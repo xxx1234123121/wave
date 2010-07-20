@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 
+import sys
+if sys.version_info < (2, 7):
+  import warnings
+  warnings.warn( '''This script was develped on python 2.7, 
+                    there may be bugs with earlier versions!''' )
+
 import datetime
 
 import urllib
@@ -8,6 +14,9 @@ import urllib2
 import re
 
 import functools
+import itertools
+
+import json
 
 """
 -------------------------------------------------------------------
@@ -15,7 +24,7 @@ This script retrieves buoy data from the NDBC.
 
 Version:       0.1.0
 Author:        Charlie Sharpsteen <source@sharpsteen.net>
-Last Modified: July 19, 2010 by Charlie Sharpsteen
+Last Modified: July 20, 2010 by Charlie Sharpsteen
 -------------------------------------------------------------------
 """
 
@@ -33,10 +42,13 @@ def fetchFromNDBC( buoyNum, startTime, stopTime, dataType, verbose = False ):
   fetchData = functools.partial( NDBCGetData, 
     buoyNum = buoyNum, dataType = dataType )
 
-  dataSets = [ processNDBC(data) for data in [fetchData( year ) for year in timeSpan]
+  dataSets = [ NDBCrawToRecords(data) for data in [fetchData( year ) for year in timeSpan]
     if NDBCGaveData(data) ]
 
-  return dataSets
+  # Flatten the seperate lists into one data set
+  data = list(itertools.chain.from_iterable( dataSets ))
+
+  return data
 
 
 def NDBCGetData( year, buoyNum, dataType ):
@@ -74,7 +86,7 @@ def NDBCGaveData( responseString ):
   else:
     return True
 
-def processNDBC( rawData ):
+def NDBCrawToRecords( rawData ):
   # Need to use re.split('\s+',line) instead of line.split(' ') because
   # there is a variable amount of whitespace seperating elements.
   parsedData = [ re.split('\s+', line) for line in rawData.splitlines()
@@ -151,7 +163,8 @@ if __name__ == '__main__':
 
   print "\n\nHello, world!\n"
 
-  urlTest = fetchFromNDBC( args.buoyNum, args.startTime, args.stopTime, 'wind' )
+  windData = fetchFromNDBC( args.buoyNum, args.startTime, args.stopTime, 'wind' )
 
-  print urlTest
+  checkForDate = lambda obj: obj.isoformat() if isinstance( obj, datetime.datetime ) else None
+  print json.dumps( windData, indent = 4, default = checkForDate )
 
