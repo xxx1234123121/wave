@@ -159,6 +159,22 @@ def processArgs():
   args = parser.parse_args()
   return args
 
+
+def loadDBConfig():
+  """Looks for a file called dbconfig.json that stores database logon info."""
+  
+  try:
+    configFile = open( 'dbconfig.json', 'r' )
+  except:
+    print """\nOh noes!  Could not find database accees credentials!  I was looking\
+for the file:\n\n\tdbconfig.json\n\nUnfortunately, this file is currently\
+required and required to be in the working directory. \n"""
+    sys.exit()
+
+  DBconfig = json.load( configFile )
+  return DBconfig
+
+
 if __name__ == '__main__':
   """
   This is the actual script part.  Building a script file this way allows it to be used
@@ -167,13 +183,16 @@ if __name__ == '__main__':
   """
   
   args = processArgs()
+  DBconfig = loadDBConfig()
 
   print "\n\nHello, world!\n"
 
-  windData = fetchFromNDBC( args.buoyNum, args.startTime, args.stopTime, 'wind' )
+  print DBconfig
 
-  checkForDate = lambda obj: obj.isoformat() if isinstance( obj, datetime.datetime ) else None
-  print json.dumps( windData, indent = 4, default = checkForDate )
+  #windData = fetchFromNDBC( args.buoyNum, args.startTime, args.stopTime, 'wind' )
 
-  print "\n\n Stats: %i objects for %i days worth of data.\n" % ( len(windData), (args.stopTime - args.startTime).days )
+  #checkForDate = lambda obj: obj.isoformat() if isinstance( obj, datetime.datetime ) else None
+  #print json.dumps( windData, indent = 4, default = checkForDate )
+
+  #print "\n\n Stats: %i objects for %i days worth of data.\n" % ( len(windData), (args.stopTime - args.startTime).days )
 
