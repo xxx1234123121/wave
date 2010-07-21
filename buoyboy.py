@@ -45,8 +45,10 @@ def fetchFromNDBC( buoyNum, startTime, stopTime, dataType, verbose = False ):
   dataSets = [ NDBCrawToRecords(data) for data in [fetchData( year ) for year in timeSpan]
     if NDBCGaveData(data) ]
 
-  # Flatten the seperate lists into one data set
-  data = list(itertools.chain.from_iterable( dataSets ))
+  # dataSets contains a list of records- one list for each year.
+  # Flatten them into a single list containing all records.
+  data = [ record for record in itertools.chain.from_iterable( dataSets )
+    if isInsideTimespan( record['dateTime'], startTime, stopTime ) ]
 
   return data
 
@@ -70,7 +72,7 @@ def NDBCGetData( year, buoyNum, dataType ):
   }
 
   # Annoying thing about Python's URL encoder- it will ALWAYS substitute characters.
-  # I.E slashes, /, will become %2. The urllib.unquote function fixes this.
+  # E.g slashes, /, will become %2. The urllib.unquote function fixes this.
   urlData = urllib.unquote(urllib.urlencode( dataDict ))
 
   NDBC = urllib2.urlopen( "%s?%s" % ( BASE_URL, urlData ) )
@@ -94,7 +96,7 @@ def NDBCrawToRecords( rawData ):
 
   records = [ 
     { 
-      'winDateTime' : datetime.datetime(*[int(x) for x in line[0:4]]),
+      'dateTime' : datetime.datetime(*[int(x) for x in line[0:5]]),
       'winDirection' : float(line[5]),
       'winSpeed' : float(line[6])
     } 
@@ -107,6 +109,11 @@ def NDBCrawToRecords( rawData ):
    Utility Functions
 -------------------------------------------------------------------
 """
+def isInsideTimespan( aDate, startTime, stopTime ):
+  if startTime <= aDate and stopTime >= aDate:
+    return True
+  else:
+    return False
 
 def ISO_datestring( aString ):
   """Takes a string in 'unambiguous format' and returns a datetime object.
@@ -167,4 +174,6 @@ if __name__ == '__main__':
 
   checkForDate = lambda obj: obj.isoformat() if isinstance( obj, datetime.datetime ) else None
   print json.dumps( windData, indent = 4, default = checkForDate )
+
+  print "\n\n Stats: %i objects for %i days worth of data.\n" % ( len(windData), (args.stopTime - args.startTime).days )
 
