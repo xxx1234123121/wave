@@ -18,6 +18,9 @@ import itertools
 
 import json
 
+import sqlalchemy
+import geoalchemy
+
 """
 -------------------------------------------------------------------
 This script retrieves buoy data from the NDBC.
@@ -104,6 +107,31 @@ def NDBCrawToRecords( rawData ):
 
   return records
 
+
+"""
+-------------------------------------------------------------------
+   Database Access Functions
+-------------------------------------------------------------------
+"""
+def getDBTable( DBconfig, name ):
+  engine = connectDB( DBconfig )
+
+  meta = sqlalchemy.MetaData( bind = engine )
+
+  table = sqlalchemy.Table( name, meta,
+      autoload = True )
+
+  return table
+
+
+def connectDB( DBconfig ):
+  url = "{type}://{username}:{password}@{server}/{database}"\
+    .format(**DBconfig)
+
+  engine = sqlalchemy.create_engine( url )
+  return engine
+    
+
 """
 -------------------------------------------------------------------
    Utility Functions
@@ -187,7 +215,8 @@ if __name__ == '__main__':
 
   print "\n\nHello, world!\n"
 
-  print DBconfig
+  tblWind = getDBTable( DBconfig, 'tblwind' )
+  print tblWind.columns
 
   #windData = fetchFromNDBC( args.buoyNum, args.startTime, args.stopTime, 'wind' )
 
@@ -195,4 +224,3 @@ if __name__ == '__main__':
   #print json.dumps( windData, indent = 4, default = checkForDate )
 
   #print "\n\n Stats: %i objects for %i days worth of data.\n" % ( len(windData), (args.stopTime - args.startTime).days )
-
