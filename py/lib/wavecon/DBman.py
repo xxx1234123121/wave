@@ -1,11 +1,20 @@
-from sqlalchemy import create_engine, MetaData
-from sqlalchemy import Table
-from sqlalchemy.orm import mapper, sessionmaker
+"""
+-------------------------------------------------------------------
+This module abstracts the WaveConnect database into a set of Python
+classes that can be used by other scripts to interact with the
+database.
 
-from geoalchemy import GeometryExtensionColumn, GeometryColumn
+Version:       0.1.0
+Author:        Charlie Sharpsteen <source@sharpsteen.net>
+Last Modified: July 23, 2010 by Charlie Sharpsteen
+-------------------------------------------------------------------
+"""
+from sqlalchemy import create_engine, MetaData
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+
+from geoalchemy import GeometryColumn
 from geoalchemy import Point
-from geoalchemy import GeometryDDL
-from geoalchemy.postgis import PGComparator
 
 import warnings
 
@@ -42,7 +51,7 @@ being mapped to database tables. I.E. other scripts that depend
 on this module will not have to be re-written because the DBman API
 will not change.
 
--------------------------------------------------------------------
+===================================================================
 
 Update:
 
@@ -54,11 +63,23 @@ Update:
   So, as long as our Schema is defined in a SQL script, this is the
   way to go.
 
+===================================================================
+
+Update to update:
+
+  I stumbled accross an example in the GeoAlchemy source code that
+  shows how to combine the reflexive and declaritive styles.  This
+  should give the best of both worlds and reduce the verbosity and
+  repatition of the code by a tremendous amount.
+
 -------------------------------------------------------------------
 """
-def tblSourceTypeTmpl( tableName, metaData ):
+def _tblSourceTypeTmpl( tableName, BaseClass ):
 
-  class SourceType(object):
+  class SourceType(BaseClass):
+    __tablename__ = tableName
+    __table_args__ = {'autoload' : True, 'useexisting' : True } 
+
     def __init__( self, sourceTypeName ):
       self.sourcetypename = sourceTypeName
 
@@ -67,17 +88,15 @@ def tblSourceTypeTmpl( tableName, metaData ):
         self.sourcetypename )
 
 
-  table = Table( tableName, metaData,
-    autoload = True, useexisting = True )
-
-  mapper( SourceType, table)
-
   return SourceType
 
 
-def tblSourceTmpl( tableName, metaData ):
+def _tblSourceTmpl( tableName, BaseClass ):
 
-  class Source(object):
+  class Source(BaseClass):
+    __tablename__ = tableName
+    __table_args__ = {'autoload' : True, 'useexisting' : True } 
+
     def __init__( self, srcName, srcConfig, srcBeginExecution,
       srcEndExecution, srcSourceTypeID ):
       self.srcname = srcname
@@ -92,17 +111,15 @@ def tblSourceTmpl( tableName, metaData ):
         self.srcendexecution, self.srcsourcetypeid )
 
 
-  table = Table( tableName, metaData,
-    autoload = True, useexisting = True )
-
-  mapper( Source, table)
-
   return Source
 
 
-def tblSpectraTmpl( tableName, metaData ):
+def _tblSpectraTmpl( tableName, BaseClass ):
 
-  class Spectra(object):
+  class Spectra(BaseClass):
+    __tablename__ = tableName
+    __table_args__ = {'autoload' : True, 'useexisting' : True } 
+
     def __init__( self, spectraFreq, spectraDir ):
       self.spectrafreq = spectraFreq
       self.spectradir = spectraDir
@@ -112,17 +129,16 @@ def tblSpectraTmpl( tableName, metaData ):
         self.spectrafreq, self.spectradir )
 
 
-  table = Table( tableName, metaData,
-    autoload = True, useexisting = True )
-
-  mapper( Spectra, table)
-
   return Spectra
 
 
-def tblWaveTmpl( tableName, metaData ):
+def _tblWaveTmpl( tableName, BaseClass ):
 
-  class Wave(object):
+  class Wave(BaseClass):
+    __tablename__ = tableName
+    __table_args__ = {'autoload' : True, 'useexisting' : True } 
+    wavlocation = GeometryColumn( Point(2) )
+
     def __init__( self, wavSourceID, wavSpectraID, wavLocation,
       wavDateTime, wavSpectra, waveHeight, wavPeakDir, wavPeakPeriod ):
       self.wavsourceid = wavSourceID
@@ -141,20 +157,16 @@ def tblWaveTmpl( tableName, metaData ):
           self.wavpeakdir, self.wavpeakperiod )
 
 
-  table = Table( tableName, metaData,
-    GeometryExtensionColumn( 'wavlocation', Point(2) ),
-    autoload = True, useexisting = True )
-
-  mapper( Wind, table, properties = {
-    'wavlocation' : GeometryColumn( table.c.wavlocation )
-  })
-
   return Wave
 
 
-def tblWindTmpl( tableName, metaData ):
+def _tblWindTmpl( tableName, BaseClass ):
 
-  class Wind(object):
+  class Wind(BaseClass):
+    __tablename__ = tableName
+    __table_args__ = {'autoload' : True, 'useexisting' : True } 
+    winlocation = GeometryColumn( Point(2) )
+
     def __init__( self, winSourceID, winLocation, winDateTime,
       winSpeed, winDirection ):
       self.winsourceid = winSourceID
@@ -169,23 +181,16 @@ def tblWindTmpl( tableName, metaData ):
         self.winspeed, self.windirection )
 
 
-  table = Table( tableName, metaData,
-    GeometryExtensionColumn( 'winlocation', Point(2)),
-    autoload = True, useexisting = True )
-
-  mapper( Wind, table, properties = {
-    'winlocation' : GeometryColumn( table.c.winlocation,
-      comparator = PGComparator )
-  })
-
-  GeometryDDL( table )
-
   return Wind
 
 
-def tblCurrentTmpl( tableName, metaData ):
+def _tblCurrentTmpl( tableName, BaseClass ):
 
-  class Current(object):
+  class Current(BaseClass):
+    __tablename__ = tableName
+    __table_args__ = {'autoload' : True, 'useexisting' : True } 
+    curlocation = GeometryColumn( Point(2) )
+
     def __init__( self, curSourceID, curLocation, curDateTime,
       curSpeed, curDirection ):
       self.cursourceid = curSourceID
@@ -200,22 +205,16 @@ def tblCurrentTmpl( tableName, metaData ):
         self.curspeed, self.curdirection )
 
 
-  table = Table( tableName, metaData,
-    GeometryExtensionColumn( 'curlocation', Point(2) ),
-    autoload = True, useexisting = True )
-
-  mapper( Current, table, properties = {
-    'curlocation' : GeometryColumn( table.c.curlocation )
-  })
-
-  GeometryDDL( table )
-
   return Current
 
 
-def tblBathyTmpl( tableName, metaData ):
+def _tblBathyTmpl( tableName, BaseClass ):
 
-  class Bathy(object):
+  class Bathy(BaseClass):
+    __tablename__ = tableName
+    __table_args__ = {'autoload' : True, 'useexisting' : True } 
+    bathylocation = GeometryColumn( Point(2) )
+
     def __init__( self, bathySourceID, bathyLocation, bathyDepth ):
       self.bathysourceid = bathySourceID
       self.bathylocation = bathyLocation
@@ -226,28 +225,18 @@ def tblBathyTmpl( tableName, metaData ):
         self.bathysourceid, self.bathylocation, self.bathydepth )
 
 
-  table = Table( tableName, metaData,
-    GeometryExtensionColumn( 'curlocation', Point(2) ),
-    autoload = True, useexisting = True )
-
-  mapper( Bathy, table, properties = {
-    'bathylocation' : GeometryColumn( table.c.bathylocation )
-  })
-
-  GeometryDDL( table )
-
   return Bathy
 
 
-DATABASE_TEMPLATES = {
+_DATABASE_TEMPLATES = {
 
-  'tblsourcetype' : tblSourceTypeTmpl,
-  'tblsource' : tblSourceTmpl,
-  'tblspectra' : tblSpectraTmpl,
-  'tblwave' : tblWaveTmpl,
-  'tblwind' : tblWindTmpl,
-  'tblcurrent' : tblCurrentTmpl,
-  'tblbathy' : tblBathyTmpl
+  'tblsourcetype' : _tblSourceTypeTmpl,
+  'tblsource' : _tblSourceTmpl,
+  'tblspectra' : _tblSpectraTmpl,
+  'tblwave' : _tblWaveTmpl,
+  'tblwind' : _tblWindTmpl,
+  'tblcurrent' : _tblCurrentTmpl,
+  'tblbathy' : _tblBathyTmpl
 
 }
 
@@ -258,8 +247,10 @@ DATABASE_TEMPLATES = {
 -------------------------------------------------------------------
 """
 def accessTable( DBconfig, template, name = None ):
+
   if name is None:
     name = template
+
   # SQLAlchmey whines because it can't figure out what to do with
   # GIS columns in the database.  This shuts it up.
   with warnings.catch_warnings():
@@ -269,8 +260,10 @@ def accessTable( DBconfig, template, name = None ):
 
     meta = MetaData( bind = engine )
     meta.reflect()
+
+    BaseClass = declarative_base( metadata = meta )
   
-    Class = DATABASE_TEMPLATES[template]( name, meta )
+    Class = _DATABASE_TEMPLATES[template]( name, BaseClass )
 
     return Class
 
