@@ -1,3 +1,14 @@
+"""
+-------------------------------------------------------------------
+This module abstracts the WaveConnect database into a set of Python
+classes that can be used by other scripts to interact with the
+database.
+
+Version:       0.1.0
+Author:        Charlie Sharpsteen <source@sharpsteen.net>
+Last Modified: July 23, 2010 by Charlie Sharpsteen
+-------------------------------------------------------------------
+"""
 from sqlalchemy import create_engine, MetaData
 from sqlalchemy import Table
 from sqlalchemy.orm import mapper, sessionmaker
