@@ -1,7 +1,0 @@
-{
-  "username" : "aUser",
-  "password" : "password",
-  "database" : "aDB",
-  "server" : "localhost",
-  "type" : "postgresql"  
-}
