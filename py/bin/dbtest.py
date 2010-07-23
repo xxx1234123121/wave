@@ -1,16 +1,19 @@
+#!/usr/bin/env python
 from buoyboy import loadDBConfig
-cfig = loadDBConfig()
-from wavecon import DBman
-Wind = DBman.accessDBTable( cfig, 'tblwind' )
+cfg = loadDBConfig()
 
-#import geoalchemy
-import datetime
-foo = datetime.datetime.now()
-#point = geoalchemy.WKTSpatialElement
-win_record = Wind( 1, 1, '(10,10)', foo, 12.0, 42 )
-# GAH! ------------^  Shouldn't need the ID!
-engine = DBman.connectToDB(cfig)
-Session = DBman.sessionmaker(bind=engine)
-session = Session()
-session.add(win_record)
+from wavecon import DBman
+session = DBman.startSession( cfg )
+
+from datetime import datetime
+
+Wind = DBman.accessTable( cfg, 'tblwind', 'tblwind' )
+
+windTest = Wind( '1', 'POINT(40.86 -124.08)', datetime.now(), 12.0, 120.0 )
+print windTest
+
+session.add(windTest)
 session.commit()
+
+for record in session.query(Wind):
+  print session.scalar(record.winlocation.wkt)
