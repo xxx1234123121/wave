@@ -1,0 +1,7 @@
+{
+  "username" : "wave",
+  "password" : "w@ve2010",
+  "database" : "buoytest",
+  "server" : "localhost",
+  "type" : "postgresql"  
+}
