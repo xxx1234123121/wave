@@ -8,7 +8,7 @@ the database.
 
 
 **Development Status:**
-  **Last Modified:** July 23, 2010 by Charlie Sharpsteen
+  **Last Modified:** July 24, 2010 by Charlie Sharpsteen
 
 "Design Notes"/Ravings
 ----------------------
@@ -246,6 +246,54 @@ _DATABASE_TEMPLATES = {
 
 
 #------------------------------------------------------------------
+#  Class Utility Methods
+#------------------------------------------------------------------
+def recordToDict( object ):
+  """Turns a record pulled from the database into a dictionary.
+  In :py:func:`wavecon.DBman.accessTable` this method is attached to
+  the Base object from which all classes representing databse objects
+  descend.  It provides a convienant way to reduce a database record
+  to a basic Python object.
+
+  """
+  dictionary = dict( (key, value) for
+    key, value in object.__dict__.iteritems()
+    if not callable( value ) and not key.startswith('__')
+    and not key.startswith('_') 
+  )
+
+  return dictionary
+
+def recordDateTime( object ):
+  """Each database table has a different name for a timestamp. Some
+  call it winDateTime, some call it wavDateTime, ect, ect.
+
+  This is pretty annoying when trying to write a general function
+  that sorts records based on date as you have to figure out which
+  name the object is using.  This function is a quick hack that adds a
+  is added to the record Base class in
+  :py:func:`wavecon.DBman.accessTable`.  It scans through the class
+  attributes and looks for something that ends in 'datetime' and
+  returns that value.
+
+  .. warning::
+     This function may disappear in the future as it feels way too
+     hackey.  The solution may be to change names in the database
+     schema or remap object attributes such that names are
+     standardized.
+
+  """
+  timestamp = ( value for key, value in object.__dict__.iteritems()
+    if key.endswith('datetime' ) )
+
+  try:
+    return timestamp.next()
+  except StopIteration:
+    return None
+
+  
+
+#------------------------------------------------------------------
 #  Database Access Functions
 #------------------------------------------------------------------
 def accessTable( DBconfig, template, name = None ):
@@ -290,6 +338,10 @@ def accessTable( DBconfig, template, name = None ):
     meta.reflect()
 
     BaseClass = declarative_base( metadata = meta )
+    # Add helper methods that will filter to all classes and objects
+    # through inheritance.
+    BaseClass.recordToDict = recordToDict
+    BaseClass.recordDateTime = recordDateTime
   
     Class = _DATABASE_TEMPLATES[template]( name, BaseClass )
 
