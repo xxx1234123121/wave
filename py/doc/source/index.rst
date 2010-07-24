@@ -17,6 +17,8 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   DBman
+
 Indices and tables
 ------------------
 
