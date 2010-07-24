@@ -7,13 +7,11 @@ Python classes that can be used by other scripts to interact with
 the database.
 
 
-.. admonition:: Development Status
-
-
+**Development Status:**
   **Last Modified:** July 23, 2010 by Charlie Sharpsteen
 
-Ravings or "Design Notes"
--------------------------
+"Design Notes"/Ravings
+----------------------
 
 Going to try this the "reflective" way- which means SQLAlchemy will
 infer the layout of the database tables by talking to the database.
@@ -246,6 +244,28 @@ def accessTable( DBconfig, template, name = None ):
   """Returns a Class that can be used to spawn objects which are 
   suitable for serialization to a database table.
 
+  Argument Info:
+
+    * *DBconfig*:
+        A python dictionary containing access credentials for the
+        database server.  See :py:data:`wavecon.config.DBconfig`
+        for the structure of this dictionary.
+
+    * *template*
+        A string specifying the Schema that should be used to model
+        the database table you are trying to access.  I.E. if you
+        are trying to access a table that is defined like
+        ``tblWave`` in ``DB.psql`` then pass the string
+        ``'tblwave'``
+
+    * *name*
+        An optional name for the database table. I.E. you are
+        trying to access a table that has the same schema as
+        ``tblWave`` but is called ``tblWaveModeled``.  You would
+        then pass ``'tblwave'`` for the *template* parameter and
+        ``'tblwavemodeled'`` for the *name* parameter.  If left
+        blank it will default to the value passed for *template*
+
   """
 
   if name is None:
@@ -279,6 +299,9 @@ def startSession( DBconfig ):
 
     * `GeoAlchemy`_ documentation.  Describes how to run PostGIS
       enabled queries.
+
+  See :py:data:`wavecon.config.DBconfig` for a description of the
+  *DBconfig* parameter.
 
     .. _SQLAlchemy: http://www.sqlalchemy.org/docs/ormtutorial.html#
          creating-a-session
