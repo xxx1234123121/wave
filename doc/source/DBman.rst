@@ -2,9 +2,15 @@ The ``DBman`` Module
 ====================
 
 .. automodule:: wavecon.DBman
+
+Class Utility Methods
+---------------------
+
+.. autofunction:: wavecon.DBman.recordToDict
+.. autofunction:: wavecon.DBman.recordDateTime
    
-Functions
----------
+Database Access Functions
+-------------------------
 
 .. autofunction:: wavecon.DBman.accessTable
 .. autofunction:: wavecon.DBman.startSession

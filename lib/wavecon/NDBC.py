@@ -70,7 +70,7 @@ def fetchFromNDBC( buoyNum, startTime, stopTime, dataType,
   # dataSets contains a list of records- one list for each year.
   # Flatten them into a single list containing all records.
   data = [ record for record in itertools.chain.from_iterable( dataSets )
-    if isInsideTimespan( record['dateTime'], startTime, stopTime ) ]
+    if isInsideTimespan( record.dateTime(), startTime, stopTime ) ]
 
   return data
 
