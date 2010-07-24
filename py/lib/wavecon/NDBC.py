@@ -1,3 +1,17 @@
+"""
+Overview
+--------
+
+This module provides an interface to data stored at the National Buoy
+Data Center (`NDBC`_).
+
+**Development Status:**
+  **Last Modified:** July 23, 2010 by Charlie Sharpsteen
+
+
+.. _NDBC: http://www.ndbc.noaa.gov/
+
+"""
 import datetime
 
 import urllib
@@ -8,13 +22,15 @@ import re
 import functools
 import itertools
 
+#---------------------------------------------------------------------
+#  Metadata
+#---------------------------------------------------------------------
 
-"""
--------------------------------------------------------------------
-   Data Retrieval
--------------------------------------------------------------------
-"""
-def fetchFromNDBC( buoyNum, startTime, stopTime, dataType, verbose = False ):
+#---------------------------------------------------------------------
+#  Data Retrieval
+#---------------------------------------------------------------------
+def fetchFromNDBC( buoyNum, startTime, stopTime, dataType,
+    verbose = False ):
 
   # Determine the years that need to be downloaded.
   timeSpan = range( startTime.year, stopTime.year + 1 )
@@ -85,11 +101,9 @@ def NDBCrawToRecords( rawData ):
   return records
 
 
-"""
--------------------------------------------------------------------
-   Utility Functions
--------------------------------------------------------------------
-"""
+#---------------------------------------------------------------------
+#  Utility Functions
+#---------------------------------------------------------------------
 def isInsideTimespan( aDate, startTime, stopTime ):
   if startTime <= aDate and stopTime >= aDate:
     return True

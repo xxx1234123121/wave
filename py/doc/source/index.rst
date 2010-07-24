@@ -19,6 +19,7 @@ Contents:
 
    config
    DBman
+   NDBC
 
 
 Indices and tables
