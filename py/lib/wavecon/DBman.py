@@ -76,7 +76,7 @@ def _tblSourceTypeTmpl( tableName, BaseClass ):
     __tablename__ = tableName
     __table_args__ = {'autoload' : True, 'useexisting' : True } 
 
-    def __init__( self, sourceTypeName ):
+    def __init__( self, sourceTypeName = None ):
       self.sourcetypename = sourceTypeName
 
     def __repr__(self):
@@ -93,13 +93,15 @@ def _tblSourceTmpl( tableName, BaseClass ):
     __tablename__ = tableName
     __table_args__ = {'autoload' : True, 'useexisting' : True } 
 
-    def __init__( self, srcName, srcConfig, srcBeginExecution,
-      srcEndExecution, srcSourceTypeID ):
-      self.srcname = srcname
-      self.srcconfig = srcconfig
-      self.srcbeginexecution = srcbeginexecution
-      self.srcendexecution = srcendexecution
-      self.srcsourcetypeid = srcsourcetypeid
+    def __init__( self, srcName = None, srcConfig = None, 
+      srcBeginExecution = None , srcEndExecution = None, 
+      srcSourceTypeID = None 
+    ):
+      self.srcname = srcName
+      self.srcconfig = srcConfig
+      self.srcbeginexecution = srcBeginExecution
+      self.srcendexecution = srcEndExecution
+      self.srcsourcetypeid = srcSourceTypeID
 
     def __repr__(self):
       return "<SourceRecord('{}','{}','{}','{}','{}')>".format(
@@ -116,7 +118,7 @@ def _tblSpectraTmpl( tableName, BaseClass ):
     __tablename__ = tableName
     __table_args__ = {'autoload' : True, 'useexisting' : True } 
 
-    def __init__( self, spectraFreq, spectraDir ):
+    def __init__( self, spectraFreq = None, spectraDir = None ):
       self.spectrafreq = spectraFreq
       self.spectradir = spectraDir
 
@@ -135,16 +137,18 @@ def _tblWaveTmpl( tableName, BaseClass ):
     __table_args__ = {'autoload' : True, 'useexisting' : True } 
     wavlocation = GeometryColumn( Point(2) )
 
-    def __init__( self, wavSourceID, wavSpectraID, wavLocation,
-      wavDateTime, wavSpectra, waveHeight, wavPeakDir, wavPeakPeriod ):
+    def __init__( self, wavSourceID = None, wavSpectraID = None, 
+      wavLocation = None, wavDateTime = None, wavSpectra = None, 
+      waveHeight = None, wavPeakDir = None, wavPeakPeriod = None
+    ):
       self.wavsourceid = wavSourceID
       self.wavspectraid = wavSpectraID
       self.wavlocation = wavLocation
       self.wavdatetime = wavDateTime
-      self.wavspectra = wavspectra
-      self.wavheight = wavheight
-      self.wavpeakdir = wavpeakdir
-      self.wavpeakperiod = wavpeakperiod
+      self.wavspectra = wavSpectra
+      self.wavheight = wavHeight
+      self.wavpeakdir = wavPeakDir
+      self.wavpeakperiod = wavPeakPeriod
 
     def __repr__(self):
       return "<SpectraRecord('{}','{}','{}','{}','{}','{}','{}','{}')>"\
@@ -163,8 +167,9 @@ def _tblWindTmpl( tableName, BaseClass ):
     __table_args__ = {'autoload' : True, 'useexisting' : True } 
     winlocation = GeometryColumn( Point(2) )
 
-    def __init__( self, winSourceID, winLocation, winDateTime,
-      winSpeed, winDirection ):
+    def __init__( self, winSourceID = None, winLocation = None, 
+      winDateTime = None, winSpeed = None, winDirection = None
+    ):
       self.winsourceid = winSourceID
       self.winlocation = winLocation
       self.windatetime = winDateTime
@@ -187,8 +192,9 @@ def _tblCurrentTmpl( tableName, BaseClass ):
     __table_args__ = {'autoload' : True, 'useexisting' : True } 
     curlocation = GeometryColumn( Point(2) )
 
-    def __init__( self, curSourceID, curLocation, curDateTime,
-      curSpeed, curDirection ):
+    def __init__( self, curSourceID = None, curLocation = None, 
+      curDateTime = None, curSpeed = None, curDirection = None 
+    ):
       self.cursourceid = curSourceID
       self.curlocation = curLocation
       self.curdatetime = curDateTime
@@ -211,7 +217,9 @@ def _tblBathyTmpl( tableName, BaseClass ):
     __table_args__ = {'autoload' : True, 'useexisting' : True } 
     bathylocation = GeometryColumn( Point(2) )
 
-    def __init__( self, bathySourceID, bathyLocation, bathyDepth ):
+    def __init__( self, bathySourceID = None, bathyLocation = None, 
+      bathyDepth = None 
+    ):
       self.bathysourceid = bathySourceID
       self.bathylocation = bathyLocation
       self.bathydepth = bathyDepth
