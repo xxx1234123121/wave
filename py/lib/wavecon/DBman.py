@@ -1,27 +1,17 @@
 """
--------------------------------------------------------------------
-This module abstracts the WaveConnect database into a set of Python
-classes that can be used by other scripts to interact with the
-database.
+Overview
+--------
 
-Version:       0.1.0
-Author:        Charlie Sharpsteen <source@sharpsteen.net>
-Last Modified: July 23, 2010 by Charlie Sharpsteen
--------------------------------------------------------------------
-"""
-from sqlalchemy import create_engine, MetaData
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+This module abstracts the WaveConnect database into a set of
+Python classes that can be used by other scripts to interact with
+the database.
 
-from geoalchemy import GeometryColumn
-from geoalchemy import Point
 
-import warnings
+**Development Status:**
+  **Last Modified:** July 23, 2010 by Charlie Sharpsteen
 
-"""
--------------------------------------------------------------------
-   Python Classes Bound to Database Schema
--------------------------------------------------------------------
+"Design Notes"/Ravings
+----------------------
 
 Going to try this the "reflective" way- which means SQLAlchemy will
 infer the layout of the database tables by talking to the database.
@@ -51,29 +41,35 @@ being mapped to database tables. I.E. other scripts that depend
 on this module will not have to be re-written because the DBman API
 will not change.
 
-===================================================================
-
-Update:
+.. note:: Update
 
   After implementing the reflective style, I feel it has one nice
   advantage over the declarative style for our use case.  With the
   reflective style, one does not have to worry about managing 
-  things such as ForeignKeys or Constraints or Indexes or...
+  things such as Foreign Keys or Constraints or Indexes or...
 
   So, as long as our Schema is defined in a SQL script, this is the
   way to go.
 
-===================================================================
+.. note:: Update to update:
 
-Update to update:
-
-  I stumbled accross an example in the GeoAlchemy source code that
-  shows how to combine the reflexive and declaritive styles.  This
+  I stumbled across an example in the GeoAlchemy source code that
+  shows how to combine the reflexive and declarative styles.  This
   should give the best of both worlds and reduce the verbosity and
-  repatition of the code by a tremendous amount.
+  repetition of the code by a significant amount.
 
--------------------------------------------------------------------
 """
+
+from sqlalchemy import create_engine, MetaData
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+
+from geoalchemy import GeometryColumn
+from geoalchemy import Point
+
+import warnings
+
+
 def _tblSourceTypeTmpl( tableName, BaseClass ):
 
   class SourceType(BaseClass):
@@ -241,12 +237,36 @@ _DATABASE_TEMPLATES = {
 }
 
 
-"""
--------------------------------------------------------------------
-   Database Access Functions
--------------------------------------------------------------------
-"""
+#------------------------------------------------------------------
+#  Database Access Functions
+#------------------------------------------------------------------
 def accessTable( DBconfig, template, name = None ):
+  """Returns a Class that can be used to spawn objects which are 
+  suitable for serialization to a database table.
+
+  Argument Info:
+
+    * *DBconfig*:
+        A python dictionary containing access credentials for the
+        database server.  See :py:data:`wavecon.config.DBconfig`
+        for the structure of this dictionary.
+
+    * *template*
+        A string specifying the Schema that should be used to model
+        the database table you are trying to access.  I.E. if you
+        are trying to access a table that is defined like
+        ``tblWave`` in ``DB.psql`` then pass the string
+        ``'tblwave'``
+
+    * *name*
+        An optional name for the database table. I.E. you are
+        trying to access a table that has the same schema as
+        ``tblWave`` but is called ``tblWaveModeled``.  You would
+        then pass ``'tblwave'`` for the *template* parameter and
+        ``'tblwavemodeled'`` for the *name* parameter.  If left
+        blank it will default to the value passed for *template*
+
+  """
 
   if name is None:
     name = template
@@ -268,6 +288,28 @@ def accessTable( DBconfig, template, name = None ):
     return Class
 
 def startSession( DBconfig ):
+  """Returns an object representing a connection to the database.
+  This object may be used in combination with a class returned
+  by ``accessTable()`` to add objects to the database, run queries,
+  perform updates and do all kinds of useful things.
+
+  The following websites explain how to use ``session`` objects:
+
+    * `SQLAlchemy`_ documentation.  Describes basic usage.
+
+    * `GeoAlchemy`_ documentation.  Describes how to run PostGIS
+      enabled queries.
+
+  See :py:data:`wavecon.config.DBconfig` for a description of the
+  *DBconfig* parameter.
+
+    .. _SQLAlchemy: http://www.sqlalchemy.org/docs/ormtutorial.html#
+         creating-a-session
+
+    .. _GeoAlchemy: http://www.geoalchemy.org/tutorial.html#
+         performing-spatial-queries
+
+  """
   engine = connectTo( DBconfig )
   Session = sessionmaker( bind = engine )
 
