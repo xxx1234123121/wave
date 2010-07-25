@@ -95,8 +95,10 @@ if __name__ == '__main__':
   print "\n\nHello, world!\n"
 
   windRecords = NDBC.fetchRecords( args.buoyNum, args.startTime, args.stopTime, 'wind' )
+  NDBC.commitToDB( windRecords )
   for record in windRecords:
     print record
+
 
   #checkForDate = lambda obj: obj.isoformat() if isinstance( obj, datetime.datetime ) else None
   #print json.dumps( windData, indent = 4, default = checkForDate )
