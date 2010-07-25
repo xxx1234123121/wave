@@ -6,7 +6,7 @@ This module provides an interface to data stored at the National Buoy
 Data Center (`NDBC`_).
 
 **Development Status:**
-  **Last Modified:** July 23, 2010 by Charlie Sharpsteen
+  **Last Modified:** July 24, 2010 by Charlie Sharpsteen
 
 
 .. _NDBC: http://www.ndbc.noaa.gov/
@@ -50,32 +50,38 @@ BUOY_META = {
 
 }
 
+BuoySource = DBman.accessTable( _DBconfig, 'tblsource' )
+WindRecord = DBman.accessTable( _DBconfig, 'tblwind' )
+
 
 #---------------------------------------------------------------------
 #  Data Retrieval
 #---------------------------------------------------------------------
-def fetchFromNDBC( buoyNum, startTime, stopTime, dataType,
+def fetchRecords( buoyNum, startTime, stopTime, dataType,
     verbose = False ):
 
   # Determine the years that need to be downloaded.
   timeSpan = range( startTime.year, stopTime.year + 1 )
 
-  fetchData = functools.partial( NDBCGetData, 
+  fetchData = functools.partial( getData, 
     buoyNum = buoyNum, dataType = dataType )
 
-  dataSets = [ NDBCrawToRecords(data) for data in 
-    [fetchData( year ) for year in timeSpan]
-    if NDBCGaveData(data) ]
+  dataSets = [ rawToRecords( data, dataType ) for data 
+    in [fetchData( year ) for year in timeSpan]
+    if NDBCGaveData(data) 
+  ]
 
   # dataSets contains a list of records- one list for each year.
   # Flatten them into a single list containing all records.
-  data = [ record for record in itertools.chain.from_iterable( dataSets )
-    if isInsideTimespan( record.dateTime(), startTime, stopTime ) ]
+  records = [ record for record 
+    in itertools.chain.from_iterable( dataSets )
+    if isInsideTimespan( record.recordDateTime(), 
+      startTime, stopTime ) ]
 
-  return data
+  return records
 
 
-def NDBCGetData( year, buoyNum, dataType ):
+def getData( year, buoyNum, dataType ):
   BASE_URL = "http://www.ndbc.noaa.gov/view_text_file.php"
   PARAMS = {
 
@@ -110,19 +116,21 @@ def NDBCGaveData( responseString ):
   else:
     return True
 
-def NDBCrawToRecords( rawData ):
+def rawToRecords( rawData, dataType ):
   # Need to use re.split('\s+',line) instead of line.split(' ') because
   # there is a variable amount of whitespace seperating elements.
   parsedData = [ re.split('\s+', line) for line in rawData.splitlines()
     if not line.startswith('#') ]
 
-  records = [ 
-    { 
-      'dateTime' : datetime.datetime(*[int(x) for x in line[0:5]]),
-      'winDirection' : float(line[5]),
-      'winSpeed' : float(line[6])
-    } 
-    for line in parsedData ]
+  if dataType == 'wind':
+    records = [ 
+      WindRecord( 
+        winDateTime =  datetime.datetime(*[int(x) for x in line[0:5]]),
+        winDirection = float(line[5]),
+        winSpeed = float(line[6])
+      ) for line in parsedData ]
+  else:
+    raise TypeError
 
   return records
 
@@ -131,18 +139,17 @@ def NDBCrawToRecords( rawData ):
 #  Database Interaction 
 #---------------------------------------------------------------------
 def getBuoyFromDB( buoyNum ):
-  Buoy = DBman.accessTable( _DBconfig, 'tblsource' )
   session = DBman.startSession( _DBconfig )
 
-  buoy = session.query(Buoy)\
-      .filter( Buoy.srcname == getBuoyName( buoyNum ) ).first()
+  buoy = session.query(BuoySource)\
+      .filter( BuoySource.srcname == getBuoyName( buoyNum ) ).first()
 
   if buoy:
     session.close()
     return buoy
   else:
     # A record for this buoy does not exist in the DB. Create it.
-    buoy = Buoy( srcName = getBuoyName( buoyNum ) )
+    buoy = BuoySource( srcName = getBuoyName( buoyNum ) )
 
     session.add( buoy )
     session.commit()
