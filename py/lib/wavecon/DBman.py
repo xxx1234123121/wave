@@ -8,7 +8,7 @@ the database.
 
 
 **Development Status:**
-  **Last Modified:** July 23, 2010 by Charlie Sharpsteen
+  **Last Modified:** July 24, 2010 by Charlie Sharpsteen
 
 "Design Notes"/Ravings
 ----------------------
@@ -62,7 +62,7 @@ will not change.
 
 from sqlalchemy import create_engine, MetaData
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, synonym
 
 from geoalchemy import GeometryColumn
 from geoalchemy import Point
@@ -82,6 +82,8 @@ def _tblSourceTypeTmpl( tableName, BaseClass ):
     def __repr__(self):
       return "<SourceTypeRecord('{}')>".format(
         self.sourcetypename )
+
+    sourcetypeid = synonym( 'id', map_column = True )
 
 
   return SourceType
@@ -108,6 +110,8 @@ def _tblSourceTmpl( tableName, BaseClass ):
         self.srcname, self.srcconfig, self.srcbeginexecution,
         self.srcendexecution, self.srcsourcetypeid )
 
+    srcid = synonym( 'id', map_column = True )
+
 
   return Source
 
@@ -126,6 +130,7 @@ def _tblSpectraTmpl( tableName, BaseClass ):
       return "<SpectraRecord('{}','{}')>".format(
         self.spectrafreq, self.spectradir )
 
+    spectraid = synonym( 'id', map_column = True )
 
   return Spectra
 
@@ -156,6 +161,11 @@ def _tblWaveTmpl( tableName, BaseClass ):
           self.wavdatetime, self.wavspectra, self.wavheight,
           self.wavpeakdir, self.wavpeakperiod )
 
+    wavid = synonym( 'id', map_column = True )
+    wavsourceid = synonym( 'sourceid', map_column = True )
+    wavdatetime = synonym( 'datetime', map_column = True )
+    wavlocation = synonym( 'location', map_column = True )
+
 
   return Wave
 
@@ -181,6 +191,10 @@ def _tblWindTmpl( tableName, BaseClass ):
         self.winsourceid, self.winlocation, self.windatetime,
         self.winspeed, self.windirection )
 
+    winid = synonym( 'id', map_column = True )
+    winsourceid = synonym( 'sourceid', map_column = True )
+    windatetime = synonym( 'datetime', map_column = True )
+    winlocation = synonym( 'location', map_column = True )
 
   return Wind
 
@@ -206,6 +220,10 @@ def _tblCurrentTmpl( tableName, BaseClass ):
         self.cursourceid, self.curlocation, self.curdatetime,
         self.curspeed, self.curdirection )
 
+    curid = synonym( 'id', map_column = True )
+    cursourceid = synonym( 'sourceid', map_column = True )
+    curdatetime = synonym( 'datetime', map_column = True )
+    curlocation = synonym( 'location', map_column = True )
 
   return Current
 
@@ -228,6 +246,10 @@ def _tblBathyTmpl( tableName, BaseClass ):
       return "<BathyRecord('{}','{}','{}')>".format(
         self.bathysourceid, self.bathylocation, self.bathydepth )
 
+    bathyid = synonym( 'id', map_column = True )
+    bathysourceid = synonym( 'sourceid', map_column = True )
+    bathydatetime = synonym( 'datetime', map_column = True )
+    bathylocation = synonym( 'location', map_column = True )
 
   return Bathy
 
@@ -243,6 +265,26 @@ _DATABASE_TEMPLATES = {
   'tblbathy' : _tblBathyTmpl
 
 }
+
+
+#------------------------------------------------------------------
+#  Class Utility Methods
+#------------------------------------------------------------------
+def recordToDict( object ):
+  """Turns a record pulled from the database into a dictionary.
+  In :py:func:`wavecon.DBman.accessTable` this method is attached to
+  the Base object from which all classes representing databse objects
+  descend.  It provides a convienant way to reduce a database record
+  to a basic Python object.
+
+  """
+  dictionary = dict( (key, value) for
+    key, value in object.__dict__.iteritems()
+    if not callable( value ) and not key.startswith('__')
+    and not key.startswith('_') 
+  )
+
+  return dictionary
 
 
 #------------------------------------------------------------------
@@ -290,6 +332,9 @@ def accessTable( DBconfig, template, name = None ):
     meta.reflect()
 
     BaseClass = declarative_base( metadata = meta )
+    # Add helper methods that will filter to all classes and objects
+    # through inheritance.
+    BaseClass.recordToDict = recordToDict
   
     Class = _DATABASE_TEMPLATES[template]( name, BaseClass )
 

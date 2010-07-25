@@ -94,9 +94,11 @@ if __name__ == '__main__':
 
   print "\n\nHello, world!\n"
 
-  tblWind = DBman.accessTable( DBconfig, 'tblwind' )
+  windRecords = NDBC.fetchRecords( args.buoyNum, args.startTime, args.stopTime, 'wind' )
+  NDBC.commitToDB( windRecords )
+  for record in windRecords:
+    print record
 
-  #windData = fetchFromNDBC( args.buoyNum, args.startTime, args.stopTime, 'wind' )
 
   #checkForDate = lambda obj: obj.isoformat() if isinstance( obj, datetime.datetime ) else None
   #print json.dumps( windData, indent = 4, default = checkForDate )
