@@ -24,6 +24,8 @@ import re
 import functools
 import itertools
 
+from geoalchemy import WKTSpatialElement
+
 from wavecon import DBman
 from wavecon.config import DBconfig as _DBconfig
 
@@ -53,6 +55,8 @@ BUOY_META = {
 BuoySource = DBman.accessTable( _DBconfig, 'tblsource' )
 WindRecord = DBman.accessTable( _DBconfig, 'tblwind' )
 
+_session = DBman.startSession( _DBconfig )
+
 
 #---------------------------------------------------------------------
 #  Data Retrieval
@@ -73,9 +77,9 @@ def fetchRecords( buoyNum, startTime, stopTime, dataType,
 
   # dataSets contains a list of records- one list for each year.
   # Flatten them into a single list containing all records.
-  records = [ record for record 
+  records = [ associateWithBuoy( record, buoyNum ) for record 
     in itertools.chain.from_iterable( dataSets )
-    if isInsideTimespan( record.recordDateTime(), 
+    if isInsideTimespan( record.datetime, 
       startTime, stopTime ) ]
 
   return records
@@ -139,28 +143,39 @@ def rawToRecords( rawData, dataType ):
 #  Database Interaction 
 #---------------------------------------------------------------------
 def getBuoyFromDB( buoyNum ):
-  session = DBman.startSession( _DBconfig )
-
-  buoy = session.query(BuoySource)\
+  buoy = _session.query(BuoySource)\
       .filter( BuoySource.srcname == getBuoyName( buoyNum ) ).first()
 
   if buoy:
-    session.close()
     return buoy
   else:
     # A record for this buoy does not exist in the DB. Create it.
     buoy = BuoySource( srcName = getBuoyName( buoyNum ) )
 
-    session.add( buoy )
-    session.commit()
-    session.refresh( buoy )
-    session.close()
+    _session.add( buoy )
+    _session.commit()
 
     return buoy
 
 def getBuoyID( buoyNum ):
   id = getBuoyFromDB( buoyNum ).srcid
   return id
+
+
+def associateWithBuoy( record, buoyNum ):
+  record.location = getBuoyLoc( buoyNum, asWKT = True )
+  record.sourceid = getBuoyID( buoyNum )
+
+  return record
+    
+
+def commitToDB( records ):
+  _session.add_all( records )
+  _session.commit()
+
+  return None
+
+
 
 #---------------------------------------------------------------------
 #  Utility Functions
@@ -177,9 +192,9 @@ def getBuoyName( buoyNum ):
 
 
 def getBuoyLoc( buoyNum, asWKT = False ):
-  buoyLoc = BUOY_META[ str(buoyNum) ]
+  buoyLoc = BUOY_META[ str(buoyNum) ]['location']
   if asWKT:
-    return "POINT({} {})".format(*buoyLoc)
+    return WKTSpatialElement( "POINT({} {})".format(*buoyLoc) )
   else:
     return buoyLoc
 
