@@ -62,7 +62,7 @@ will not change.
 
 from sqlalchemy import create_engine, MetaData
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, synonym
 
 from geoalchemy import GeometryColumn
 from geoalchemy import Point
@@ -107,6 +107,8 @@ def _tblSourceTmpl( tableName, BaseClass ):
       return "<SourceRecord('{}','{}','{}','{}','{}')>".format(
         self.srcname, self.srcconfig, self.srcbeginexecution,
         self.srcendexecution, self.srcsourcetypeid )
+
+    srcid = synonym( 'id', map_column = True )
 
 
   return Source
@@ -181,6 +183,10 @@ def _tblWindTmpl( tableName, BaseClass ):
         self.winsourceid, self.winlocation, self.windatetime,
         self.winspeed, self.windirection )
 
+    winid = synonym( 'id', map_column = True )
+    winsourceid = synonym( 'sourceid', map_column = True )
+    windatetime = synonym( 'datetime', map_column = True )
+    winlocation = synonym( 'location', map_column = True )
 
   return Wind
 
@@ -264,34 +270,6 @@ def recordToDict( object ):
 
   return dictionary
 
-def recordDateTime( object ):
-  """Each database table has a different name for a timestamp. Some
-  call it winDateTime, some call it wavDateTime, ect, ect.
-
-  This is pretty annoying when trying to write a general function
-  that sorts records based on date as you have to figure out which
-  name the object is using.  This function is a quick hack that adds a
-  is added to the record Base class in
-  :py:func:`wavecon.DBman.accessTable`.  It scans through the class
-  attributes and looks for something that ends in 'datetime' and
-  returns that value.
-
-  .. warning::
-     This function may disappear in the future as it feels way too
-     hackey.  The solution may be to change names in the database
-     schema or remap object attributes such that names are
-     standardized.
-
-  """
-  timestamp = ( value for key, value in object.__dict__.iteritems()
-    if key.endswith('datetime' ) )
-
-  try:
-    return timestamp.next()
-  except StopIteration:
-    return None
-
-  
 
 #------------------------------------------------------------------
 #  Database Access Functions
@@ -341,7 +319,6 @@ def accessTable( DBconfig, template, name = None ):
     # Add helper methods that will filter to all classes and objects
     # through inheritance.
     BaseClass.recordToDict = recordToDict
-    BaseClass.recordDateTime = recordDateTime
   
     Class = _DATABASE_TEMPLATES[template]( name, BaseClass )
 
