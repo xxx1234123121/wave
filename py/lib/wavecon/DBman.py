@@ -144,7 +144,7 @@ def _tblWaveTmpl( tableName, BaseClass ):
 
     def __init__( self, wavSourceID = None, wavSpectraID = None, 
       wavLocation = None, wavDateTime = None, wavSpectra = None, 
-      waveHeight = None, wavPeakDir = None, wavPeakPeriod = None
+      wavHeight = None, wavPeakDir = None, wavPeakPeriod = None
     ):
       self.wavsourceid = wavSourceID
       self.wavspectraid = wavSpectraID
@@ -156,7 +156,7 @@ def _tblWaveTmpl( tableName, BaseClass ):
       self.wavpeakperiod = wavPeakPeriod
 
     def __repr__(self):
-      return "<SpectraRecord('{}','{}','{}','{}','{}','{}','{}','{}')>"\
+      return "<WaveRecord('{}','{}','{}','{}','{}','{}','{}','{}')>"\
         .format( self.wavsourceid, self.wavspectraid, self.wavlocation,
           self.wavdatetime, self.wavspectra, self.wavheight,
           self.wavpeakdir, self.wavpeakperiod )
