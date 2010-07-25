@@ -14,15 +14,15 @@ Data Center (`NDBC`_).
 """
 
 
-import datetime
+from datetime import datetime
 
 import urllib
 import urllib2
 
 import re
 
-import functools
-import itertools
+from functools import partial
+from itertools import chain
 
 from geoalchemy import WKTSpatialElement
 
@@ -54,6 +54,7 @@ BUOY_META = {
 
 BuoySource = DBman.accessTable( _DBconfig, 'tblsource' )
 WindRecord = DBman.accessTable( _DBconfig, 'tblwind' )
+WaveRecord = DBman.accessTable( _DBconfig, 'tblwave' )
 
 _session = DBman.startSession( _DBconfig )
 
@@ -67,20 +68,21 @@ def fetchRecords( buoyNum, startTime, stopTime, dataType,
   # Determine the years that need to be downloaded.
   timeSpan = range( startTime.year, stopTime.year + 1 )
 
-  fetchData = functools.partial( getData, 
+  fetchData = partial( getData, 
     buoyNum = buoyNum, dataType = dataType )
 
   dataSets = [ rawToRecords( data, dataType ) for data 
-    in [fetchData( year ) for year in timeSpan]
+    in ( fetchData( year ) for year in timeSpan )
     if NDBCGaveData(data) 
   ]
 
   # dataSets contains a list of records- one list for each year.
   # Flatten them into a single list containing all records.
-  records = [ associateWithBuoy( record, buoyNum ) for record 
-    in itertools.chain.from_iterable( dataSets )
-    if isInsideTimespan( record.datetime, 
-      startTime, stopTime ) ]
+  records = [ record for record in chain.from_iterable( dataSets ) ]
+  # records = [ associateWithBuoy( record, buoyNum ) for record 
+  #   in itertools.chain.from_iterable( dataSets )
+  #   if isInsideTimespan( record.datetime, 
+  #     startTime, stopTime ) ]
 
   return records
 
@@ -89,9 +91,9 @@ def getData( year, buoyNum, dataType ):
   BASE_URL = "http://www.ndbc.noaa.gov/view_text_file.php"
   PARAMS = {
 
-    'wind' : { 
-      'fileSep' : 'c', 
-      'dataDir' : "data/historical/cwind/" 
+    'meteorological' : { 
+      'fileSep' : 'h', 
+      'dataDir' : "data/historical/stdmet/" 
     }
 
   }
@@ -107,7 +109,7 @@ def getData( year, buoyNum, dataType ):
   # E.g slashes, /, will become %2. The urllib.unquote function fixes this.
   urlData = urllib.unquote(urllib.urlencode( dataDict ))
 
-  NDBC = urllib2.urlopen( "%s?%s" % ( BASE_URL, urlData ) )
+  NDBC = urllib2.urlopen( "{}?{}".format( BASE_URL, urlData ) )
   data = NDBC.read()
   NDBC.close()
 
@@ -126,12 +128,19 @@ def rawToRecords( rawData, dataType ):
   parsedData = [ re.split('\s+', line) for line in rawData.splitlines()
     if not line.startswith('#') ]
 
-  if dataType == 'wind':
-    records = [ 
-      WindRecord( 
-        winDateTime =  datetime.datetime(*[int(x) for x in line[0:5]]),
-        winDirection = float(line[5]),
-        winSpeed = float(line[6])
+  if dataType == 'meteorological':
+    records = [(
+        WindRecord( 
+          winDateTime =  datetime( *[int(x) for x in line[0:5]] ),
+          winDirection = float(line[5]),
+          winSpeed = float(line[6])
+        ),
+        WaveRecord(
+          wavDateTime =  datetime( *[int(x) for x in line[0:5]] ),
+          wavHeight = float(line[8]),
+          wavPeakDir = float(line[9]),
+          wavPeakPeriod = float(line[11])
+        ) 
       ) for line in parsedData ]
   else:
     raise TypeError
