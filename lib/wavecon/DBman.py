@@ -83,6 +83,8 @@ def _tblSourceTypeTmpl( tableName, BaseClass ):
       return "<SourceTypeRecord('{}')>".format(
         self.sourcetypename )
 
+    sourcetypeid = synonym( 'id', map_column = True )
+
 
   return SourceType
 
@@ -128,6 +130,7 @@ def _tblSpectraTmpl( tableName, BaseClass ):
       return "<SpectraRecord('{}','{}')>".format(
         self.spectrafreq, self.spectradir )
 
+    spectraid = synonym( 'id', map_column = True )
 
   return Spectra
 
@@ -157,6 +160,11 @@ def _tblWaveTmpl( tableName, BaseClass ):
         .format( self.wavsourceid, self.wavspectraid, self.wavlocation,
           self.wavdatetime, self.wavspectra, self.wavheight,
           self.wavpeakdir, self.wavpeakperiod )
+
+    wavid = synonym( 'id', map_column = True )
+    wavsourceid = synonym( 'sourceid', map_column = True )
+    wavdatetime = synonym( 'datetime', map_column = True )
+    wavlocation = synonym( 'location', map_column = True )
 
 
   return Wave
@@ -212,6 +220,10 @@ def _tblCurrentTmpl( tableName, BaseClass ):
         self.cursourceid, self.curlocation, self.curdatetime,
         self.curspeed, self.curdirection )
 
+    curid = synonym( 'id', map_column = True )
+    cursourceid = synonym( 'sourceid', map_column = True )
+    curdatetime = synonym( 'datetime', map_column = True )
+    curlocation = synonym( 'location', map_column = True )
 
   return Current
 
@@ -234,6 +246,10 @@ def _tblBathyTmpl( tableName, BaseClass ):
       return "<BathyRecord('{}','{}','{}')>".format(
         self.bathysourceid, self.bathylocation, self.bathydepth )
 
+    bathyid = synonym( 'id', map_column = True )
+    bathysourceid = synonym( 'sourceid', map_column = True )
+    bathydatetime = synonym( 'datetime', map_column = True )
+    bathylocation = synonym( 'location', map_column = True )
 
   return Bathy
 
