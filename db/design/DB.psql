@@ -1,0 +1,85 @@
+CREATE  TABLE  tblSourceType (
+  sourceTypeID TEXT DEFAULT uuid_generate_v4() PRIMARY KEY ,
+  sourceTypeName TEXT NULL);
+
+CREATE  TABLE  tblSource (
+  srcID TEXT DEFAULT uuid_generate_v4() PRIMARY KEY,
+  srcName TEXT NULL ,
+  srcConfig BYTEA NULL ,
+  srcBeginExecution TIMESTAMP NULL ,
+  srcEndExecution TIMESTAMP NULL ,
+  srcSourceTypeID TEXT NULL ,
+  CONSTRAINT plSourceTypeIND
+    FOREIGN KEY (srcSourceTypeID )
+    REFERENCES tblSourceType (sourceTypeID )
+    ON DELETE CASCADE
+    ON UPDATE CASCADE);
+CREATE INDEX plSourceTypeIND ON tblSource (srcSourceTypeID ASC) ;
+
+CREATE  TABLE  tblSpectra (
+  spectraID TEXT DEFAULT uuid_generate_v4() PRIMARY KEY,
+  spectraFreq FLOAT[] NULL ,
+  spectraDir FLOAT[] NULL);
+
+CREATE  TABLE  tblWave (
+  wavID TEXT DEFAULT uuid_generate_v4() PRIMARY KEY,
+  wavSourceID TEXT NOT NULL ,
+  wavSpectraID TEXT NOT NULL ,
+  wavDateTime TIMESTAMP NULL ,
+  wavSpectra FLOAT[][] NULL ,
+  wavHeight FLOAT NULL ,
+  wavPeakDir FLOAT NULL ,
+  wavPeakPeriod FLOAT NULL ,
+  CONSTRAINT wavSourceIND
+    FOREIGN KEY (wavSourceID )
+    REFERENCES tblSource (srcID )
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT wavSpectraIND
+    FOREIGN KEY (wavSpectraID )
+    REFERENCES tblSpectra (spectraID )
+    ON DELETE CASCADE
+    ON UPDATE CASCADE);
+CREATE INDEX wavSourceIND ON tblWave (wavSourceID ASC) ;
+CREATE INDEX wavSpectraIND ON tblWave (wavSpectraID ASC) ;
+SELECT AddGeometryColumn( 'tblwave', 'wavlocation', 4326, 'POINT', 2 );
+
+CREATE  TABLE  tblWind (
+  winID TEXT DEFAULT uuid_generate_v4() PRIMARY KEY,
+  winSourceID TEXT NOT NULL ,
+  winDateTime TIMESTAMP NOT NULL ,
+  winSpeed FLOAT NOT NULL ,
+  winDirection FLOAT NOT NULL ,
+  CONSTRAINT winSourceIND
+    FOREIGN KEY (winSourceID )
+    REFERENCES tblSource (srcID )
+    ON DELETE CASCADE
+    ON UPDATE CASCADE);
+CREATE INDEX winSourceIND ON tblWind (winSourceID ASC) ;
+SELECT AddGeometryColumn( 'tblwind', 'winlocation', 4326, 'POINT', 2 );
+
+CREATE  TABLE  tblCurrent (
+  curID TEXT DEFAULT uuid_generate_v4() PRIMARY KEY,
+  curSourceID TEXT NOT NULL ,
+  curDateTime TIMESTAMP NOT NULL ,
+  curSpeed FLOAT NOT NULL ,
+  curDirection FLOAT NOT NULL ,
+  CONSTRAINT curSourceIND
+    FOREIGN KEY (curSourceID )
+    REFERENCES tblSource (srcID )
+    ON DELETE CASCADE
+    ON UPDATE CASCADE);
+CREATE INDEX curSourceIND ON tblCurrent (curSourceID ASC) ;
+SELECT AddGeometryColumn( 'tblcurrent', 'curlocation', 4326, 'POINT', 2 );
+
+CREATE  TABLE  tblBathy (
+  bathyID TEXT DEFAULT uuid_generate_v4() PRIMARY KEY,
+  bathySourceID TEXT NULL ,
+  bathyDepth FLOAT NULL ,
+  CONSTRAINT bathySourceIND
+    FOREIGN KEY (bathySourceID )
+    REFERENCES tblSource (srcID )
+    ON DELETE CASCADE
+    ON UPDATE CASCADE);
+CREATE INDEX bathySourceIND ON tblBathy (bathySourceID ASC) ;
+SELECT AddGeometryColumn( 'tblbathy', 'bathylocation', 4326, 'POINT', 2 );
