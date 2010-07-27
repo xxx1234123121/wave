@@ -21,7 +21,9 @@ session = DBman.startSession( DBconfig )
 
 buoyID = NDBC.getBuoyID( 46022 )
 
-windTest = Wind( buoyID, WKTSpatialElement('POINT(40.86 -124.08)'), datetime.now(), 12.0, 120.0 )
+time = datetime.strptime( "4/20/2010 4:20:00","%m/%d/%Y %H:%M:%S" )
+
+windTest = Wind( buoyID, WKTSpatialElement('POINT(40.86 -124.08)'), time, 12.0, 120.0 )
 print windTest
 
 session.add(windTest)
