@@ -14,7 +14,7 @@ Data Center (`NDBC`_).
 """
 
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import urllib
 import urllib2
@@ -62,45 +62,80 @@ _session = DBman.startSession( _DBconfig )
 #---------------------------------------------------------------------
 #  Data Retrieval
 #---------------------------------------------------------------------
-def fetchRecords( buoyNum, startTime, stopTime, dataType,
-    verbose = False ):
+def fetchBuoyRecords( buoyNum, startTime, stopTime, verbose = False ):
 
   # Determine the years that need to be downloaded.
   timeSpan = range( startTime.year, stopTime.year + 1 )
 
-  fetchData = partial( getData, 
-    buoyNum = buoyNum, dataType = dataType )
+  metData =  fetchRecords( timeSpan, buoyNum, 'meteorological' )
+  densityData = fetchRecords( timeSpan, buoyNum, 'specDensity' )
 
-  dataSets = [ rawToRecords( data, dataType ) for data 
-    in ( fetchData( year ) for year in timeSpan )
-    if NDBCGaveData(data) 
-  ]
+  # Unfortunately, there is not always corresponding spectra data
+  # available for wave height, peak direction or frequency given by
+  # the meterological data, or vice-versa.  The solution is to form an
+  # intersection of the date stamps common to both data sets.  This
+  # set will later be used to filter the records.
+  metTimeStamps = set([ wind.datetime for wind, _ in metData ])
+  densityTimeStamps = set([ density['datetime']
+    for density in densityData ])
 
-  # dataSets contains a list of records- one list for each year.
-  # Flatten them into a single list containing all records.
-  records = [ record for record in chain.from_iterable( dataSets ) ]
-  # records = [ associateWithBuoy( record, buoyNum ) for record 
-  #   in itertools.chain.from_iterable( dataSets )
-  #   if isInsideTimespan( record.datetime, 
-  #     startTime, stopTime ) ]
+  validTimeStamps = [ timestamp
+    for timestamp in
+      set.intersection( densityTimeStamps, metTimeStamps )
+    if isInsideTimespan( timestamp, startTime, stopTime ) ]
+
+
+  # The following list comprehension should work:
+  #
+  # records = [ (wind, wave, spectra)
+  #   for wind, wave in metData
+  #   for spectra in densityData
+  #   if wind.datetime in validTimeStamps ]
+  #
+  # But for some reason pulling components from two lists at a time is
+  # extremely inefficient- the hack is to use zip() to collapse
+  # everything into one list.
+  windRecords, waveRecords = zip(*metData)
+
+  records = [ (wind, wave, spectra)
+    for wind, wave, spectra in 
+      zip( windRecords, waveRecords, densityData )
+    if wind.datetime in validTimeStamps ]
 
   return records
 
 
-def getData( year, buoyNum, dataType ):
+def fetchRecords( timeSpan, buoyNum, dataType ):
+  records = [
+    rawToRecords( data, dataType )
+    for data in [ fetchData( year, buoyNum, dataType )
+      for year in timeSpan ]
+    if NDBCGaveData(data) ]
+
+  # The above list comprehension returns a list of lists with each
+  # sublist containing records for one year.  The chain function is
+  # used to flatten the list of lists into a single list.
+  return list(chain.from_iterable( records ))
+
+def fetchData( year, buoyNum, dataType ):
   BASE_URL = "http://www.ndbc.noaa.gov/view_text_file.php"
   PARAMS = {
 
-    'meteorological' : { 
-      'fileSep' : 'h', 
-      'dataDir' : "data/historical/stdmet/" 
+    'meteorological' : {
+      'fileSep' : 'h',
+      'dataDir' : "data/historical/stdmet/"
+    },
+
+    'specDensity' : {
+      'fileSep' : 'w',
+      'dataDir' : 'data/historical/swden/'
     }
 
   }
 
   case = PARAMS[ dataType ]
 
-  dataDict = { 
+  dataDict = {
     'filename' : str( buoyNum ) + case['fileSep'] + str( year ) + '.txt.gz',
     'dir' : case['dataDir']
   }
@@ -124,24 +159,41 @@ def NDBCGaveData( responseString ):
 
 def rawToRecords( rawData, dataType ):
   # Need to use re.split('\s+',line) instead of line.split(' ') because
-  # there is a variable amount of whitespace seperating elements.
+  # there is a variable amount of whitespace separating elements.
   parsedData = [ re.split('\s+', line) for line in rawData.splitlines()
-    if not line.startswith('#') ]
+    if not line.startswith('#') and not line.startswith('YY') ]
 
-  if dataType == 'meteorological':
-    records = [(
-        WindRecord( 
-          winDateTime =  datetime( *[int(x) for x in line[0:5]] ),
-          winDirection = float(line[5]),
-          winSpeed = float(line[6])
+  # Ugly hack #1: NDBC added a "minutes" column in 2005- this code
+  # compensates for the varying column offsets.
+  if int(parsedData[0][0]) >= 2005:
+    C = 5
+  else:
+    C = 4
+
+  if dataType == 'meteorological':  records = [
+      (
+        WindRecord(
+          winDateTime =  dateFromRaw( line[0:C] ),
+          winDirection = float(line[C]),
+          winSpeed = float(line[C+1])
         ),
         WaveRecord(
-          wavDateTime =  datetime( *[int(x) for x in line[0:5]] ),
-          wavHeight = float(line[8]),
-          wavPeakDir = float(line[9]),
-          wavPeakPeriod = float(line[11])
-        ) 
-      ) for line in parsedData ]
+          wavDateTime =  dateFromRaw( line[0:C] ),
+          wavHeight = float(line[C+3]),
+          wavPeakDir = float(line[C+4]),
+          wavPeakPeriod = float(line[C+6])
+        )
+      )
+      for line in parsedData
+    ]
+  elif dataType == 'specDensity':
+    records = [
+      {
+        'datetime' : dateFromRaw( line[0:C] ),
+        'density' : line[C:]
+      }
+      for line in parsedData
+    ]
   else:
     raise TypeError
 
@@ -149,7 +201,7 @@ def rawToRecords( rawData, dataType ):
 
 
 #---------------------------------------------------------------------
-#  Database Interaction 
+#  Database Interaction
 #---------------------------------------------------------------------
 def getBuoyFromDB( buoyNum ):
   buoy = _session.query(BuoySource)\
@@ -176,7 +228,7 @@ def associateWithBuoy( record, buoyNum ):
   record.sourceid = getBuoyID( buoyNum )
 
   return record
-    
+
 
 def commitToDB( records ):
   _session.add_all( records )
@@ -213,3 +265,23 @@ def isInsideTimespan( aDate, startTime, stopTime ):
     return True
   else:
     return False
+
+def dateFromRaw( line ):
+  # Ugly hack #2: This one is truly hideous- not all hourly
+  # observations begin on the hour.  For example, starting in the
+  # middle of 2008 the meteorological observations for buoy #46022 are
+  # recorded 10 minutes before the hour, while the spectral
+  # observations continue to be recorded on the hour.
+  #
+  # This hack is so ugly because I am assuming the following thing:
+  #
+  # 1) All time differences are negative- I.E. if the minutes column
+  # reads "50" instead of "00" then there is a time shift of -10
+  # minutes, not +50 minutes.  So 10 minutes is added to the minute
+  # count. This could be royally screwed up- I would have to compare
+  # against the continuous observations to make sure.
+  line = [int(x) for x in line]
+  if len(line) == 5 and line[-1] != 0:
+    return datetime(*line) + timedelta( minutes = (60 - line[-1]) )
+  else:
+    return datetime(*line)

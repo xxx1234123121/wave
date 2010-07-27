@@ -94,9 +94,9 @@ if __name__ == '__main__':
 
   print "\n\nHello, world!\n"
 
-  windRecords = NDBC.fetchRecords( args.buoyNum, args.startTime, args.stopTime, 'meteorological' )
+  records = NDBC.fetchBuoyRecords( args.buoyNum, args.startTime, args.stopTime, 'meteorological' )
   #NDBC.commitToDB( windRecords )
-  for record in windRecords:
+  for record in records:
     print record
 
 
