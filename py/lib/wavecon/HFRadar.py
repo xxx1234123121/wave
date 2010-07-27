@@ -15,6 +15,7 @@ This module provides an interface to data stored at the Integrated Ocean Observi
 import time
 
 import datetime
+from numpy import *
 
 import urllib
 import urllib2
@@ -84,15 +85,17 @@ def getData( north, south, west, east, startTime, stopTime, dataType ):
   allLons = dataset.lon[:]
   allLats = dataset.lat[:]
   allTimes = dataset.time[:]
-  xIndex = [i for i,lon in enumerate(allLons) if lon>west and lon<east]
-  yIndex = [i for i,lat in enumerate(allLats) if lat>south and lat<north]
-  tIndex = [i for i,t in enumerate(allTimes) if t>time.mktime(startTime.timetuple()) and t<time.mktime(stopTime.timetuple()) ]
+  xIndex = array([i for i,lon in enumerate(allLons) if lon>west and lon<east])
+  yIndex = array([i for i,lat in enumerate(allLats) if lat>south and lat<north])
+  tIndex = array([i for i,t in enumerate(allTimes) if t>time.mktime(startTime.timetuple()) and t<time.mktime(stopTime.timetuple()) ])
   lons = [allLons[i] for i in xIndex]
   lats = [allLats[i] for i in yIndex]
   times = [allTimes[i] for i in tIndex]
 
-  u = dataset.u[min(tIndex):max(tIndex),min(yIndex):max(yIndex),min(xIndex):max(xIndex)]
-  v = dataset.v[min(tIndex):max(tIndex),min(yIndex):max(yIndex),min(xIndex):max(xIndex)]
+  u = dataset.u[tIndex,yIndex,xIndex]
+  v = dataset.v[tIndex,yIndex,xIndex]
+  #u = dataset.u[min(tIndex):max(tIndex),min(yIndex):max(yIndex),min(xIndex):max(xIndex)]
+  #v = dataset.v[min(tIndex):max(tIndex),min(yIndex):max(yIndex),min(xIndex):max(xIndex)]
   
   return [times,lats,lons,u,v]
 
