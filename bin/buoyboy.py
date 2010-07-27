@@ -26,11 +26,9 @@ sys.path.insert( 0, waveLibs )
 import datetime
 
 import json
-    
 
-from wavecon import DBman
+
 from wavecon import NDBC
-from wavecon.config import DBconfig
 
 
 """
@@ -94,10 +92,9 @@ if __name__ == '__main__':
 
   print "\n\nHello, world!\n"
 
-  records = NDBC.fetchBuoyRecords( args.buoyNum, args.startTime, args.stopTime, 'meteorological' )
-  #NDBC.commitToDB( windRecords )
-  for record in records:
-    print record
+  windRecords, waveRecords = NDBC.fetchBuoyRecords( args.buoyNum, args.startTime, args.stopTime, 'meteorological' )
+  NDBC.commitToDB( windRecords )
+  NDBC.commitToDB( waveRecords )
 
 
   #checkForDate = lambda obj: obj.isoformat() if isinstance( obj, datetime.datetime ) else None

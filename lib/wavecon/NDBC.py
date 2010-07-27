@@ -15,48 +15,55 @@ Data Center (`NDBC`_).
 
 
 from datetime import datetime, timedelta
+from collections import namedtuple
 
 import urllib
 import urllib2
 
 import re
 
-from functools import partial
 from itertools import chain
 
 from geoalchemy import WKTSpatialElement
 
 from wavecon import DBman
+
+#---------------------------------------------------------------------
+#  Metadata, Object Classes and Other Constants
+#---------------------------------------------------------------------
+
+# Database setup
 from wavecon.config import DBconfig as _DBconfig
-
-#---------------------------------------------------------------------
-#  Metadata and Other Constants
-#---------------------------------------------------------------------
-
-BUOY_META = {
-
-  '46022' : {
-    'location' : ( 40.749, -124.577 ),
-    'type' : 'NDBC'
-  },
-
-  '46212' : {
-    'location' : ( 40.753, -124.313 ),
-    'type' : 'SCRIPPS'
-  },
-
-  '46244' : {
-    'location' : ( 40.888, -124.357 ),
-    'type' : 'SCRIPPS'
-  }
-
-}
 
 BuoySource = DBman.accessTable( _DBconfig, 'tblsource' )
 WindRecord = DBman.accessTable( _DBconfig, 'tblwind' )
 WaveRecord = DBman.accessTable( _DBconfig, 'tblwave' )
 
 _session = DBman.startSession( _DBconfig )
+
+# Metadata setup
+Location = namedtuple( 'Location', 'lon lat' )
+
+BUOY_META = {
+
+  '46022' : {
+    'location' : Location( 40.749, -124.577 ),
+    'type' : 'NDBC'
+  },
+
+  '46212' : {
+    'location' : Location( 40.753, -124.313 ),
+    'type' : 'SCRIPPS'
+  },
+
+  '46244' : {
+    'location' : Location( 40.888, -124.357 ),
+    'type' : 'SCRIPPS'
+  }
+
+}
+
+FrequencySpectra = namedtuple( 'FrequencySpectra', 'datetime density' )
 
 
 #---------------------------------------------------------------------
@@ -76,7 +83,7 @@ def fetchBuoyRecords( buoyNum, startTime, stopTime, verbose = False ):
   # intersection of the date stamps common to both data sets.  This
   # set will later be used to filter the records.
   metTimeStamps = set([ wind.datetime for wind, _ in metData ])
-  densityTimeStamps = set([ density['datetime']
+  densityTimeStamps = set([ density.datetime
     for density in densityData ])
 
   validTimeStamps = [ timestamp
@@ -93,16 +100,20 @@ def fetchBuoyRecords( buoyNum, startTime, stopTime, verbose = False ):
   #   if wind.datetime in validTimeStamps ]
   #
   # But for some reason pulling components from two lists at a time is
-  # extremely inefficient- the hack is to use zip() to collapse
+  # extremely inefficient- the hack is liberal use of zip() to collapse
   # everything into one list.
   windRecords, waveRecords = zip(*metData)
 
-  records = [ (wind, wave, spectra)
+  records = [ 
+    ( 
+      associateWithBuoy( wind, buoyNum ), 
+      formWaveRecord( wave, [ spectra.density ], buoyNum )
+    )
     for wind, wave, spectra in 
       zip( windRecords, waveRecords, densityData )
     if wind.datetime in validTimeStamps ]
 
-  return records
+  return zip(*records)
 
 
 def fetchRecords( timeSpan, buoyNum, dataType ):
@@ -188,10 +199,10 @@ def rawToRecords( rawData, dataType ):
     ]
   elif dataType == 'specDensity':
     records = [
-      {
-        'datetime' : dateFromRaw( line[0:C] ),
-        'density' : line[C:]
-      }
+      FrequencySpectra( 
+        dateFromRaw( line[0:C] ),
+        [ float(x) for x in line[C:] ]
+      )
       for line in parsedData
     ]
   else:
@@ -229,6 +240,12 @@ def associateWithBuoy( record, buoyNum ):
 
   return record
 
+def formWaveRecord( waveRecord, spectra, buoyNum ):
+  waveRecord = associateWithBuoy( waveRecord, buoyNum )
+  waveRecord.wavspectra = spectra
+  waveRecord.wavspectraid = '1'
+
+  return waveRecord
 
 def commitToDB( records ):
   _session.add_all( records )
