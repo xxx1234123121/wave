@@ -23,13 +23,13 @@ from wavecon.config import DBconfig
 ################################
 # PARSE COMMAND LINE ARGUMENTS
 ################################
-north = sys.argv[1]       #50
-south = sys.argv[2]       #35
-east = sys.argv[3]        #-120
-west = sys.argv[4]        #-130
-starttime = sys.argv[5]   #YYYY/MM/DD
-stoptime = sys.argv[6]    #YYYY/MM/DD
-tmpdir = sys.argv[7]      #'.'
+north =      sys.argv[1]       #50
+south =      sys.argv[2]       #35
+east =       sys.argv[3]       #-120
+west =       sys.argv[4]       #-130
+starttime =  sys.argv[5]       #YYYY/MM/DD
+stoptime =   sys.argv[6]       #YYYY/MM/DD
+tmpdir =     sys.argv[7]       #/Users/naftali/Desktop/tmp
 
 ################################
 # PARSE DATE PARAMATERS
@@ -47,16 +47,20 @@ filename1 = 'namanl_218_'
 filename2 = '_000.grb'
 
 ################################
-# OPEN SESSION / ADD NAM12 TO tblSourceType
+# ADD NAM12 TO tblSourceType
 ################################
 session = DBman.startSession( DBconfig )     
 srctype = DBman.accessTable( DBconfig, 'tblsourcetype' )
-record = srctype('NAM12')                              
-session.add(record)
+srcname = 'NAM12'
+existing = session.query(srctype)\
+    .filter( srctype.sourcetypename == srcname )
+if (existing.first().sourcetypename != srcname):
+    record = srctype(srcname)                              
+    session.add(record)
+    session.commit()
 srctypeid = session.query(srctype)\
-            .filter( srctype.sourcetypename == 'NAM12' )\
-            .first().id
-session.commit()
+    .filter( srctype.sourcetypename == srcname )\
+    .first().id
 session.close()
 session.bind.dispose()
 
@@ -98,20 +102,20 @@ while date < stoptime :
     
     # prepare record for tblSource
     src = DBman.accessTable( DBconfig, 'tblsource')
-    srcname = 'NAM12'+date.strftime("%Y%m%d_%H")
+    srcname = srcname+'_'+date.strftime("%Y%m%d_%H")
     record = src(
-             srcName=srcname, 
-             srcConfig='', 
-             srcBeginExecution=date.today(), 
-             srcEndExecution=date.today(), 
-             srcSourceTypeID=srctypeid)
+        srcName=srcname, 
+        srcConfig='', 
+        srcBeginExecution=date.today(), 
+        srcEndExecution=date.today(), 
+        srcSourceTypeID=srctypeid)
     
     # add record to tblSource
     session = DBman.startSession( DBconfig )     
     session.add(record)    
     srcid = session.query(src)\
-                .filter( src.srcname == srcname )\
-                .first().id
+        .filter( src.srcname == srcname )\
+        .first().id
     
     # add records to tblwind
     wind = DBman.accessTable( DBconfig, 'tblwind' ) 
@@ -139,5 +143,6 @@ while date < stoptime :
 
 
 ### TO DO ###
+#modulize
 #parallelize loops
 #setup que to handle simultaneous downloads
