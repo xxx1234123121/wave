@@ -14,7 +14,7 @@ from geoalchemy import WKTSpatialElement
 ################################
 # IMPORT UBIQUITOUS FUNCTIONS
 ################################
-from os import path,system
+from os import path,system,remove
 strptime = datetime.datetime.strptime
 
 ################################
@@ -36,31 +36,31 @@ wave = DBman.accessTable( DBconfig, 'tblwave')
 ################################
 # PARSE COMMAND LINE ARGUMENTS
 ################################
-north =      50                                           # sys.argv[1]       #50
-south =      35                                           # sys.argv[2]       #35
-east =       -120                                         # sys.argv[3]       #-120
-west =       -130                                         # sys.argv[4]       #-130
-starttime =  '2010/07/29'                                   # sys.argv[5]       #YYYY/MM/DD
-stoptime =   '2010/07/29'                                   # sys.argv[6]       #YYYY/MM/DD
-tmpdir =     '/Users/naftali/Desktop/tmp'                   # sys.argv[7]       #/Users/naftali/Desktop/tmp
+north =     sys.argv[1]       #50
+south =     sys.argv[2]       #35
+east =      sys.argv[3]       #-120
+west =      sys.argv[4]       #-130
+starttime = sys.argv[5]       #YYYY/MM/DD
+stoptime =  sys.argv[6]       #YYYY/MM/DD
+tmpdir =    sys.argv[7]       #/Users/naftali/Desktop/tmp
 locale = 'EKA'
 
 ################################
 # ADD WWIII TO tblSource
 ################################
 session = DBman.startSession( DBconfig )
-srcname = 'WWIII'
+srctypename = 'WWIII'
 existing = session.query(srctype)\
-    .filter( srctype.sourcetypename == srcname )
+    .filter( srctype.sourcetypename == srctypename )
 
 if (existing.first() == None):
-    record = srctype(srcname)
+    record = srctype(srctypename)
     session.add(record)
     session.commit()
 
 # determine sourcetypeid to use in tblsource
 srctypeid = session.query(srctype)\
-    .filter( srctype.sourcetypename == srcname )\
+    .filter( srctype.sourcetypename == srctypename )\
     .first().id
 
 session.close()
@@ -89,18 +89,41 @@ while date < stoptime :
 
     # build url string, download/gunzip files
     datestr = date.strftime("%Y%m%d") + '.t00z'
-    url = 'ftp://polar.ncep.noaa.gov/pub/waves/' 
+    url = 'ftp://polar.ncep.noaa.gov/pub/waves/latest_run/' 
     filename = 'enp.' + locale + '*'
-    command = '{0} {1} {2}/{3}/{4}'.format('wget -A.gz -qP',tmpdir,url,datestr,filename)
+    command = '{0} {1} {2}/{3}'.format('wget -A.gz -qP',tmpdir,url,filename)
     system(command)
     command = 'gunzip ' + tmpdir + '/' + filename
     system(command)
     
-    # loop through downloaded files
-    files = glob.glob(tmpdir + '/' + filename)
+    ################################
+    # OPEN SESSION, ADD SOURCE TO tblSource
+    ################################
+    srcname = srctypename+'_'+date.strftime("%Y%m%d_%H")
+    record = src(
+        srcName=srcname,
+        srcConfig='',
+        srcBeginExecution=date.today(),
+        srcEndExecution=date.today(),
+        srcSourceTypeID=srctypeid)
+    
+    # add record to tblSource
     session = DBman.startSession( DBconfig )
+    session.add(record)
+    session.commit()
+    
+    # get source id to use in tblwave
+    srcid = session.query(src)\
+        .filter( src.srcname == srcname )\
+        .first().id
+    
+    ################################
+    # LOOP THROUGH DOWNLOADED FILES
+    ################################
+    files = glob.glob(tmpdir + '/' + filename)
     for file in files:
-        # store file in long string
+        
+        # store in long string, then delete file
         lines = open(file).read()
 
         # look for matches
@@ -143,7 +166,6 @@ while date < stoptime :
         # convert spectra from numpy array to list
         spectra = spectra.tolist()
         
-        
         ################################
         # ADD SPECTRAL BINS TO tblSpectra IF NECCESSARY
         ################################
@@ -155,36 +177,18 @@ while date < stoptime :
             all((array(rec.spectradir) - array(dirs)) < .01)):
                 exists = True
         
+        # if bins don't exist in db, add them
         if (exists == False):
             record = spec(freqs,dirs)
             session.add(record)
             session.commit()
         
+        # get spectra id for use in tblwave
         for rec in session.query(spec) :
             if (all((array(rec.spectradir) - array(dirs)) < .01) &
             all((array(rec.spectradir) - array(dirs)) < .01)):         
                 specid = rec.id
          
-        ################################
-        # ADD SOURCE TO tblSource
-        ################################
-        srcname = srcname+'_'+date.strftime("%Y%m%d_%H")
-        record = src(
-            srcName=srcname,
-            srcConfig='',
-            srcBeginExecution=date.today(),
-            srcEndExecution=date.today(),
-            srcSourceTypeID=srctypeid)
-        
-        # add record to tblSource
-        session.add(record)
-        session.commit()
-        
-        # get source id to use in tblwave
-        srcid = session.query(src)\
-            .filter( src.srcname == srcname )\
-            .first().id
-        
         ################################
         # ADD DATA TO tblWave
         ################################
@@ -203,11 +207,15 @@ while date < stoptime :
         
         session.commit()
     
-    #DONE LOOPING THROUGH FILES, MOVE TO NEXT DAY    
+    ################################
+    #CLOSE SESSION, REMOVE FILES, MOVE TO NEXT DAY    
+    ################################
     session.close()
     session.bind.dispose()   
+    map(remove,files)    
     date = date+delta    
         
 ###TO DO###
+#date filter not working
 #modulize
 #add try/catch to system calls (skip date if wget failed)

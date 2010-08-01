@@ -9,6 +9,7 @@ import urllib #web support
 import datetime #posix support
 import Nio #grib support
 import sys #argument parsing
+from geoalchemy import WKTSpatialElement
 from numpy import * #math support
 
 ################################
