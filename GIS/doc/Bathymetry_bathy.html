@@ -1,0 +1,148 @@
+<div id="bathymetry-data-for-waveconnect-project"
+><h1
+  >Bathymetry data for WaveConnect Project</h1
+  ><div id="included-files"
+  ><h2
+    >Included Files</h2
+    ><ul
+    ><li
+      ><p
+	><strong
+	  >bathyStyle.qml</strong
+	  ></p
+	><p
+	>QGIS style file containing formatting rules that can be used to bestow a uniform grayscale look on shallow bathymetry data so that it may be compared visually. Depth range is set at -60 to 0 meters.</p
+	></li
+      ></ul
+    ><hr
+     /><ul
+    ><li
+      ><strong
+	>northBayBathy.nc</strong
+	></li
+      ><li
+      ><p
+	><strong
+	  >southBayBathy.nc</strong
+	  ></p
+	><p
+	>High resolution DEMs of the navigable channels of north and south Humboldt Bay.</p
+	><p
+	><strong
+	  >Original Resolution:</strong
+	  > 1 m</p
+	><p
+	><strong
+	  >Original File Format:</strong
+	  > ArcGIS Binary Raster</p
+	><p
+	><strong
+	  >Original Projection:</strong
+	  > UTM Zone 10, WGS84 Ellipsoid, WGS84 Datum (EPSG:32610)</p
+	><p
+	><strong
+	  >Survey Date:</strong
+	  > 2005</p
+	><p
+	><strong
+	  >Source:</strong
+	  > <a href="http://seafloor.csumb.edu/csmp/csmp_datacatalog.html" title="California Seafloor Mapping Project"
+	  >http://seafloor.csumb.edu/csmp/csmp_datacatalog.html</a
+	  ></p
+	></li
+      ></ul
+    ><hr
+     /><ul
+    ><li
+      ><strong
+	>southShoreBathy.nc</strong
+	></li
+      ><li
+      ><strong
+	>northShoreBathy1.nc</strong
+	></li
+      ><li
+      ><p
+	><strong
+	  >northShoreBathy2.nc</strong
+	  ></p
+	><p
+	>High resolution DEMs taken ~ 500 meters off shore of the Humboldt Bay coast. These DEMs cover the WaveConnect project area.</p
+	><p
+	><strong
+	  >Original Resolution:</strong
+	  > 2 m</p
+	><p
+	><strong
+	  >Original File Format:</strong
+	  > ArcGIS Binary Raster</p
+	><p
+	><strong
+	  >Original Projection:</strong
+	  > UTM Zone 10, GRS80 Ellipsoid, NAD83 Datum (EPSG:26910)</p
+	><p
+	><strong
+	  >Survey Date:</strong
+	  > 2009</p
+	><p
+	><strong
+	  >Source:</strong
+	  > <a href="http://seafloor.csumb.edu/csmp/csmp_datacatalog.html" title="California Seafloor Mapping Project"
+	  >http://seafloor.csumb.edu/csmp/csmp_datacatalog.html</a
+	  ></p
+	></li
+      ></ul
+    ><hr
+     /><ul
+    ><li
+      ><p
+	><strong
+	  >northCoast.nc</strong
+	  ></p
+	><p
+	>3 arc second DEM from the National Geophysical Data Center (GEODAS) Coastal Relief Model. Covers a wide area of the north coast.</p
+	><p
+	><strong
+	  >Original Resolution:</strong
+	  > 3 seconds of arc</p
+	><p
+	><strong
+	  >Original File Format:</strong
+	  > ArcGIS Binary Raster</p
+	><p
+	><strong
+	  >Original Projection:</strong
+	  > Unspecified Lat/Lon (Possibly EPSG:4326?)</p
+	><p
+	><strong
+	  >Survey Date:</strong
+	  > Various</p
+	><p
+	><strong
+	  >Source:</strong
+	  > <a href="http://seafloor.csumb.edu/csmp/csmp_datacatalog.html" title="California Seafloor Mapping Project"
+	  >http://seafloor.csumb.edu/csmp/csmp_datacatalog.html</a
+	  ></p
+	></li
+      ></ul
+    ></div
+  ></div
+><div id="raster-file-processing"
+><h1
+  >Raster File Processing</h1
+  ><p
+  >Reprojected to EPSG:4326 Lat/Lon coordinate system using:</p
+  ><pre
+  ><code
+    >gdalwarp -t_srs EPSG:4326 -of Gtiff hdr.adf [output].tif
+</code
+    ></pre
+  ><p
+  >Transcribed to NetCDF format using:</p
+  ><pre
+  ><code
+    >gdal_translate -of netCDF [input].tif [output].nc
+</code
+    ></pre
+  ></div
+>
