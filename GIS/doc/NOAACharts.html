@@ -1,0 +1,24 @@
+<div id="noaa-raster-nautical-charts"
+><h1
+  >NOAA Raster Nautical Charts</h1
+  ><p
+  >Georefrenced raster images of NOAA nautical charts.</p
+  ><p
+  ><strong
+    >Source:</strong
+    > <a href="http://www.charts.noaa.gov/InteractiveCatalog/nrnc.shtml" title="NOAA RNC Catalog"
+    >http://www.charts.noaa.gov/InteractiveCatalog/nrnc.shtml</a
+    ></p
+  ></div
+><div id="raster-file-processing"
+><h1
+  >Raster File Processing</h1
+  ><p
+  >Transcribed from BSB format to GeoTiff and reprojected to EPSG:4326 Lat/Lon coordinate system using:</p
+  ><pre
+  ><code
+    >gdalwarp -t_srs EPSG:4326 -of Gtiff [chart#].KAP [chart#].tif
+</code
+    ></pre
+  ></div
+>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document><Folder><name>NDBCbuoys</name>
+<Schema name="NDBCbuoys" id="NDBCbuoys">
+	<SimpleField name="Name" type="string"></SimpleField>
+	<SimpleField name="Description" type="string"></SimpleField>
+	<SimpleField name="Name" type="string"></SimpleField>
+	<SimpleField name="Descriptio" type="string"></SimpleField>
+</Schema>
+  <Placemark>
+	<name>46022</name>
+	<description>NBDC Buoy</description>
+	<ExtendedData><SchemaData schemaUrl="#NDBCbuoys">
+		<SimpleData name="Name">46022</SimpleData>
+		<SimpleData name="Description">NBDC Buoy</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-124.576999999999998,40.749000000000002</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>46212</name>
+	<description>SCRIPPS Waverider</description>
+	<ExtendedData><SchemaData schemaUrl="#NDBCbuoys">
+		<SimpleData name="Name">46212</SimpleData>
+		<SimpleData name="Description">SCRIPPS Waverider</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-124.313000000000002,40.753</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>46244</name>
+	<description>SCRIPPS Waverider</description>
+	<ExtendedData><SchemaData schemaUrl="#NDBCbuoys">
+		<SimpleData name="Name">46244</SimpleData>
+		<SimpleData name="Description">SCRIPPS Waverider</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-124.356999999999999,40.887999999999998</coordinates></Point>
+  </Placemark>
+  <Placemark>
+	<name>HBYC1</name>
+	<description>NOAA tide guage</description>
+	<ExtendedData><SchemaData schemaUrl="#NDBCbuoys">
+		<SimpleData name="Name">HBYC1</SimpleData>
+		<SimpleData name="Description">NOAA tide guage</SimpleData>
+	</SchemaData></ExtendedData>
+      <Point><coordinates>-124.216999999999999,40.767000000000003</coordinates></Point>
+  </Placemark>
+</Folder></Document></kml>
