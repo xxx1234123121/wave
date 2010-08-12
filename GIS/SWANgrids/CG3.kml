@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document><Folder><name>CG3</name>
+<Schema name="CG3" id="CG3">
+	<SimpleField name="Name" type="string"></SimpleField>
+	<SimpleField name="Description" type="string"></SimpleField>
+	<SimpleField name="id" type="int"></SimpleField>
+	<SimpleField name="lonx" type="float"></SimpleField>
+	<SimpleField name="laty" type="float"></SimpleField>
+</Schema>
+  <Placemark>
+	<name></name>
+	<description></description>
+  <Style><LineStyle><color>ff0000ff</color></LineStyle>  <PolyStyle><fill>0</fill></PolyStyle></Style>
+	<ExtendedData><SchemaData schemaUrl="#CG3">
+		<SimpleData name="Name"></SimpleData>
+		<SimpleData name="Description"></SimpleData>
+		<SimpleData name="id">0</SimpleData>
+	</SchemaData></ExtendedData>
+      <Polygon><outerBoundaryIs><LinearRing><coordinates>-124.263499999999993,40.7485 -124.263499999999993,40.78792 -124.223600000000005,40.78792 -124.223600000000005,40.7485 -124.263499999999993,40.7485</coordinates></LinearRing></outerBoundaryIs></Polygon>
+  </Placemark>
+</Folder></Document></kml>
