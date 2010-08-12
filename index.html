@@ -1,0 +1,107 @@
+<div id="waveconnect-gis-resources"
+><h1
+  >WaveConnect GIS Resources</h1
+  ><p
+  >This directory contains GIS resources assembled for the PG&amp;E WaveConnect resource assessment survey. The files are formatted in such a way that they may be viewed using the QGIS program and manipulated using the GDAL library. QGIS and GDAL are described later on in this document. The contents of this directory are as follows:</p
+  ><div id="files"
+  ><h2
+    >Files</h2
+    ><ul
+    ><li
+      ><em
+	>WaveConnect.qgs:</em
+	> Main QGIS project file.</li
+      ></ul
+    ></div
+  ><div id="datasets"
+  ><h2
+    >Datasets</h2
+    ><ul
+    ><li
+      ><a href="doc/Bathymetry_bathy.html"
+	>Bathymetry/bathy</a
+	> : Bathymetry data for the WaveConnect study area.</li
+      ><li
+      ><a href="doc/Bathymetry_NWSSwanBathy.html"
+	>Bathymetry/NWSSwanBathy</a
+	> : Bathymetry data from the old NWS SWAN system.</li
+      ><li
+      ><a href="doc/Bathymetry_bound.html"
+	>Bathymetry/bound</a
+	> : Vector outlines for some of bathymetry surveys listed above.</li
+      ><li
+      ><a href="doc/NDBCbuoys.html"
+	>NDBCbuoys</a
+	> : Location of observation stations accessible through the NDBC system.</li
+      ><li
+      ><a href="doc/NOAACharts.html"
+	>NOAACharts</a
+	> : Background imagry of NOAA nautical charts.</li
+      ></ul
+    ></div
+  ><div id="qgis"
+  ><h2
+    >QGIS</h2
+    ><p
+    >Quantum GIS (QGIS) is an open source Geospatial Information System (GIS) that was chosen to support the WaveConnect project. QGIS was chosen because it is cost effective and meets developer requirements for support across a diverse range of platforms. The following webpages contain info relevant to obtaining and using QGIS:</p
+    ><ul
+    ><li
+      ><em
+	>The QGIS homepage:</em
+	> <a href="http://www.qgis.org/"
+	>http://www.qgis.org/</a
+	></li
+      ><li
+      ><em
+	>The QGIS downloads page:</em
+	> <a href="http://www.qgis.org/en/download/current-software.html"
+	>http://www.qgis.org/en/download/current-software.html</a
+	></li
+      ><li
+      ><em
+	>Mac OS X binaries:</em
+	> <a href="http://www.kyngchaos.com/software:qgis"
+	>http://www.kyngchaos.com/software:qgis</a
+	> (The &quot;standalone&quot; Mac binaries are recommended as they require the installation of no additional components and are self-contained and easy to uninstall)</li
+      ></ul
+    ></div
+  ><div id="gdal"
+  ><h2
+    >GDAL</h2
+    ><p
+    >The Geospatial Data Abstraction Library (GDAL) is the standard open source tool kit for manipulating and transcoding geospatial data. The following tools provided by the GDAL library were used extensively in the production of this data:</p
+    ><ul
+    ><li
+      ><code
+	>gdal_translate</code
+	>: Used to translate raster data from proprietary formats, such as ArcGIS coverages, or esoteric formats such as NOAA BSB files to commonly used raster formats such as GeoTIFF.</li
+      ><li
+      ><code
+	>gdalwarp</code
+	>: Used to reproject raster data from coordinate systems such as Universal Transverse Mercator (UTM) to the common EPSG:4326 Lat/Lon projection used throughout this project. <code
+	>gdalwarp</code
+	> was also used to merge or &quot;mosaic&quot; several raster datasets into one unified dataset.</li
+      ><li
+      ><code
+	>ogr2ogr</code
+	>: Used to reproject and reformat vector data.</li
+      ></ul
+    ><p
+    >Information and source code for GDAL can be obtained from the following webpages:</p
+    ><ul
+    ><li
+      ><em
+	>The GDAL Homepage:</em
+	> <a href="http://www.gdal.org/"
+	>http://www.gdal.org/</a
+	></li
+      ><li
+      ><em
+	>GDAL Binaries:</em
+	> <a href="http://trac.osgeo.org/gdal/wiki/DownloadingGdalBinaries"
+	>http://trac.osgeo.org/gdal/wiki/DownloadingGdalBinaries</a
+	></li
+      ></ul
+    ></div
+  ></div
+>
