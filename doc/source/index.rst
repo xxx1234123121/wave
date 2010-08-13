@@ -19,16 +19,17 @@ Included Datasets
    NDBC Buoy Locations <NDBCbuoys>
    NOAA Nautical Charts <NOAAcharts>
 
+Tools
+=====
+
 QGIS
 ----
 
-Quantum GIS (QGIS) is an open source Geospatial Information System
-(GIS) that was chosen to support the WaveConnect project. QGIS was
-chosen because it is cost effective and meets developer
-requirements for support across a diverse range of platforms. The
-following webpages contain info relevant to obtaining and using
-QGIS:
-
+Quantum GIS (QGIS) is an open source Geospatial Information System (GIS) that is
+used to assemble and manage the datasets described by this doucment. QGIS was
+chosen because it is cost effective and meets developer requirements for support
+across a diverse range of platforms. The following webpages contain info
+relevant to obtaining and using QGIS:
 
 -  *The QGIS homepage:*
    `http://www.qgis.org/ <http://www.qgis.org/>`_
@@ -40,6 +41,10 @@ QGIS:
    installation of no additional components and are self-contained and
    easy to uninstall)
 
+.. note::
+   QGIS version 1.5 or higher should be used to view the 
+   `WaveConnect.qgs <../../WaveConnect.qgs>`_ file.
+ 
 GDAL
 ----
 
