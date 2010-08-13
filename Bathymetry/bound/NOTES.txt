@@ -1,6 +1,12 @@
 Bathymetry outlines for WaveConnect Project
 ===========================================
 
+::
+
+    GIS
+    |- Bathymetry
+       |- bound
+
 Included Files
 --------------
 

@@ -1,23 +1,61 @@
 WaveConnect GIS Resources
 =========================
 
-This directory contains GIS resources assembled for the PG&E
-WaveConnect resource assessment survey. The files are formatted in
-such a way that they may be viewed using the QGIS program and
-manipulated using the GDAL library. QGIS and GDAL are described
-later on in this document. The contents of this directory are as
-follows:
+This project contains GIS resources assembled for the PG&E WaveConnect
+resource assessment survey. The files are formatted in such a way that they
+should be accessible to a wide range of tools.  For raster imagry, the GeoTIFF
+format is preferred; for vector data the KML format is used.  Raw data has been
+obtained from various sources, which are described in this documentation, and
+manipulated using the GDAL library to produce GeoTIFF and KML files.  All
+datasets have been reprojected into the ``EPSG:4326`` spatial reference system.
+
+The freely available QGIS program has been used to organize and display the
+datasets.  The main QGIS file is `WaveConnect.qgs <../../WaveConnect.qgs>`_. QGIS
+and GDAL are described later on in this document.
 
 Included Datasets
 -----------------
 
+This project contains the following files:
+
+::
+
+    GIS
+    |- README.html
+    |    A link to this documentation.
+    |- WaveConnect.qgs  
+    |    Main QGIS Project file.
+    |- Bathymetry
+    |  |- bathy
+    |  |    Contains raster datasets from bathymetry surveys.
+    |  |- bound
+    |       Vector outlines of bathymetry survey areas.
+    |- NDBCbuoys
+    |    Vector dataset showing the location of NDBC buoys.
+    |- StudyArea
+    |    Vector outline of the WaveConnect project area.
+    |- HFradarCoverage
+    |    Location and coverage of the High-Frequency radar installation in
+    |    Trinidad.
+    |- NOAAcharts
+    |    Raster imagry of NOAA nautical charts.
+    |- SWANgrids
+    |    Coverage area of a SWAN modle that was used by the National Weather
+    |    Service.
+    |- doc
+         Contains the Sphinx source code for this documentation.
+
+Documentation specific to each dataset can is contained in the following pages
+and explains where the data was obtained from and what post-processing steps
+were used:
+
 .. toctree::
    :maxdepth: 1
 
-   Survey Data <SurveyBathy>
-   Survey Boundaries <SurveyBounds>
-   NDBC Buoy Locations <NDBCbuoys>
-   NOAA Nautical Charts <NOAAcharts>
+   SurveyBathy
+   SurveyBounds
+   NDBCbuoys
+   NOAAcharts
 
 Tools
 =====
@@ -26,7 +64,7 @@ QGIS
 ----
 
 Quantum GIS (QGIS) is an open source Geospatial Information System (GIS) that is
-used to assemble and manage the datasets described by this doucment. QGIS was
+used to assemble and manage the datasets described by this document. QGIS was
 chosen because it is cost effective and meets developer requirements for support
 across a diverse range of platforms. The following webpages contain info
 relevant to obtaining and using QGIS:

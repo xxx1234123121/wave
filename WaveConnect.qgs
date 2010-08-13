@@ -4,10 +4,10 @@
     <mapcanvas>
         <units>degrees</units>
         <extent>
-            <xmin>-124.490497</xmin>
-            <ymin>40.524156</ymin>
-            <xmax>-123.631046</xmax>
-            <ymax>41.127055</ymax>
+            <xmin>-125.178380</xmin>
+            <ymin>40.106495</ymin>
+            <xmax>-123.342987</xmax>
+            <ymax>41.394009</ymax>
         </extent>
         <projections>1</projections>
         <destinationsrs>
@@ -25,8 +25,8 @@
     </mapcanvas>
     <legend>
         <legendgroup open="false" checked="Qt::Checked" name="NWS SWAN Domains">
-            <legendlayer open="true" checked="Qt::Checked" name="NWS CG3">
-                <filegroup open="true" hidden="false">
+            <legendlayer open="false" checked="Qt::Checked" name="NWS CG3">
+                <filegroup open="false" hidden="false">
                     <legendlayerfile isInOverview="0" layerid="CG320100812125500401" visible="1"/>
                 </filegroup>
             </legendlayer>
@@ -41,14 +41,14 @@
                 </filegroup>
             </legendlayer>
         </legendgroup>
-        <legendlayer open="false" checked="Qt::Checked" name="High Frequency Radar Coverage">
+        <legendlayer open="false" checked="Qt::Checked" name="High Frequency Radar Range">
             <filegroup open="false" hidden="false">
-                <legendlayerfile isInOverview="0" layerid="HFrange20100812213633016" visible="1"/>
+                <legendlayerfile isInOverview="0" layerid="HFrange20100813115833992" visible="1"/>
             </filegroup>
         </legendlayer>
-        <legendlayer open="false" checked="Qt::Checked" name="High Frequency Radar Station">
+        <legendlayer open="false" checked="Qt::Checked" name="High Frequency Radar Location">
             <filegroup open="false" hidden="false">
-                <legendlayerfile isInOverview="0" layerid="HFloc20100812212721023" visible="1"/>
+                <legendlayerfile isInOverview="0" layerid="HFloc20100813115909511" visible="1"/>
             </filegroup>
         </legendlayer>
         <legendlayer open="false" checked="Qt::Checked" name="StudyArea">
@@ -1241,9 +1241,9 @@
             </labelattributes>
         </maplayer>
         <maplayer minimumScale="0" maximumScale="1e+08" minLabelScale="0" maxLabelScale="1e+08" geometry="Point" type="vector" hasScaleBasedVisibilityFlag="0" scaleBasedLabelVisibilityFlag="0">
-            <id>HFloc20100812212721023</id>
-            <datasource>./HFradarGrid/HFloc.csv?delimiter=,&amp;delimiterType=plain&amp;xField=lonx&amp;yField=laty</datasource>
-            <layername>High Frequency Radar Station</layername>
+            <id>HFloc20100813115909511</id>
+            <datasource>./HFradarCoverage/HFloc.csv?delimiter=,&amp;delimiterType=plain&amp;xField=lonx&amp;yField=laty</datasource>
+            <layername>High Frequency Radar Location</layername>
             <srs>
                 <spatialrefsys>
                     <proj4>+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs</proj4>
@@ -1266,7 +1266,7 @@
                             <prop k="angle" v="0"/>
                             <prop k="color" v="0,209,153,255"/>
                             <prop k="color_border" v="0,170,127,255"/>
-                            <prop k="name" v="pentagon"/>
+                            <prop k="name" v="diamond"/>
                             <prop k="offset" v="0,0"/>
                             <prop k="size" v="9"/>
                         </layer>
@@ -1280,9 +1280,9 @@
                 <edittype type="0" name="laty"/>
                 <edittype type="0" name="lonx"/>
             </edittypes>
-            <editform>.</editform>
+            <editform></editform>
             <editforminit></editforminit>
-            <annotationform>.</annotationform>
+            <annotationform></annotationform>
             <displayfield>id</displayfield>
             <label>0</label>
             <attributeactions/>
@@ -1308,9 +1308,9 @@
             </labelattributes>
         </maplayer>
         <maplayer minimumScale="0" maximumScale="1e+08" minLabelScale="0" maxLabelScale="1e+08" geometry="Polygon" type="vector" hasScaleBasedVisibilityFlag="0" scaleBasedLabelVisibilityFlag="0">
-            <id>HFrange20100812213633016</id>
-            <datasource>./HFradarGrid/HFrange.kml</datasource>
-            <layername>High Frequency Radar Coverage</layername>
+            <id>HFrange20100813115833992</id>
+            <datasource>./HFradarCoverage/HFrange.kml</datasource>
+            <layername>High Frequency Radar Range</layername>
             <srs>
                 <spatialrefsys>
                     <proj4>+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs</proj4>
@@ -1330,7 +1330,7 @@
                 <symbols>
                     <symbol outputUnit="MM" alpha="1" type="fill" name="0">
                         <layer pass="0" class="SimpleFill" locked="0">
-                            <prop k="color" v="212,9,14,255"/>
+                            <prop k="color" v="1,34,193,255"/>
                             <prop k="color_border" v="255,128,0,255"/>
                             <prop k="offset" v="0,0"/>
                             <prop k="style" v="no"/>
@@ -1346,9 +1346,9 @@
                 <edittype type="0" name="Description"/>
                 <edittype type="0" name="Name"/>
             </edittypes>
-            <editform>.</editform>
+            <editform></editform>
             <editforminit></editforminit>
-            <annotationform>.</annotationform>
+            <annotationform></annotationform>
             <displayfield>Name</displayfield>
             <label>0</label>
             <attributeactions/>
