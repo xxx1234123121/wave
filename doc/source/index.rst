@@ -10,7 +10,7 @@ manipulated using the GDAL library to produce GeoTIFF and KML files.  All
 datasets have been reprojected into the ``EPSG:4326`` spatial reference system.
 
 The freely available QGIS program has been used to organize and display the
-datasets.  The main QGIS file is `WaveConnect.qgs <../../WaveConnect.qgs>`_. QGIS
+datasets.  The main QGIS file is ``WaveConnect.qgs``. QGIS
 and GDAL are described later on in this document.
 
 Included Datasets
@@ -81,7 +81,7 @@ relevant to obtaining and using QGIS:
 
 .. note::
    QGIS version 1.5 or higher should be used to view the 
-   `WaveConnect.qgs <../../WaveConnect.qgs>`_ file.
+   ``WaveConnect.qgs`` file.
  
 GDAL
 ----
