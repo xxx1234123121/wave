@@ -1,6 +1,11 @@
 NOAA Raster Nautical Charts
 ===========================
 
+::
+
+    GIS
+    |- NOAAcharts
+
 Georefrenced raster images of NOAA nautical charts.
 
 **Source:**
