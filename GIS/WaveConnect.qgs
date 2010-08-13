@@ -4,10 +4,10 @@
     <mapcanvas>
         <units>degrees</units>
         <extent>
-            <xmin>-125.160269</xmin>
-            <ymin>40.057450</ymin>
-            <xmax>-123.550000</xmax>
-            <ymax>41.187041</ymax>
+            <xmin>-124.490497</xmin>
+            <ymin>40.524156</ymin>
+            <xmax>-123.631046</xmax>
+            <ymax>41.127055</ymax>
         </extent>
         <projections>1</projections>
         <destinationsrs>
@@ -41,23 +41,23 @@
                 </filegroup>
             </legendlayer>
         </legendgroup>
-        <legendlayer open="true" checked="Qt::Checked" name="High Frequency Radar Coverage">
-            <filegroup open="true" hidden="false">
+        <legendlayer open="false" checked="Qt::Checked" name="High Frequency Radar Coverage">
+            <filegroup open="false" hidden="false">
                 <legendlayerfile isInOverview="0" layerid="HFrange20100812213633016" visible="1"/>
             </filegroup>
         </legendlayer>
-        <legendlayer open="true" checked="Qt::Checked" name="High Frequency Radar Station">
-            <filegroup open="true" hidden="false">
+        <legendlayer open="false" checked="Qt::Checked" name="High Frequency Radar Station">
+            <filegroup open="false" hidden="false">
                 <legendlayerfile isInOverview="0" layerid="HFloc20100812212721023" visible="1"/>
             </filegroup>
         </legendlayer>
-        <legendlayer open="true" checked="Qt::Checked" name="StudyArea">
-            <filegroup open="true" hidden="false">
+        <legendlayer open="false" checked="Qt::Checked" name="StudyArea">
+            <filegroup open="false" hidden="false">
                 <legendlayerfile isInOverview="0" layerid="StudyArea20100615213616882" visible="1"/>
             </filegroup>
         </legendlayer>
-        <legendlayer open="true" checked="Qt::Checked" name="NDBCbuoys">
-            <filegroup open="true" hidden="false">
+        <legendlayer open="false" checked="Qt::Checked" name="NDBCbuoys">
+            <filegroup open="false" hidden="false">
                 <legendlayerfile isInOverview="0" layerid="NDBCbuoys20100812114132682" visible="1"/>
             </filegroup>
         </legendlayer>
@@ -1280,9 +1280,9 @@
                 <edittype type="0" name="laty"/>
                 <edittype type="0" name="lonx"/>
             </edittypes>
-            <editform></editform>
+            <editform>.</editform>
             <editforminit></editforminit>
-            <annotationform></annotationform>
+            <annotationform>.</annotationform>
             <displayfield>id</displayfield>
             <label>0</label>
             <attributeactions/>
@@ -1346,9 +1346,9 @@
                 <edittype type="0" name="Description"/>
                 <edittype type="0" name="Name"/>
             </edittypes>
-            <editform></editform>
+            <editform>.</editform>
             <editforminit></editforminit>
-            <annotationform></annotationform>
+            <annotationform>.</annotationform>
             <displayfield>Name</displayfield>
             <label>0</label>
             <attributeactions/>
