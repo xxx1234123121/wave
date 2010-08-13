@@ -1,0 +1,227 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>WaveConnect GIS Resources &mdash; WaveConnect GIS Resources v0.1 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="WaveConnect GIS Resources v0.1 documentation" href="#" />
+    <link rel="next" title="Bathymetry data for WaveConnect Project" href="SurveyBathy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="SurveyBathy.html" title="Bathymetry data for WaveConnect Project"
+             accesskey="N">next</a> |</li>
+        <li><a href="#">WaveConnect GIS Resources v0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="waveconnect-gis-resources">
+<h1>WaveConnect GIS Resources<a class="headerlink" href="#waveconnect-gis-resources" title="Permalink to this headline">¶</a></h1>
+<p>This project contains GIS resources assembled for the PG&amp;E WaveConnect
+resource assessment survey. The files are formatted in such a way that they
+should be accessible to a wide range of tools.  For raster imagry, the GeoTIFF
+format is preferred; for vector data the KML format is used.  Raw data has been
+obtained from various sources, which are described in this documentation, and
+manipulated using the GDAL library to produce GeoTIFF and KML files.  All
+datasets have been reprojected into the <tt class="docutils literal"><span class="pre">EPSG:4326</span></tt> spatial reference system.</p>
+<p>The freely available QGIS program has been used to organize and display the
+datasets.  The main QGIS file is <a class="reference external" href="../../WaveConnect.qgs">WaveConnect.qgs</a>. QGIS
+and GDAL are described later on in this document.</p>
+<div class="section" id="included-datasets">
+<h2>Included Datasets<a class="headerlink" href="#included-datasets" title="Permalink to this headline">¶</a></h2>
+<p>This project contains the following files:</p>
+<div class="highlight-python"><pre>GIS
+|- README.html
+|    A link to this documentation.
+|- WaveConnect.qgs
+|    Main QGIS Project file.
+|- Bathymetry
+|  |- bathy
+|  |    Contains raster datasets from bathymetry surveys.
+|  |- bound
+|       Vector outlines of bathymetry survey areas.
+|- NDBCbuoys
+|    Vector dataset showing the location of NDBC buoys.
+|- StudyArea
+|    Vector outline of the WaveConnect project area.
+|- HFradarCoverage
+|    Location and coverage of the High-Frequency radar installation in
+|    Trinidad.
+|- NOAAcharts
+|    Raster imagry of NOAA nautical charts.
+|- SWANgrids
+|    Coverage area of a SWAN modle that was used by the National Weather
+|    Service.
+|- doc
+     Contains the Sphinx source code for this documentation.</pre>
+</div>
+<p>Documentation specific to each dataset can is contained in the following pages
+and explains where the data was obtained from and what post-processing steps
+were used:</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="SurveyBathy.html">Bathymetry data for WaveConnect Project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="SurveyBounds.html">Bathymetry outlines for WaveConnect Project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="NDBCbuoys.html">NDBC Buoy Locations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="NOAAcharts.html">NOAA Raster Nautical Charts</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div class="section" id="tools">
+<h1>Tools<a class="headerlink" href="#tools" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="qgis">
+<h2>QGIS<a class="headerlink" href="#qgis" title="Permalink to this headline">¶</a></h2>
+<p>Quantum GIS (QGIS) is an open source Geospatial Information System (GIS) that is
+used to assemble and manage the datasets described by this document. QGIS was
+chosen because it is cost effective and meets developer requirements for support
+across a diverse range of platforms. The following webpages contain info
+relevant to obtaining and using QGIS:</p>
+<ul class="simple">
+<li><em>The QGIS homepage:</em>
+<a class="reference external" href="http://www.qgis.org/">http://www.qgis.org/</a></li>
+<li><em>The QGIS downloads page:</em>
+<a class="reference external" href="http://www.qgis.org/en/download/current-software.html">http://www.qgis.org/en/download/current-software.html</a></li>
+<li><em>Mac OS X binaries:</em>
+<a class="reference external" href="http://www.kyngchaos.com/software:qgis">http://www.kyngchaos.com/software:qgis</a>
+(The &#8220;standalone&#8221; Mac binaries are recommended as they require the
+installation of no additional components and are self-contained and
+easy to uninstall)</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">QGIS version 1.5 or higher should be used to view the
+<a class="reference external" href="../../WaveConnect.qgs">WaveConnect.qgs</a> file.</p>
+</div>
+</div>
+<div class="section" id="gdal">
+<h2>GDAL<a class="headerlink" href="#gdal" title="Permalink to this headline">¶</a></h2>
+<p>The Geospatial Data Abstraction Library (GDAL) is the standard open
+source tool kit for manipulating and transcoding geospatial data.
+The following tools provided by the GDAL library were used
+extensively in the production of this data:</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">gdal_translate</span></tt>: Used to translate raster data from
+proprietary formats, such as ArcGIS coverages, or esoteric formats
+such as NOAA BSB files to commonly used raster formats such as
+GeoTIFF.</li>
+<li><tt class="docutils literal"><span class="pre">gdalwarp</span></tt>: Used to reproject raster data from coordinate
+systems such as Universal Transverse Mercator (UTM) to the common
+EPSG:4326 Lat/Lon projection used throughout this project.
+<tt class="docutils literal"><span class="pre">gdalwarp</span></tt> was also used to merge or &#8220;mosaic&#8221; several raster
+datasets into one unified dataset.</li>
+<li><tt class="docutils literal"><span class="pre">ogr2ogr</span></tt>: Used to reproject and reformat vector data.</li>
+</ul>
+<p>Information and source code for GDAL can be obtained from the
+following webpages:</p>
+<ul class="simple">
+<li><em>The GDAL Homepage:</em>
+<a class="reference external" href="http://www.gdal.org/">http://www.gdal.org/</a></li>
+<li><em>GDAL Binaries:</em>
+<a class="reference external" href="http://trac.osgeo.org/gdal/wiki/DownloadingGdalBinaries">http://trac.osgeo.org/gdal/wiki/DownloadingGdalBinaries</a></li>
+</ul>
+</div>
+<div class="section" id="indices-and-tables">
+<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><em>Index</em></a></li>
+<li><a class="reference internal" href="py-modindex.html"><em>Module Index</em></a></li>
+<li><a class="reference internal" href="search.html"><em>Search Page</em></a></li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">WaveConnect GIS Resources</a><ul>
+<li><a class="reference internal" href="#included-datasets">Included Datasets</a><ul>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tools">Tools</a><ul>
+<li><a class="reference internal" href="#qgis">QGIS</a></li>
+<li><a class="reference internal" href="#gdal">GDAL</a></li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Next topic</h4>
+  <p class="topless"><a href="SurveyBathy.html"
+                        title="next chapter">Bathymetry data for WaveConnect Project</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/index.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="SurveyBathy.html" title="Bathymetry data for WaveConnect Project"
+             >next</a> |</li>
+        <li><a href="#">WaveConnect GIS Resources v0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, Nir Berezovsky, Charlie Sharpsteen, Colin Sheppard.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.1.
+    </div>
+  </body>
+</html>

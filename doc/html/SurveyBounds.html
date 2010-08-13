@@ -1,0 +1,156 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Bathymetry outlines for WaveConnect Project &mdash; WaveConnect GIS Resources v0.1 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="WaveConnect GIS Resources v0.1 documentation" href="index.html" />
+    <link rel="next" title="NDBC Buoy Locations" href="NDBCbuoys.html" />
+    <link rel="prev" title="Bathymetry data for WaveConnect Project" href="SurveyBathy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="NDBCbuoys.html" title="NDBC Buoy Locations"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="SurveyBathy.html" title="Bathymetry data for WaveConnect Project"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">WaveConnect GIS Resources v0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="bathymetry-outlines-for-waveconnect-project">
+<h1>Bathymetry outlines for WaveConnect Project<a class="headerlink" href="#bathymetry-outlines-for-waveconnect-project" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-python"><pre>GIS
+|- Bathymetry
+   |- bound</pre>
+</div>
+<div class="section" id="included-files">
+<h2>Included Files<a class="headerlink" href="#included-files" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p class="first"><strong>boundStyle.qml</strong></p>
+<p>QGIS style file containing formatting rules that can be used to
+bestow a uniform look on boundary files. Each file describes a
+polygon and this style sets fill colors to be transparent and
+outlines to be thin and red.</p>
+</li>
+</ul>
+<hr class="docutils" />
+<ul>
+<li><p class="first"><strong>northBayBound.kml</strong></p>
+</li>
+<li><p class="first"><strong>northShoreBound1.kml</strong></p>
+</li>
+<li><p class="first"><strong>northShoreBound2.kml</strong></p>
+</li>
+<li><p class="first"><strong>southBayBound.kml</strong></p>
+</li>
+<li><p class="first"><strong>southShoreBound.kml</strong></p>
+<p>Polygon outlines of bathymetry DEMS obtained from the California
+Seafloor Mapping project. Data originally provided as shapefiles
+obtained from:</p>
+<p><a class="reference external" href="http://seafloor.csumb.edu/csmp/csmp_datacatalog.html">http://seafloor.csumb.edu/csmp/csmp_datacatalog.html</a></p>
+</li>
+</ul>
+</div>
+<div class="section" id="vector-file-processing">
+<h2>Vector File Processing<a class="headerlink" href="#vector-file-processing" title="Permalink to this headline">¶</a></h2>
+<p>Transcribed to KML format using:</p>
+<div class="highlight-python"><pre>ogr2ogr -of KML [input].shp [output].kml</pre>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Bathymetry outlines for WaveConnect Project</a><ul>
+<li><a class="reference internal" href="#included-files">Included Files</a></li>
+<li><a class="reference internal" href="#vector-file-processing">Vector File Processing</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="SurveyBathy.html"
+                        title="previous chapter">Bathymetry data for WaveConnect Project</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="NDBCbuoys.html"
+                        title="next chapter">NDBC Buoy Locations</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/SurveyBounds.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="NDBCbuoys.html" title="NDBC Buoy Locations"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="SurveyBathy.html" title="Bathymetry data for WaveConnect Project"
+             >previous</a> |</li>
+        <li><a href="index.html">WaveConnect GIS Resources v0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, Nir Berezovsky, Charlie Sharpsteen, Colin Sheppard.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.1.
+    </div>
+  </body>
+</html>
