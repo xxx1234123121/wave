@@ -6,7 +6,7 @@ This module provides an interface to data stored at the National Buoy
 Data Center (`NDBC`_).
 
 **Development Status:**
-  **Last Modified:** July 24, 2010 by Charlie Sharpsteen
+  **Last Modified:** August 16, 2010 by Charlie Sharpsteen
 
 
 .. _NDBC: http://www.ndbc.noaa.gov/
@@ -14,6 +14,9 @@ Data Center (`NDBC`_).
 """
 
 
+#------------------------------------------------------------------------------
+#  Imports from Python 2.7 standard library
+#------------------------------------------------------------------------------
 from datetime import datetime, timedelta
 from collections import namedtuple
 
@@ -24,13 +27,20 @@ import re
 
 from itertools import chain
 
+#------------------------------------------------------------------------------
+#  Imports from third party libraries
+#------------------------------------------------------------------------------
 from geoalchemy import WKTSpatialElement
 
+#------------------------------------------------------------------------------
+#  Imports from WaveConnect libraries
+#------------------------------------------------------------------------------
 from wavecon import DBman
 
-#---------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
 #  Metadata, Object Classes and Other Constants
-#---------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
 # Database setup
 from wavecon.config import DBconfig as _DBconfig
@@ -41,9 +51,11 @@ WaveRecord = DBman.accessTable( _DBconfig, 'tblwave' )
 
 _session = DBman.startSession( _DBconfig )
 
-# Metadata setup
+# Custom objects
 Location = namedtuple( 'Location', 'lon lat' )
+FrequencySpectra = namedtuple( 'FrequencySpectra', 'datetime density' )
 
+# Metadata setup
 BUOY_META = {
 
   '46022' : {
@@ -63,7 +75,6 @@ BUOY_META = {
 
 }
 
-FrequencySpectra = namedtuple( 'FrequencySpectra', 'datetime density' )
 
 
 #---------------------------------------------------------------------
@@ -252,7 +263,6 @@ def commitToDB( records ):
   _session.commit()
 
   return None
-
 
 
 #---------------------------------------------------------------------
