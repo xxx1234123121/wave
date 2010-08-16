@@ -23,6 +23,8 @@ module to a SQL database.
 #------------------------------------------------------------------------------
 #  Imports from WaveConnect libraries
 #------------------------------------------------------------------------------
+from .globals import BUOY_META
+from .data import getBuoyName
 from wavecon import DBman
 
 

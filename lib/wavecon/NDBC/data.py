@@ -35,6 +35,7 @@ from geoalchemy import WKTSpatialElement
 #------------------------------------------------------------------------------
 #  Imports from WaveConnect libraries
 #------------------------------------------------------------------------------
+from .globals import *
 from wavecon import DBman
 
 
@@ -50,32 +51,6 @@ WindRecord = DBman.accessTable( _DBconfig, 'tblwind' )
 WaveRecord = DBman.accessTable( _DBconfig, 'tblwave' )
 
 _session = DBman.startSession( _DBconfig )
-
-# Custom objects
-Location = namedtuple( 'Location', 'lon lat' )
-FrequencySpectra = namedtuple( 'FrequencySpectra', 'datetime density' )
-
-# Metadata setup
-BUOY_META = {
-
-  '46022' : {
-    'location' : Location( 40.749, -124.577 ),
-    'type' : 'NDBC'
-  },
-
-  '46212' : {
-    'location' : Location( 40.753, -124.313 ),
-    'type' : 'SCRIPPS'
-  },
-
-  '46244' : {
-    'location' : Location( 40.888, -124.357 ),
-    'type' : 'SCRIPPS'
-  }
-
-}
-
-
 
 #---------------------------------------------------------------------
 #  Data Retrieval
