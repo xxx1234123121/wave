@@ -28,5 +28,5 @@ Example
 The following is an example useage of DBman to insert a ``Wind`` object into
 the database table ``tblWind``:
 
-.. literalinclude:: ../../bin/dbtest.py
+.. literalinclude:: ../../tests/dbtest.py
    :lines: 12-
