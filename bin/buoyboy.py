@@ -27,7 +27,6 @@ import datetime
 
 import json
 
-
 from wavecon.NDBC import downloader
 
 
@@ -83,7 +82,6 @@ def processArgs():
   # Positional arguments- these are not identified by a flag.  Rather their meaning is
   # inferred from their position in the command line.
   parser.add_argument( 'buoyNum', metavar = 'Buoy#', type = int,
-                       choices = [46022, 46212, 46244],
                        help = 'The number of the NDBC buoy for which you wish to fetch data.' )
 
   parser.add_argument( 'startTime', metavar = 'StartTime', type = ISO_datestring,
