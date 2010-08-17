@@ -47,14 +47,12 @@ from .globals import *
 #------------------------------------------------------------------------------
 def fetchBuoyRecords( buoyNum, startTime, stopTime, verbose = False ):
 
-  print startTime.isoformat()
-  print stopTime.isoformat()
-
   # Determine the years that need to be downloaded.
   timeSpan = range( startTime.year, stopTime.year + 1 )
 
   metData =  fetchRecords( timeSpan, buoyNum, 'meteorological' )
   densityData = fetchRecords( timeSpan, buoyNum, 'specDensity' )
+  alpha1Data = fetchRecords( timeSpan, buoyNum, 'directionAlpha1' )
 
   # Unfortunately, there is not always corresponding spectra data available for
   # wave height, peak direction or frequency given by the meterological data, or
@@ -75,8 +73,18 @@ def fetchBuoyRecords( buoyNum, startTime, stopTime, verbose = False ):
       if isInsideTimespan( density['datetime'], startTime, stopTime )
     ])
 
-  waveRecords = joinWithSpectra( waveRecords, waveTimestamps, 
-      densityData, densityTimestamps )
+    waveRecords = joinWithSpectra( waveRecords, waveTimestamps, 
+        densityData, densityTimestamps )
+
+  if len( alpha1Data ) > 0:
+    alpha1Data, alpha1Timestamps = zip(*[
+      ( alpha1, alpha1['datetime'] ) 
+      for alpha1 in alpha1Data 
+      if isInsideTimespan( alpha1['datetime'], startTime, stopTime )
+    ])
+
+    waveRecords = joinWithSpectra( waveRecords, waveTimestamps, 
+        alpha1Data, alpha1Timestamps )
 
   return windRecords, waveRecords
 
@@ -105,6 +113,11 @@ def fetchData( year, buoyNum, dataType ):
     'specDensity' : {
       'fileSep' : 'w',
       'dataDir' : 'data/historical/swden/'
+    },
+
+    'directionAlpha1' : {
+      'fileSep' : 'd',
+      'dataDir' : 'data/historical/swdir/'
     }
 
   }
@@ -138,7 +151,7 @@ def rawToRecords( rawData, buoyNum, dataType ):
   # there is a variable amount of whitespace separating elements.
   rawData = rawData.splitlines()
 
-  if dataType == 'specDensity':
+  if not dataType == 'meteorological':
     binLine = re.split( '\s+', rawData.pop(0) )
 
   parsedData = [ re.split('\s+', line) for line in rawData
@@ -178,6 +191,18 @@ def rawToRecords( rawData, buoyNum, dataType ):
         # Not the most efficient to store a copy of the bins in each record but
         # this allows the bins to change over time.
         'density': [ float(x) for x in line[C:] ]
+      }
+      for line in parsedData
+    ]
+  elif dataType == 'directionAlpha1':
+    records = [
+      { 
+        'buoyNumber': buoyNum,
+        'datetime': dateFromRaw( line[0:C] ),
+        'alpha1Bins': [ float(x) for x in binLine[C:] ], 
+        # Not the most efficient to store a copy of the bins in each record but
+        # this allows the bins to change over time.
+        'alpha1': [ float(x) for x in line[C:] ]
       }
       for line in parsedData
     ]
@@ -257,6 +282,10 @@ def dateFromRaw( line ):
   # count. This could be royally screwed up- I would have to compare
   # against the continuous observations to make sure.
   line = [int(x) for x in line]
+
+  # Check for two diget years:
+  if line[0] < 1900 : line[0] += 1900
+
   if len(line) == 5 and line[-1] != 0:
     return datetime(*line) + timedelta( minutes = (60 - line[-1]) )
   else:
