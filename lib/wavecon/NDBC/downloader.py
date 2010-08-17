@@ -47,6 +47,14 @@ from .globals import *
 #------------------------------------------------------------------------------
 def fetchBuoyRecords( buoyNum, startTime, stopTime, verbose = False ):
 
+  if startTime > stopTime:
+    raise RuntimeError(
+      """You specified a start time of {} and a stop time of {}.  The stop time
+      must be later than the start time.""".format(
+        startTime.isoformat(), stopTime.isoformat()
+      )
+    )
+
   # Determine the years that need to be downloaded.
   timeSpan = range( startTime.year, stopTime.year + 1 )
 
@@ -60,11 +68,23 @@ def fetchBuoyRecords( buoyNum, startTime, stopTime, verbose = False ):
   # records that fall within the requested time range along with a seperate list
   # of the datestamps.  The datestamps may then be intersected to locate wave
   # and spectra records that can be combined.
-  windRecords, waveRecords, waveTimestamps = zip(*[
-    ( wind, wave, wave['datetime'] )
-    for wind, wave in metData
-    if isInsideTimespan( wind['datetime'], startTime, stopTime )
-  ])
+  try:
+    windRecords, waveRecords, waveTimestamps = zip(*[
+      ( wind, wave, wave['datetime'] )
+      for wind, wave in metData
+      if isInsideTimespan( wind['datetime'], startTime, stopTime )
+    ])
+  except:
+    # Check to see if we got meteorlogical data.  If we didn't, we probably did
+    # not get any data so wipe out with an error.
+    raise RuntimeError(
+      """Did not recieve any meterological data from NDBC for buoy {}, for the
+      time period starting on {} and ending on {}.  It is likely that data
+      either does not exist or there was an error in parsing the NDBC
+      output.""".format( 
+        buoyNum, startTime.isoformat(), stopTime.isoformat() 
+      )
+    )
 
   if len( densityData ) > 0:
     densityData, densityTimestamps = zip(*[
