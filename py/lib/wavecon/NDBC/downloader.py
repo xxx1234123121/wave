@@ -56,46 +56,29 @@ def fetchBuoyRecords( buoyNum, startTime, stopTime, verbose = False ):
   metData =  fetchRecords( timeSpan, buoyNum, 'meteorological' )
   densityData = fetchRecords( timeSpan, buoyNum, 'specDensity' )
 
-  # Unfortunately, there is not always corresponding spectra data
-  # available for wave height, peak direction or frequency given by
-  # the meterological data, or vice-versa.  The solution is to form an
-  # intersection of the date stamps common to both data sets.  This
-  # set will later be used to filter the records.
-  metTimeStamps = set([ wind['datetime'] for wind, _ in metData ])
-  densityTimeStamps = set([ 
-    density['datetime']
-    for density in densityData
+  # Unfortunately, there is not always corresponding spectra data available for
+  # wave height, peak direction or frequency given by the meterological data, or
+  # vice-versa.  The solution is to first filter each list and return the
+  # records that fall within the requested time range along with a seperate list
+  # of the datestamps.  The datestamps may then be intersected to locate wave
+  # and spectra records that can be combined.
+  windRecords, waveRecords, waveTimestamps = zip(*[
+    ( wind, wave, wave['datetime'] )
+    for wind, wave in metData
+    if isInsideTimespan( wind['datetime'], startTime, stopTime )
   ])
 
-  validTimeStamps = [ 
-    timestamp
-    for timestamp in
-      set.intersection( densityTimeStamps, metTimeStamps )
-    if isInsideTimespan( timestamp, startTime, stopTime )
-  ]
+  if len( densityData ) > 0:
+    densityData, densityTimestamps = zip(*[
+      ( density, density['datetime'] ) 
+      for density in densityData 
+      if isInsideTimespan( density['datetime'], startTime, stopTime )
+    ])
 
-  # The following list comprehension should work:
-  #
-  # records = [ (wind, wave, spectra)
-  #   for wind, wave in metData
-  #   for spectra in densityData
-  #   if wind.datetime in validTimeStamps ]
-  #
-  # But for some reason pulling components from two lists at a time is
-  # extremely inefficient- the hack is liberal use of zip() to collapse
-  # everything into one list.
-  windRecords, waveRecords = zip(*metData)
-  records = [ 
-    (
-      wind, 
-      joinWithSpectra( wave, densitySpectra)
-    )
-    for wind, wave, densitySpectra in 
-      zip( windRecords, waveRecords, densityData )
-    if wind['datetime'] in validTimeStamps
-  ]
+  waveRecords = joinWithSpectra( waveRecords, waveTimestamps, 
+      densityData, densityTimestamps )
 
-  return zip(*records)
+  return windRecords, waveRecords
 
 
 def fetchRecords( timeSpan, buoyNum, dataType ):
@@ -232,11 +215,32 @@ def isInsideTimespan( aDate, startTime, stopTime ):
   else:
     return False
 
-def joinWithSpectra( waveRecord, *spectraRecords ):
-  for spectra in spectraRecords:
-    waveRecord.update( spectra )
+def joinWithSpectra( waveRecords, waveTimestamps,
+    spectraRecords, spectraTimestamps
+):
 
-  return waveRecord
+  waveToJoin, waveToPass = splitWaveRecords( waveRecords, waveTimestamps )
+  spectraToJoin, spectraToPass = splitWaveRecords( spectraRecords, spectraTimestamps )
+
+  for wave, spectra in zip( waveToJoin, spectraToJoin ):
+    wave.update( spectra )
+
+  return waveToPass + waveToJoin + spectraToPass
+
+def splitWaveRecords( records, timestamps ):
+  recordsToJoin = [
+    record
+    for record in records
+    if record['datetime'] in timestamps
+  ]
+
+  recordsToPass = [
+    record
+    for record in records
+    if record['datetime'] not in timestamps
+  ]
+
+  return recordsToJoin, recordsToPass
 
 def dateFromRaw( line ):
   # Ugly hack #2: This one is truly hideous- not all hourly
