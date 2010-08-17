@@ -48,6 +48,12 @@ def ISO_datestring( aString ):
 
   return datetime.datetime.strptime( aString, '%m/%d/%Y %H:%M:%S' )
 
+def JSON_datestring( aObject ):
+  if isinstance( aObject, datetime.datetime ):
+    return aObject.isoformat()
+  else:
+    return None
+
 
 """
 -------------------------------------------------------------------
@@ -64,6 +70,16 @@ def processArgs():
   parser.add_argument( '-v', action = 'store_true', dest = 'be_verbose',
                        help = 'Should BuoyBoy pretend he is called ChattyCathy?' )
 
+  parser.add_argument( '--format', action = 'store', dest ='output_format',
+                       choices = ['database', 'json'], default = 'json',
+                       help = '''The format of output- may be 'database' or
+                       'json'.  If database is selected, downloaded data will be
+                       serialized to a relational database.  If json output is
+                       selected, downloaded data will be serialized to JSON
+                       format and either dumped to the screen or written to a
+                       file depending on the values of windFile and waveFile.'''
+                     )
+
   # Positional arguments- these are not identified by a flag.  Rather their meaning is
   # inferred from their position in the command line.
   parser.add_argument( 'buoyNum', metavar = 'Buoy#', type = int,
@@ -76,6 +92,16 @@ def processArgs():
   parser.add_argument( 'stopTime', metavar = 'StopTime', type = ISO_datestring,
                         help = '''The end of the time range for which data is to be downloaded. 
                         Uses the same format as described above.''' ) 
+
+  parser.add_argument( 'windFile', nargs = '?', action = 'store', default = '',
+                       help = '''If --format was set to json (the default),
+                       specifies the name of the output file to which downloaded
+                       wind data should be dumped as JSON records.  If left
+                       blank, records will be written to the screen.''' )
+
+  parser.add_argument( 'waveFile', nargs = '?', action = 'store', default = '',
+                       help = '''Controls output of downloaded wave data.  See
+                       the windFile argument for details.''' )
 
   args = parser.parse_args()
   return args
@@ -90,15 +116,40 @@ if __name__ == '__main__':
   
   args = processArgs()
 
-  print "\n\nHello, world!\n"
-
   windRecords, waveRecords = downloader.fetchBuoyRecords( args.buoyNum, args.startTime, args.stopTime, 'meteorological' )
-  print windRecords
-  #NDBC.commitToDB( windRecords )
-  #NDBC.commitToDB( waveRecords )
+
+  if args.output_format == 'json':
+
+    if args.windFile:
+      file = open( windFile, 'w' )
+    else:
+      file = sys.stdout
+
+    file.write(json.dumps(
+      windRecords,
+      indent = 2,
+      default = JSON_datestring
+    ))
+
+    if args.windFile: file.close()
+
+    if args.waveFile:
+      file = open( waveFile, 'w' )
+    else:
+      file = sys.stdout
+
+    file.write(json.dumps(
+      waveRecords,
+      indent = 2,
+      default = JSON_datestring
+    ))
+    
+  else:
+    print 'database commit- to be added.'
+    #NDBC.commitToDB( windRecords )
+    #NDBC.commitToDB( waveRecords )
 
 
-  #checkForDate = lambda obj: obj.isoformat() if isinstance( obj, datetime.datetime ) else None
   #print json.dumps( windData, indent = 4, default = checkForDate )
 
   #print "\n\n Stats: %i objects for %i days worth of data.\n" % ( len(windData), (args.stopTime - args.startTime).days )
