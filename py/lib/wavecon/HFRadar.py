@@ -27,6 +27,17 @@ import itertools
 
 from geoalchemy import WKTSpatialElement
 
+
+"""
+For developmenet purposes: if not running as a libary, execute the following here:
+
+import sys
+from os import path
+scriptLocation = path.dirname(path.abspath("./HFRadarCurrent.py"))
+waveLibs = path.abspath(path.join( scriptLocation, '..' ))
+sys.path.insert( 0, waveLibs )
+"""
+
 from wavecon import DBman
 from wavecon.config import DBconfig as _DBconfig
 

@@ -204,7 +204,7 @@ design accomodates the following:
   Buoy data or for all model runs).
 \end{itemize}
 \begin{figure}
-\includegraphics{images/wave-database-20100720.png}
+\includegraphics{../images/wave-database-20100720.png}
 \caption{Preliminary Database Schematic}
 \label{db-schematic}
 \end{figure}
@@ -236,11 +236,51 @@ array of the same dimension and size as the wind or current data.
 \subsection{Data Flow}
 
 
-\subsection{Data Flow}
+\subsection{Input Data Retrieval}
 
+Before a CMS model run can be initiated, the appropriate input data must be collected, formatted, and specified in the appropriate configuration files.  In order to facilitate the use of CMS in a real-time context, the process of gathering data from online sources must be reliable and fully automated.  To accomplish this, we created a set of Python scripts to connect to remote data archives, parse the relevant data, and store to the PostgreSQL database (Table \ref{tab:inputHarvest}.  Python was chosen as a platform for this task due to the availability of extensive libraries that facilitate working with a wide variety of data formats.
 
-
-
+\begin{table}[b!]
+\caption{Python scripts for retrieval of input data to CMS.}
+\begin{center}
+\begin{tabular}{| lllccc |}
+\hline
+\textbf{Name} & \textbf{Description} & \textbf{Data Source} & \textbf{Database Destination} \\
+ \hline
+buoyboy.py & retrieves wind data from any specified NDBC buoy & http://www.ndbc.noaa.gov/ & tblWind,tblSource \\
+Buoy 22 & B22 & 40.749N,124.577W & 1 & 5 & 10.4 \\
+Blue Lake Rancheria & BLU & 40.879N,123.992W & 24 & 10 & 4.7 \\
+Fortuna Weather Station & FRT & 40.556N,124.133W  & 21 & 10 & 3.1 \\
+Kneeland Airport & KNA & 40.719N,123.927W & 832 & 10 & 2.9 \\
+Samoa Penninsula & SAM & 40.769N,124.218W & 20 & 10 & 1.5 \\
+Trinidad Head & TRD & 41.054N,124.151W & 100 & 10 & 5.1 \\
+\hline
+\textbf{Group: LA Buoys} & & & & & \\
+Buoy 11, Santa Maria & B11 & 34.868N,120.857W & 1 & 5 & 9.3 \\
+Buoy 23, Pt Arguello & B23 & 34.714N,120.967W & 1 & 10 & 10.6 \\
+Buoy 63, Pt Conception & B63 & 34.273N,120.699W & 1 & 5 & 8.8 \\
+\hline
+\textbf{Group: SF Buoys} & & & & & \\
+Buoy 13, Bodega Bay & B13 & 38.242N,123.301W & 1 & 5 & 9.9 \\
+Buoy 26, San Francisco & B26 & 37.759N,122.833W & 1 & 5 & 9.8 \\
+Buoy 12, Half Moon Bay & B12 & 37.361N,122.881W & 1 & 5 & 9.1 \\
+\hline
+\textbf{Group: North Dakota} & & & & & \\
+Binford & NDB & 47.641N,98.432W & 466 & 40 & 1.8 \\
+Hannaford & NDH & 47.328N,98.209W & 430 & 56 & 6.2 \\
+Finley & NDF & 47.500N,97.817W & 430 & 70 & 2.1 \\
+West Finley & NDW & 47.501N,97.873W & 430 & 48 & 4.6 \\
+\hline
+\textbf{Group: Holland} & & & & & \\
+L.E. Goeree & HGO & 51.918N,3.667E & 1 & 38.3 & 21.6 \\
+Hoek van Holland & HVH & 51.988N,4.085E & 1 & 15 & 25.9 \\
+Tholen & HTH & 51.481N,4.193E & 1 & 16.5 & 22.3 \\
+R'dam Geulhaven & HRG & 51.893N,4.313E & 1 & 10 & 23.6 \\
+\hline
+\end{tabular}
+\end{center}
+\label{tab:datasources}
+\end{table}
 \bibliographystyle{plain}
 \bibliography{WaveConnect}
 
