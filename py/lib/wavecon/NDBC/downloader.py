@@ -47,6 +47,9 @@ from .globals import *
 #------------------------------------------------------------------------------
 def fetchBuoyRecords( buoyNum, startTime, stopTime, verbose = False ):
 
+  print startTime.isoformat()
+  print stopTime.isoformat()
+
   # Determine the years that need to be downloaded.
   timeSpan = range( startTime.year, stopTime.year + 1 )
 
@@ -81,12 +84,15 @@ def fetchBuoyRecords( buoyNum, startTime, stopTime, verbose = False ):
   # But for some reason pulling components from two lists at a time is
   # extremely inefficient- the hack is liberal use of zip() to collapse
   # everything into one list.
-  #windRecords, waveRecords = zip(*metData)
+  windRecords, waveRecords = zip(*metData)
   records = [ 
-    (met, wave)
-    for met, wave in 
-      zip( metData, densityData )
-    if met[0]['datetime'] in validTimeStamps
+    (
+      wind, 
+      joinWithSpectra( wave, densitySpectra)
+    )
+    for wind, wave, densitySpectra in 
+      zip( windRecords, waveRecords, densityData )
+    if wind['datetime'] in validTimeStamps
   ]
 
   return zip(*records)
@@ -94,7 +100,7 @@ def fetchBuoyRecords( buoyNum, startTime, stopTime, verbose = False ):
 
 def fetchRecords( timeSpan, buoyNum, dataType ):
   records = [
-    rawToRecords( data, dataType )
+    rawToRecords( data, buoyNum, dataType )
     for data in [ fetchData( year, buoyNum, dataType )
       for year in timeSpan ]
     if NDBCGaveData(data) ]
@@ -144,10 +150,15 @@ def NDBCGaveData( responseString ):
   else:
     return True
 
-def rawToRecords( rawData, dataType ):
+def rawToRecords( rawData, buoyNum, dataType ):
   # Need to use re.split('\s+',line) instead of line.split(' ') because
   # there is a variable amount of whitespace separating elements.
-  parsedData = [ re.split('\s+', line) for line in rawData.splitlines()
+  rawData = rawData.splitlines()
+
+  if dataType == 'specDensity':
+    binLine = re.split( '\s+', rawData.pop(0) )
+
+  parsedData = [ re.split('\s+', line) for line in rawData
     if not line.startswith('#') and not line.startswith('YY') ]
 
   # Ugly hack #1: NDBC added a "minutes" column in 2005- this code
@@ -159,12 +170,14 @@ def rawToRecords( rawData, dataType ):
 
   if dataType == 'meteorological':  records = [
       (
-        { 
+        {
+          'buoyNumber': buoyNum,
           'datetime': dateFromRaw( line[0:C] ),
           'winDirection': float(line[C]),
           'winSpeed': float(line[C+1])
         },
         { 
+          'buoyNumber': buoyNum,
           'datetime':  dateFromRaw( line[0:C] ),
           'wavHeight': float(line[C+3]),
           'wavPeakDir': float(line[C+4]),
@@ -176,7 +189,11 @@ def rawToRecords( rawData, dataType ):
   elif dataType == 'specDensity':
     records = [
       { 
+        'buoyNumber': buoyNum,
         'datetime': dateFromRaw( line[0:C] ),
+        'densityBins': [ float(x) for x in binLine[C:] ], 
+        # Not the most efficient to store a copy of the bins in each record but
+        # this allows the bins to change over time.
         'density': [ float(x) for x in line[C:] ]
       }
       for line in parsedData
@@ -214,6 +231,12 @@ def isInsideTimespan( aDate, startTime, stopTime ):
     return True
   else:
     return False
+
+def joinWithSpectra( waveRecord, *spectraRecords ):
+  for spectra in spectraRecords:
+    waveRecord.update( spectra )
+
+  return waveRecord
 
 def dateFromRaw( line ):
   # Ugly hack #2: This one is truly hideous- not all hourly
