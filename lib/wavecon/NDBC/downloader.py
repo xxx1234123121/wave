@@ -33,28 +33,18 @@ from itertools import chain
 from geoalchemy import WKTSpatialElement
 
 #------------------------------------------------------------------------------
-#  Imports from WaveConnect libraries
+#  Imports from other NDBC submodules
 #------------------------------------------------------------------------------
 from .globals import *
-from wavecon import DBman
 
 
 #------------------------------------------------------------------------------
 #  Metadata, Object Classes and Other Constants
 #------------------------------------------------------------------------------
 
-# Database setup
-from wavecon.config import DBconfig as _DBconfig
-
-BuoySource = DBman.accessTable( _DBconfig, 'tblsource' )
-WindRecord = DBman.accessTable( _DBconfig, 'tblwind' )
-WaveRecord = DBman.accessTable( _DBconfig, 'tblwave' )
-
-_session = DBman.startSession( _DBconfig )
-
-#---------------------------------------------------------------------
+#------------------------------------------------------------------------------
 #  Data Retrieval
-#---------------------------------------------------------------------
+#------------------------------------------------------------------------------
 def fetchBuoyRecords( buoyNum, startTime, stopTime, verbose = False ):
 
   # Determine the years that need to be downloaded.
@@ -68,15 +58,18 @@ def fetchBuoyRecords( buoyNum, startTime, stopTime, verbose = False ):
   # the meterological data, or vice-versa.  The solution is to form an
   # intersection of the date stamps common to both data sets.  This
   # set will later be used to filter the records.
-  metTimeStamps = set([ wind.datetime for wind, _ in metData ])
-  densityTimeStamps = set([ density.datetime
-    for density in densityData ])
+  metTimeStamps = set([ wind['datetime'] for wind, _ in metData ])
+  densityTimeStamps = set([ 
+    density['datetime']
+    for density in densityData
+  ])
 
-  validTimeStamps = [ timestamp
+  validTimeStamps = [ 
+    timestamp
     for timestamp in
       set.intersection( densityTimeStamps, metTimeStamps )
-    if isInsideTimespan( timestamp, startTime, stopTime ) ]
-
+    if isInsideTimespan( timestamp, startTime, stopTime )
+  ]
 
   # The following list comprehension should work:
   #
@@ -88,16 +81,13 @@ def fetchBuoyRecords( buoyNum, startTime, stopTime, verbose = False ):
   # But for some reason pulling components from two lists at a time is
   # extremely inefficient- the hack is liberal use of zip() to collapse
   # everything into one list.
-  windRecords, waveRecords = zip(*metData)
-
+  #windRecords, waveRecords = zip(*metData)
   records = [ 
-    ( 
-      associateWithBuoy( wind, buoyNum ), 
-      formWaveRecord( wave, [ spectra.density ], buoyNum )
-    )
-    for wind, wave, spectra in 
-      zip( windRecords, waveRecords, densityData )
-    if wind.datetime in validTimeStamps ]
+    (met, wave)
+    for met, wave in 
+      zip( metData, densityData )
+    if met[0]['datetime'] in validTimeStamps
+  ]
 
   return zip(*records)
 
@@ -169,75 +159,32 @@ def rawToRecords( rawData, dataType ):
 
   if dataType == 'meteorological':  records = [
       (
-        WindRecord(
-          winDateTime =  dateFromRaw( line[0:C] ),
-          winDirection = float(line[C]),
-          winSpeed = float(line[C+1])
-        ),
-        WaveRecord(
-          wavDateTime =  dateFromRaw( line[0:C] ),
-          wavHeight = float(line[C+3]),
-          wavPeakDir = float(line[C+4]),
-          wavPeakPeriod = float(line[C+6])
-        )
+        { 
+          'datetime': dateFromRaw( line[0:C] ),
+          'winDirection': float(line[C]),
+          'winSpeed': float(line[C+1])
+        },
+        { 
+          'datetime':  dateFromRaw( line[0:C] ),
+          'wavHeight': float(line[C+3]),
+          'wavPeakDir': float(line[C+4]),
+          'wavPeakPeriod': float(line[C+6])
+        }
       )
       for line in parsedData
     ]
   elif dataType == 'specDensity':
     records = [
-      FrequencySpectra( 
-        dateFromRaw( line[0:C] ),
-        [ float(x) for x in line[C:] ]
-      )
+      { 
+        'datetime': dateFromRaw( line[0:C] ),
+        'density': [ float(x) for x in line[C:] ]
+      }
       for line in parsedData
     ]
   else:
     raise TypeError
 
   return records
-
-
-#---------------------------------------------------------------------
-#  Database Interaction
-#---------------------------------------------------------------------
-def getBuoyFromDB( buoyNum ):
-  buoy = _session.query(BuoySource)\
-      .filter( BuoySource.srcname == getBuoyName( buoyNum ) ).first()
-
-  if buoy:
-    return buoy
-  else:
-    # A record for this buoy does not exist in the DB. Create it.
-    buoy = BuoySource( srcName = getBuoyName( buoyNum ) )
-
-    _session.add( buoy )
-    _session.commit()
-
-    return buoy
-
-def getBuoyID( buoyNum ):
-  id = getBuoyFromDB( buoyNum ).srcid
-  return id
-
-
-def associateWithBuoy( record, buoyNum ):
-  record.location = getBuoyLoc( buoyNum, asWKT = True )
-  record.sourceid = getBuoyID( buoyNum )
-
-  return record
-
-def formWaveRecord( waveRecord, spectra, buoyNum ):
-  waveRecord = associateWithBuoy( waveRecord, buoyNum )
-  waveRecord.wavspectra = spectra
-  waveRecord.wavspectraid = '1'
-
-  return waveRecord
-
-def commitToDB( records ):
-  _session.add_all( records )
-  _session.commit()
-
-  return None
 
 
 #---------------------------------------------------------------------

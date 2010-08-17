@@ -2,7 +2,6 @@ from collections import namedtuple
 
 # Custom objects
 Location = namedtuple( 'Location', 'lon lat' )
-FrequencySpectra = namedtuple( 'FrequencySpectra', 'datetime density' )
 
 # Metadata setup
 BUOY_META = {
