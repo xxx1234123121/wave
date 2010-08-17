@@ -28,7 +28,7 @@ import datetime
 import json
 
 
-from wavecon import NDBC
+from wavecon.NDBC import downloader
 
 
 """
@@ -92,9 +92,10 @@ if __name__ == '__main__':
 
   print "\n\nHello, world!\n"
 
-  windRecords, waveRecords = NDBC.fetchBuoyRecords( args.buoyNum, args.startTime, args.stopTime, 'meteorological' )
-  NDBC.commitToDB( windRecords )
-  NDBC.commitToDB( waveRecords )
+  windRecords, waveRecords = downloader.fetchBuoyRecords( args.buoyNum, args.startTime, args.stopTime, 'meteorological' )
+  print windRecords
+  #NDBC.commitToDB( windRecords )
+  #NDBC.commitToDB( waveRecords )
 
 
   #checkForDate = lambda obj: obj.isoformat() if isinstance( obj, datetime.datetime ) else None
