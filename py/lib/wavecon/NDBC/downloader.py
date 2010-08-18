@@ -56,7 +56,7 @@ def fetchBuoyRecords( buoyNum, startTime, stopTime, verbose = False ):
     )
 
   # Determine the years that need to be downloaded.
-  timeSpan = range( startTime.year, stopTime.year + 1 )
+  timeSpan = calcDownloadDates( startTime, stopTime )
 
   metData =  fetchRecords( timeSpan, buoyNum, 'meteorological' )
   densityData = fetchRecords( timeSpan, buoyNum, 'specDensity' )
@@ -145,8 +145,8 @@ def fetchBuoyRecords( buoyNum, startTime, stopTime, verbose = False ):
 def fetchRecords( timeSpan, buoyNum, dataType ):
   records = [
     rawToRecords( data, buoyNum, dataType )
-    for data in [ fetchData( year, buoyNum, dataType )
-      for year in timeSpan ]
+    for data in [ fetchData( time, buoyNum, dataType )
+      for time in timeSpan ]
     if NDBCGaveData(data) ]
 
   # The above list comprehension returns a list of lists with each
@@ -154,52 +154,62 @@ def fetchRecords( timeSpan, buoyNum, dataType ):
   # used to flatten the list of lists into a single list.
   return list(chain.from_iterable( records ))
 
-def fetchData( year, buoyNum, dataType ):
+def fetchData( time, buoyNum, dataType ):
   BASE_URL = "http://www.ndbc.noaa.gov/view_text_file.php"
   PARAMS = {
 
     'meteorological' : {
       'fileSep' : 'h',
-      'dataDir' : "data/historical/stdmet/"
+      'dataDir' : "stdmet"
     },
 
     'specDensity' : {
       'fileSep' : 'w',
-      'dataDir' : 'data/historical/swden/'
+      'dataDir' : 'swden'
     },
 
     'directionAlpha1' : {
       'fileSep' : 'd',
-      'dataDir' : 'data/historical/swdir/'
+      'dataDir' : 'swdir'
     },
 
     'directionAlpha2' : {
       'fileSep' : 'i',
-      'dataDir' : 'data/historical/swdir2/'
+      'dataDir' : 'swdir2'
     },
 
     'directionR1' : {
       'fileSep' : 'j',
-      'dataDir' : 'data/historical/swr1/'
+      'dataDir' : 'swr1'
     },
 
     'directionR2' : {
       'fileSep' : 'k',
-      'dataDir' : 'data/historical/swr2/'
+      'dataDir' : 'swr2'
     }
 
   }
 
   case = PARAMS[ dataType ]
 
-  dataDict = {
-    'filename' : str( buoyNum ) + case['fileSep'] + str( year ) + '.txt.gz',
-    'dir' : case['dataDir']
-  }
+  if time[0] == 'year':
+    dataDict = {
+      'filename' : "{}{}{}.txt.gz".format( buoyNum, case['fileSep'], time[1] ),
+      'dir' : "data/historical/{}/".format( case['dataDir'] )
+    }
+  elif time[0] == 'month':
+    year = datetime.now().year
+    month = datetime(2000,time[1],1).strftime('%b')
+    dataDict = {
+      'filename' : "{}{}{}.txt.gz".format( buoyNum, time[1], year ),
+      'dir' : "data/{}/{}/".format( case['dataDir'], month )
+    }
 
   # Annoying thing about Python's URL encoder- it will ALWAYS substitute characters.
   # E.g slashes, /, will become %2. The urllib.unquote function fixes this.
   urlData = urllib.unquote(urllib.urlencode( dataDict ))
+
+  #print "{}?{}".format( BASE_URL, urlData )
 
   NDBC = urllib2.urlopen( "{}?{}".format( BASE_URL, urlData ) )
   data = NDBC.read()
@@ -328,6 +338,34 @@ def getBuoyLoc( buoyNum, asWKT = False ):
     return WKTSpatialElement( "POINT({} {})".format(*buoyLoc) )
   else:
     return buoyLoc
+
+def calcDownloadDates( startTime, stopTime ):
+  # NDBC data is stored in yearly chunks for historical data and monthly chunks
+  # for current data.  This script determines which chunks need to be downloaded
+  # to cover the given time span.  If the startTime and stopTime occur before
+  # the current year, a download is executed for each year.  If the startTime or
+  # stopTime fall within the current year, a download is executed for each
+  # month in the year.
+  
+  now = datetime.now()
+  getChunks = []
+
+  if startTime.year < now.year and stopTime.year == now.year:
+    getYears = range( startTime.year, stopTime.year )
+    getChunks += zip( ['year'] * len(getYears), getYears )
+  elif startTime.year < now.year and stopTime.year < now.year:
+    getYears = range( startTime.year, stopTime.year + 1 )
+    getChunks += zip( ['year'] * len(getYears), getYears )
+
+  if startTime.year < now.year and stopTime.year == now.year:
+    getMonths = range( 1, stopTime.month + 1 )
+    getChunks += zip( ['month'] * len(getMonths), getMonths )
+  if startTime.year == now.year and stopTime.year == now.year:
+    getMonths = range( startTime.month, stopTime.month + 1 )
+    getChunks += zip( ['month'] * len(getMonths), getMonths )
+
+  return getChunks
+
 
 
 def isInsideTimespan( aDate, startTime, stopTime ):
