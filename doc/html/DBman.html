@@ -1,0 +1,292 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>The DBman Module &mdash; WaveConnect v0.1 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/js/jsMath/easy/load.js"></script>
+    <link rel="top" title="WaveConnect v0.1 documentation" href="index.html" />
+    <link rel="next" title="The NDBC Module" href="NDBC.html" />
+    <link rel="prev" title="The config Module" href="config.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="NDBC.html" title="The NDBC Module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="config.html" title="The config Module"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">WaveConnect v0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-wavecon.DBman">
+<span id="the-dbman-module"></span><h1>The <tt class="docutils literal"><span class="pre">DBman</span></tt> Module<a class="headerlink" href="#module-wavecon.DBman" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>This module abstracts the WaveConnect database into a set of
+Python classes that can be used by other scripts to interact with
+the database.</p>
+<dl class="docutils">
+<dt><strong>Development Status:</strong></dt>
+<dd><strong>Last Modified:</strong> July 24, 2010 by Charlie Sharpsteen</dd>
+</dl>
+</div>
+<div class="section" id="design-notes-ravings">
+<h2>&#8220;Design Notes&#8221;/Ravings<a class="headerlink" href="#design-notes-ravings" title="Permalink to this headline">¶</a></h2>
+<p>Going to try this the &#8220;reflective&#8221; way- which means SQLAlchemy will
+infer the layout of the database tables by talking to the database.
+Some special columns, such as GIS Points, will have to be declared
+manually using GeoAlchemy extensions.</p>
+<p>The advantage to this approach is that it is quick n&#8217; dirty to
+implement.</p>
+<p>The drawbacks are that the database structure is very opaque to the
+Python programmer- most everything is happening by &#8220;magic&#8221;.  Also,
+the Python classes which are bound to the database tables <em>must</em>
+have attributes whose names match the names of the columns.</p>
+<p>If it becomes a maintenance nightmare, the alternative is to switch
+to a &#8220;declarative&#8221; style as described in:</p>
+<blockquote>
+<dl class="docutils">
+<dt><a class="reference external" href="http://www.sqlalchemy.org/docs/ormtutorial">http://www.sqlalchemy.org/docs/ormtutorial</a>.html#</dt>
+<dd>creating-table-class-and-mapper-all-at-once-declaratively</dd>
+</dl>
+</blockquote>
+<p>With the declarative style, the database Table schema is embedded
+inside the Python classes that are being mapped to those tables.</p>
+<p>The good news is that we can switch from &#8220;reflective&#8221; to 
+&#8220;declarative&#8221; without changing how use the Python objects that are
+being mapped to database tables. I.E. other scripts that depend
+on this module will not have to be re-written because the DBman API
+will not change.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>Update</p>
+<p>After implementing the reflective style, I feel it has one nice
+advantage over the declarative style for our use case.  With the
+reflective style, one does not have to worry about managing 
+things such as Foreign Keys or Constraints or Indexes or...</p>
+<p class="last">So, as long as our Schema is defined in a SQL script, this is the
+way to go.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>Update to update:</p>
+<p class="last">I stumbled across an example in the GeoAlchemy source code that
+shows how to combine the reflexive and declarative styles.  This
+should give the best of both worlds and reduce the verbosity and
+repetition of the code by a significant amount.</p>
+</div>
+</div>
+<div class="admonition-todo admonition " id="index-0">
+<p class="first admonition-title">Todo</p>
+<p class="last">Describe session usage- how it is best to create one global session
+per module to avoid &#8220;Maximum Connections Exceeded&#8221; errors and the
+overhead involved with opening/closing sessions in each function
+call (can double execution time).</p>
+</div>
+<div class="section" id="class-descriptions">
+<h2>Class Descriptions<a class="headerlink" href="#class-descriptions" title="Permalink to this headline">¶</a></h2>
+<div class="admonition-todo admonition " id="index-1">
+<p class="first admonition-title">Todo</p>
+<p class="last">Describe class attributes and synonyms.</p>
+</div>
+</div>
+<div class="section" id="database-access-functions">
+<h2>Database Access Functions<a class="headerlink" href="#database-access-functions" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="wavecon.DBman.accessTable">
+<tt class="descclassname">wavecon.DBman.</tt><tt class="descname">accessTable</tt><big>(</big><em>DBconfig</em>, <em>template</em>, <em>name=None</em><big>)</big><a class="reference internal" href="_modules/wavecon/DBman.html#accessTable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wavecon.DBman.accessTable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a Class that can be used to spawn objects which are 
+suitable for serialization to a database table.</p>
+<p>Argument Info:</p>
+<blockquote>
+<ul>
+<li><dl class="first docutils">
+<dt><em>DBconfig</em>:</dt>
+<dd><p class="first last">A python dictionary containing access credentials for the
+database server.  See <tt class="xref py py-data docutils literal"><span class="pre">wavecon.config.DBconfig</span></tt>
+for the structure of this dictionary.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><em>template</em></dt>
+<dd><p class="first last">A string specifying the Schema that should be used to model
+the database table you are trying to access.  I.E. if you
+are trying to access a table that is defined like
+<tt class="docutils literal"><span class="pre">tblWave</span></tt> in <tt class="docutils literal"><span class="pre">DB.psql</span></tt> then pass the string
+<tt class="docutils literal"><span class="pre">'tblwave'</span></tt></p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><em>name</em></dt>
+<dd><p class="first last">An optional name for the database table. I.E. you are
+trying to access a table that has the same schema as
+<tt class="docutils literal"><span class="pre">tblWave</span></tt> but is called <tt class="docutils literal"><span class="pre">tblWaveModeled</span></tt>.  You would
+then pass <tt class="docutils literal"><span class="pre">'tblwave'</span></tt> for the <em>template</em> parameter and
+<tt class="docutils literal"><span class="pre">'tblwavemodeled'</span></tt> for the <em>name</em> parameter.  If left
+blank it will default to the value passed for <em>template</em></p>
+</dd>
+</dl>
+</li>
+</ul>
+</blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="wavecon.DBman.startSession">
+<tt class="descclassname">wavecon.DBman.</tt><tt class="descname">startSession</tt><big>(</big><em>DBconfig</em><big>)</big><a class="reference internal" href="_modules/wavecon/DBman.html#startSession"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#wavecon.DBman.startSession" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an object representing a connection to the database.
+This object may be used in combination with a class returned
+by <tt class="docutils literal"><span class="pre">accessTable()</span></tt> to add objects to the database, run queries,
+perform updates and do all kinds of useful things.</p>
+<p>The following websites explain how to use <tt class="docutils literal"><span class="pre">session</span></tt> objects:</p>
+<blockquote>
+<ul class="simple">
+<li><a class="reference external" href="http://www.sqlalchemy.org/docs/ormtutorial.html#creating-a-session">SQLAlchemy</a> documentation.  Describes basic usage.</li>
+<li><a class="reference external" href="http://www.geoalchemy.org/tutorial.html#performing-spatial-queries">GeoAlchemy</a> documentation.  Describes how to run PostGIS
+enabled queries.</li>
+</ul>
+</blockquote>
+<p>See <tt class="xref py py-data docutils literal"><span class="pre">wavecon.config.DBconfig</span></tt> for a description of the
+<em>DBconfig</em> parameter.</p>
+<blockquote>
+</blockquote>
+</dd></dl>
+
+</div>
+<div class="section" id="example">
+<h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
+<p>The following is an example useage of DBman to insert a <tt class="docutils literal"><span class="pre">Wind</span></tt> object into
+the database table <tt class="docutils literal"><span class="pre">tblWind</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">wavecon.config</span> <span class="kn">import</span> <span class="n">DBconfig</span>
+<span class="kn">from</span> <span class="nn">wavecon</span> <span class="kn">import</span> <span class="n">DBman</span>
+<span class="kn">from</span> <span class="nn">wavecon.NDBC.DB</span> <span class="kn">import</span> <span class="n">getBuoyID</span>
+
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">geoalchemy</span> <span class="kn">import</span> <span class="n">WKTSpatialElement</span>
+
+<span class="n">Wind</span> <span class="o">=</span> <span class="n">DBman</span><span class="o">.</span><span class="n">accessTable</span><span class="p">(</span> <span class="n">DBconfig</span><span class="p">,</span> <span class="s">&#39;tblwind&#39;</span><span class="p">,</span> <span class="s">&#39;tblwind&#39;</span> <span class="p">)</span>
+<span class="n">session</span> <span class="o">=</span> <span class="n">DBman</span><span class="o">.</span><span class="n">startSession</span><span class="p">(</span> <span class="n">DBconfig</span> <span class="p">)</span>
+
+<span class="n">buoyID</span> <span class="o">=</span> <span class="n">getBuoyID</span><span class="p">(</span> <span class="mi">46022</span> <span class="p">)</span>
+
+<span class="n">time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span> <span class="s">&quot;4/20/2010 4:20:00&quot;</span><span class="p">,</span><span class="s">&quot;%m/</span><span class="si">%d</span><span class="s">/%Y %H:%M:%S&quot;</span> <span class="p">)</span>
+
+<span class="n">windTest</span> <span class="o">=</span> <span class="n">Wind</span><span class="p">(</span> <span class="n">buoyID</span><span class="p">,</span> <span class="n">WKTSpatialElement</span><span class="p">(</span><span class="s">&#39;POINT(40.86 -124.08)&#39;</span><span class="p">),</span> <span class="n">time</span><span class="p">,</span> <span class="mf">12.0</span><span class="p">,</span> <span class="mf">120.0</span> <span class="p">)</span>
+<span class="k">print</span> <span class="n">windTest</span>
+
+<span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">windTest</span><span class="p">)</span>
+<span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+<span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Wind</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+  <span class="k">print</span> <span class="n">record</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">The <tt class="docutils literal"><span class="pre">DBman</span></tt> Module</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#design-notes-ravings">&#8220;Design Notes&#8221;/Ravings</a></li>
+<li><a class="reference internal" href="#class-descriptions">Class Descriptions</a></li>
+<li><a class="reference internal" href="#database-access-functions">Database Access Functions</a></li>
+<li><a class="reference internal" href="#example">Example</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="config.html"
+                        title="previous chapter">The <tt class="docutils literal"><span class="pre">config</span></tt> Module</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="NDBC.html"
+                        title="next chapter">The <tt class="docutils literal"><span class="pre">NDBC</span></tt> Module</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/DBman.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="NDBC.html" title="The NDBC Module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="config.html" title="The config Module"
+             >previous</a> |</li>
+        <li><a href="index.html">WaveConnect v0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, Nir Berezovsky, Charlie Sharpsteen, Colin Sheppard.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.1.
+    </div>
+  </body>
+</html>

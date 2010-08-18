@@ -1,0 +1,469 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>wavecon.DBman &mdash; WaveConnect v0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/js/jsMath/easy/load.js"></script>
+    <link rel="top" title="WaveConnect v0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">WaveConnect v0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for wavecon.DBman</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Overview</span>
+<span class="sd">--------</span>
+
+<span class="sd">This module abstracts the WaveConnect database into a set of</span>
+<span class="sd">Python classes that can be used by other scripts to interact with</span>
+<span class="sd">the database.</span>
+
+
+<span class="sd">**Development Status:**</span>
+<span class="sd">  **Last Modified:** July 24, 2010 by Charlie Sharpsteen</span>
+
+<span class="sd">&quot;Design Notes&quot;/Ravings</span>
+<span class="sd">----------------------</span>
+
+<span class="sd">Going to try this the &quot;reflective&quot; way- which means SQLAlchemy will</span>
+<span class="sd">infer the layout of the database tables by talking to the database.</span>
+<span class="sd">Some special columns, such as GIS Points, will have to be declared</span>
+<span class="sd">manually using GeoAlchemy extensions.</span>
+
+<span class="sd">The advantage to this approach is that it is quick n&#39; dirty to</span>
+<span class="sd">implement.</span>
+
+<span class="sd">The drawbacks are that the database structure is very opaque to the</span>
+<span class="sd">Python programmer- most everything is happening by &quot;magic&quot;.  Also,</span>
+<span class="sd">the Python classes which are bound to the database tables *must*</span>
+<span class="sd">have attributes whose names match the names of the columns.</span>
+
+<span class="sd">If it becomes a maintenance nightmare, the alternative is to switch</span>
+<span class="sd">to a &quot;declarative&quot; style as described in:</span>
+
+<span class="sd">  http://www.sqlalchemy.org/docs/ormtutorial.html#</span>
+<span class="sd">    creating-table-class-and-mapper-all-at-once-declaratively</span>
+
+<span class="sd">With the declarative style, the database Table schema is embedded</span>
+<span class="sd">inside the Python classes that are being mapped to those tables.</span>
+
+<span class="sd">The good news is that we can switch from &quot;reflective&quot; to </span>
+<span class="sd">&quot;declarative&quot; without changing how use the Python objects that are</span>
+<span class="sd">being mapped to database tables. I.E. other scripts that depend</span>
+<span class="sd">on this module will not have to be re-written because the DBman API</span>
+<span class="sd">will not change.</span>
+
+<span class="sd">.. note:: Update</span>
+
+<span class="sd">  After implementing the reflective style, I feel it has one nice</span>
+<span class="sd">  advantage over the declarative style for our use case.  With the</span>
+<span class="sd">  reflective style, one does not have to worry about managing </span>
+<span class="sd">  things such as Foreign Keys or Constraints or Indexes or...</span>
+
+<span class="sd">  So, as long as our Schema is defined in a SQL script, this is the</span>
+<span class="sd">  way to go.</span>
+
+<span class="sd">.. note:: Update to update:</span>
+
+<span class="sd">  I stumbled across an example in the GeoAlchemy source code that</span>
+<span class="sd">  shows how to combine the reflexive and declarative styles.  This</span>
+<span class="sd">  should give the best of both worlds and reduce the verbosity and</span>
+<span class="sd">  repetition of the code by a significant amount.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="kn">import</span> <span class="n">create_engine</span><span class="p">,</span> <span class="n">MetaData</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy.ext.declarative</span> <span class="kn">import</span> <span class="n">declarative_base</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy.orm</span> <span class="kn">import</span> <span class="n">sessionmaker</span><span class="p">,</span> <span class="n">synonym</span>
+
+<span class="kn">from</span> <span class="nn">geoalchemy</span> <span class="kn">import</span> <span class="n">GeometryColumn</span>
+<span class="kn">from</span> <span class="nn">geoalchemy</span> <span class="kn">import</span> <span class="n">Point</span>
+
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+
+<span class="k">def</span> <span class="nf">_tblSourceTypeTmpl</span><span class="p">(</span> <span class="n">tableName</span><span class="p">,</span> <span class="n">BaseClass</span> <span class="p">):</span>
+
+  <span class="k">class</span> <span class="nc">SourceType</span><span class="p">(</span><span class="n">BaseClass</span><span class="p">):</span>
+    <span class="n">__tablename__</span> <span class="o">=</span> <span class="n">tableName</span>
+    <span class="n">__table_args__</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;autoload&#39;</span> <span class="p">:</span> <span class="bp">True</span><span class="p">,</span> <span class="s">&#39;useexisting&#39;</span> <span class="p">:</span> <span class="bp">True</span> <span class="p">}</span> 
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">sourceTypeName</span> <span class="o">=</span> <span class="bp">None</span> <span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">sourcetypename</span> <span class="o">=</span> <span class="n">sourceTypeName</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+      <span class="k">return</span> <span class="s">&quot;&lt;SourceTypeRecord(&#39;{}&#39;)&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sourcetypename</span> <span class="p">)</span>
+
+    <span class="n">sourcetypeid</span> <span class="o">=</span> <span class="n">synonym</span><span class="p">(</span> <span class="s">&#39;id&#39;</span><span class="p">,</span> <span class="n">map_column</span> <span class="o">=</span> <span class="bp">True</span> <span class="p">)</span>
+
+
+  <span class="k">return</span> <span class="n">SourceType</span>
+
+
+<span class="k">def</span> <span class="nf">_tblSourceTmpl</span><span class="p">(</span> <span class="n">tableName</span><span class="p">,</span> <span class="n">BaseClass</span> <span class="p">):</span>
+
+  <span class="k">class</span> <span class="nc">Source</span><span class="p">(</span><span class="n">BaseClass</span><span class="p">):</span>
+    <span class="n">__tablename__</span> <span class="o">=</span> <span class="n">tableName</span>
+    <span class="n">__table_args__</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;autoload&#39;</span> <span class="p">:</span> <span class="bp">True</span><span class="p">,</span> <span class="s">&#39;useexisting&#39;</span> <span class="p">:</span> <span class="bp">True</span> <span class="p">}</span> 
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">srcName</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">srcConfig</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> 
+      <span class="n">srcBeginExecution</span> <span class="o">=</span> <span class="bp">None</span> <span class="p">,</span> <span class="n">srcEndExecution</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> 
+      <span class="n">srcSourceTypeID</span> <span class="o">=</span> <span class="bp">None</span> 
+    <span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">srcname</span> <span class="o">=</span> <span class="n">srcName</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">srcconfig</span> <span class="o">=</span> <span class="n">srcConfig</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">srcbeginexecution</span> <span class="o">=</span> <span class="n">srcBeginExecution</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">srcendexecution</span> <span class="o">=</span> <span class="n">srcEndExecution</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">srcsourcetypeid</span> <span class="o">=</span> <span class="n">srcSourceTypeID</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+      <span class="k">return</span> <span class="s">&quot;&lt;SourceRecord(&#39;{}&#39;,&#39;{}&#39;,&#39;{}&#39;,&#39;{}&#39;,&#39;{}&#39;)&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">srcname</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">srcconfig</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">srcbeginexecution</span><span class="p">,</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">srcendexecution</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">srcsourcetypeid</span> <span class="p">)</span>
+
+    <span class="n">srcid</span> <span class="o">=</span> <span class="n">synonym</span><span class="p">(</span> <span class="s">&#39;id&#39;</span><span class="p">,</span> <span class="n">map_column</span> <span class="o">=</span> <span class="bp">True</span> <span class="p">)</span>
+
+
+  <span class="k">return</span> <span class="n">Source</span>
+
+
+<span class="k">def</span> <span class="nf">_tblSpectraTmpl</span><span class="p">(</span> <span class="n">tableName</span><span class="p">,</span> <span class="n">BaseClass</span> <span class="p">):</span>
+
+  <span class="k">class</span> <span class="nc">Spectra</span><span class="p">(</span><span class="n">BaseClass</span><span class="p">):</span>
+    <span class="n">__tablename__</span> <span class="o">=</span> <span class="n">tableName</span>
+    <span class="n">__table_args__</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;autoload&#39;</span> <span class="p">:</span> <span class="bp">True</span><span class="p">,</span> <span class="s">&#39;useexisting&#39;</span> <span class="p">:</span> <span class="bp">True</span> <span class="p">}</span> 
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">spectraFreq</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">spectraDir</span> <span class="o">=</span> <span class="bp">None</span> <span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">spectrafreq</span> <span class="o">=</span> <span class="n">spectraFreq</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">spectradir</span> <span class="o">=</span> <span class="n">spectraDir</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+      <span class="k">return</span> <span class="s">&quot;&lt;SpectraRecord(&#39;{}&#39;,&#39;{}&#39;)&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spectrafreq</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">spectradir</span> <span class="p">)</span>
+
+    <span class="n">spectraid</span> <span class="o">=</span> <span class="n">synonym</span><span class="p">(</span> <span class="s">&#39;id&#39;</span><span class="p">,</span> <span class="n">map_column</span> <span class="o">=</span> <span class="bp">True</span> <span class="p">)</span>
+
+  <span class="k">return</span> <span class="n">Spectra</span>
+
+
+<span class="k">def</span> <span class="nf">_tblWaveTmpl</span><span class="p">(</span> <span class="n">tableName</span><span class="p">,</span> <span class="n">BaseClass</span> <span class="p">):</span>
+
+  <span class="k">class</span> <span class="nc">Wave</span><span class="p">(</span><span class="n">BaseClass</span><span class="p">):</span>
+    <span class="n">__tablename__</span> <span class="o">=</span> <span class="n">tableName</span>
+    <span class="n">__table_args__</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;autoload&#39;</span> <span class="p">:</span> <span class="bp">True</span><span class="p">,</span> <span class="s">&#39;useexisting&#39;</span> <span class="p">:</span> <span class="bp">True</span> <span class="p">}</span> 
+    <span class="n">wavlocation</span> <span class="o">=</span> <span class="n">GeometryColumn</span><span class="p">(</span> <span class="n">Point</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">wavSourceID</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">wavSpectraID</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> 
+      <span class="n">wavLocation</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">wavDateTime</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">wavSpectra</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> 
+      <span class="n">wavHeight</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">wavPeakDir</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">wavPeakPeriod</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">wavsourceid</span> <span class="o">=</span> <span class="n">wavSourceID</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">wavspectraid</span> <span class="o">=</span> <span class="n">wavSpectraID</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">wavlocation</span> <span class="o">=</span> <span class="n">wavLocation</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">wavdatetime</span> <span class="o">=</span> <span class="n">wavDateTime</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">wavspectra</span> <span class="o">=</span> <span class="n">wavSpectra</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">wavheight</span> <span class="o">=</span> <span class="n">wavHeight</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">wavpeakdir</span> <span class="o">=</span> <span class="n">wavPeakDir</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">wavpeakperiod</span> <span class="o">=</span> <span class="n">wavPeakPeriod</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+      <span class="k">return</span> <span class="s">&quot;&lt;WaveRecord(&#39;{}&#39;,&#39;{}&#39;,&#39;{}&#39;,&#39;{}&#39;,&#39;{}&#39;,&#39;{}&#39;,&#39;{}&#39;,&#39;{}&#39;)&gt;&quot;</span>\
+        <span class="o">.</span><span class="n">format</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">wavsourceid</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wavspectraid</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wavlocation</span><span class="p">,</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">wavdatetime</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wavspectra</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wavheight</span><span class="p">,</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">wavpeakdir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wavpeakperiod</span> <span class="p">)</span>
+
+    <span class="n">wavid</span> <span class="o">=</span> <span class="n">synonym</span><span class="p">(</span> <span class="s">&#39;id&#39;</span><span class="p">,</span> <span class="n">map_column</span> <span class="o">=</span> <span class="bp">True</span> <span class="p">)</span>
+    <span class="n">wavsourceid</span> <span class="o">=</span> <span class="n">synonym</span><span class="p">(</span> <span class="s">&#39;sourceid&#39;</span><span class="p">,</span> <span class="n">map_column</span> <span class="o">=</span> <span class="bp">True</span> <span class="p">)</span>
+    <span class="n">wavdatetime</span> <span class="o">=</span> <span class="n">synonym</span><span class="p">(</span> <span class="s">&#39;datetime&#39;</span><span class="p">,</span> <span class="n">map_column</span> <span class="o">=</span> <span class="bp">True</span> <span class="p">)</span>
+    <span class="n">wavlocation</span> <span class="o">=</span> <span class="n">synonym</span><span class="p">(</span> <span class="s">&#39;location&#39;</span><span class="p">,</span> <span class="n">map_column</span> <span class="o">=</span> <span class="bp">True</span> <span class="p">)</span>
+
+
+  <span class="k">return</span> <span class="n">Wave</span>
+
+
+<span class="k">def</span> <span class="nf">_tblWindTmpl</span><span class="p">(</span> <span class="n">tableName</span><span class="p">,</span> <span class="n">BaseClass</span> <span class="p">):</span>
+
+  <span class="k">class</span> <span class="nc">Wind</span><span class="p">(</span><span class="n">BaseClass</span><span class="p">):</span>
+    <span class="n">__tablename__</span> <span class="o">=</span> <span class="n">tableName</span>
+    <span class="n">__table_args__</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;autoload&#39;</span> <span class="p">:</span> <span class="bp">True</span><span class="p">,</span> <span class="s">&#39;useexisting&#39;</span> <span class="p">:</span> <span class="bp">True</span> <span class="p">}</span> 
+    <span class="n">winlocation</span> <span class="o">=</span> <span class="n">GeometryColumn</span><span class="p">(</span> <span class="n">Point</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">winSourceID</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">winLocation</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> 
+      <span class="n">winDateTime</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">winSpeed</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">winDirection</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">winsourceid</span> <span class="o">=</span> <span class="n">winSourceID</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">winlocation</span> <span class="o">=</span> <span class="n">winLocation</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">windatetime</span> <span class="o">=</span> <span class="n">winDateTime</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">winspeed</span> <span class="o">=</span> <span class="n">winSpeed</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">windirection</span> <span class="o">=</span> <span class="n">winDirection</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+      <span class="k">return</span> <span class="s">&quot;&lt;WindRecord(&#39;{}&#39;,&#39;{}&#39;,&#39;{}&#39;,&#39;{}&#39;,&#39;{}&#39;)&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">winsourceid</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">winlocation</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">windatetime</span><span class="p">,</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">winspeed</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">windirection</span> <span class="p">)</span>
+
+    <span class="n">winid</span> <span class="o">=</span> <span class="n">synonym</span><span class="p">(</span> <span class="s">&#39;id&#39;</span><span class="p">,</span> <span class="n">map_column</span> <span class="o">=</span> <span class="bp">True</span> <span class="p">)</span>
+    <span class="n">winsourceid</span> <span class="o">=</span> <span class="n">synonym</span><span class="p">(</span> <span class="s">&#39;sourceid&#39;</span><span class="p">,</span> <span class="n">map_column</span> <span class="o">=</span> <span class="bp">True</span> <span class="p">)</span>
+    <span class="n">windatetime</span> <span class="o">=</span> <span class="n">synonym</span><span class="p">(</span> <span class="s">&#39;datetime&#39;</span><span class="p">,</span> <span class="n">map_column</span> <span class="o">=</span> <span class="bp">True</span> <span class="p">)</span>
+    <span class="n">winlocation</span> <span class="o">=</span> <span class="n">synonym</span><span class="p">(</span> <span class="s">&#39;location&#39;</span><span class="p">,</span> <span class="n">map_column</span> <span class="o">=</span> <span class="bp">True</span> <span class="p">)</span>
+
+  <span class="k">return</span> <span class="n">Wind</span>
+
+
+<span class="k">def</span> <span class="nf">_tblCurrentTmpl</span><span class="p">(</span> <span class="n">tableName</span><span class="p">,</span> <span class="n">BaseClass</span> <span class="p">):</span>
+
+  <span class="k">class</span> <span class="nc">Current</span><span class="p">(</span><span class="n">BaseClass</span><span class="p">):</span>
+    <span class="n">__tablename__</span> <span class="o">=</span> <span class="n">tableName</span>
+    <span class="n">__table_args__</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;autoload&#39;</span> <span class="p">:</span> <span class="bp">True</span><span class="p">,</span> <span class="s">&#39;useexisting&#39;</span> <span class="p">:</span> <span class="bp">True</span> <span class="p">}</span> 
+    <span class="n">curlocation</span> <span class="o">=</span> <span class="n">GeometryColumn</span><span class="p">(</span> <span class="n">Point</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">curSourceID</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">curLocation</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> 
+      <span class="n">curDateTime</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">curSpeed</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">curDirection</span> <span class="o">=</span> <span class="bp">None</span> 
+    <span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">cursourceid</span> <span class="o">=</span> <span class="n">curSourceID</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">curlocation</span> <span class="o">=</span> <span class="n">curLocation</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">curdatetime</span> <span class="o">=</span> <span class="n">curDateTime</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">curspeed</span> <span class="o">=</span> <span class="n">curSpeed</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">curdirection</span> <span class="o">=</span> <span class="n">curDirection</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+      <span class="k">return</span> <span class="s">&quot;&lt;CurrentRecord(&#39;{}&#39;,&#39;{}&#39;,&#39;{}&#39;,&#39;{}&#39;,&#39;{}&#39;)&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cursourceid</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">curlocation</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">curdatetime</span><span class="p">,</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">curspeed</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">curdirection</span> <span class="p">)</span>
+
+    <span class="n">curid</span> <span class="o">=</span> <span class="n">synonym</span><span class="p">(</span> <span class="s">&#39;id&#39;</span><span class="p">,</span> <span class="n">map_column</span> <span class="o">=</span> <span class="bp">True</span> <span class="p">)</span>
+    <span class="n">cursourceid</span> <span class="o">=</span> <span class="n">synonym</span><span class="p">(</span> <span class="s">&#39;sourceid&#39;</span><span class="p">,</span> <span class="n">map_column</span> <span class="o">=</span> <span class="bp">True</span> <span class="p">)</span>
+    <span class="n">curdatetime</span> <span class="o">=</span> <span class="n">synonym</span><span class="p">(</span> <span class="s">&#39;datetime&#39;</span><span class="p">,</span> <span class="n">map_column</span> <span class="o">=</span> <span class="bp">True</span> <span class="p">)</span>
+    <span class="n">curlocation</span> <span class="o">=</span> <span class="n">synonym</span><span class="p">(</span> <span class="s">&#39;location&#39;</span><span class="p">,</span> <span class="n">map_column</span> <span class="o">=</span> <span class="bp">True</span> <span class="p">)</span>
+
+  <span class="k">return</span> <span class="n">Current</span>
+
+
+<span class="k">def</span> <span class="nf">_tblBathyTmpl</span><span class="p">(</span> <span class="n">tableName</span><span class="p">,</span> <span class="n">BaseClass</span> <span class="p">):</span>
+
+  <span class="k">class</span> <span class="nc">Bathy</span><span class="p">(</span><span class="n">BaseClass</span><span class="p">):</span>
+    <span class="n">__tablename__</span> <span class="o">=</span> <span class="n">tableName</span>
+    <span class="n">__table_args__</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;autoload&#39;</span> <span class="p">:</span> <span class="bp">True</span><span class="p">,</span> <span class="s">&#39;useexisting&#39;</span> <span class="p">:</span> <span class="bp">True</span> <span class="p">}</span> 
+    <span class="n">bathylocation</span> <span class="o">=</span> <span class="n">GeometryColumn</span><span class="p">(</span> <span class="n">Point</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">bathySourceID</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">bathyLocation</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> 
+      <span class="n">bathyDepth</span> <span class="o">=</span> <span class="bp">None</span> 
+    <span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">bathysourceid</span> <span class="o">=</span> <span class="n">bathySourceID</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">bathylocation</span> <span class="o">=</span> <span class="n">bathyLocation</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">bathydepth</span> <span class="o">=</span> <span class="n">bathyDepth</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+      <span class="k">return</span> <span class="s">&quot;&lt;BathyRecord(&#39;{}&#39;,&#39;{}&#39;,&#39;{}&#39;)&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bathysourceid</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bathylocation</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bathydepth</span> <span class="p">)</span>
+
+    <span class="n">bathyid</span> <span class="o">=</span> <span class="n">synonym</span><span class="p">(</span> <span class="s">&#39;id&#39;</span><span class="p">,</span> <span class="n">map_column</span> <span class="o">=</span> <span class="bp">True</span> <span class="p">)</span>
+    <span class="n">bathysourceid</span> <span class="o">=</span> <span class="n">synonym</span><span class="p">(</span> <span class="s">&#39;sourceid&#39;</span><span class="p">,</span> <span class="n">map_column</span> <span class="o">=</span> <span class="bp">True</span> <span class="p">)</span>
+    <span class="n">bathydatetime</span> <span class="o">=</span> <span class="n">synonym</span><span class="p">(</span> <span class="s">&#39;datetime&#39;</span><span class="p">,</span> <span class="n">map_column</span> <span class="o">=</span> <span class="bp">True</span> <span class="p">)</span>
+    <span class="n">bathylocation</span> <span class="o">=</span> <span class="n">synonym</span><span class="p">(</span> <span class="s">&#39;location&#39;</span><span class="p">,</span> <span class="n">map_column</span> <span class="o">=</span> <span class="bp">True</span> <span class="p">)</span>
+
+  <span class="k">return</span> <span class="n">Bathy</span>
+
+
+<span class="n">_DATABASE_TEMPLATES</span> <span class="o">=</span> <span class="p">{</span>
+
+  <span class="s">&#39;tblsourcetype&#39;</span> <span class="p">:</span> <span class="n">_tblSourceTypeTmpl</span><span class="p">,</span>
+  <span class="s">&#39;tblsource&#39;</span> <span class="p">:</span> <span class="n">_tblSourceTmpl</span><span class="p">,</span>
+  <span class="s">&#39;tblspectra&#39;</span> <span class="p">:</span> <span class="n">_tblSpectraTmpl</span><span class="p">,</span>
+  <span class="s">&#39;tblwave&#39;</span> <span class="p">:</span> <span class="n">_tblWaveTmpl</span><span class="p">,</span>
+  <span class="s">&#39;tblwind&#39;</span> <span class="p">:</span> <span class="n">_tblWindTmpl</span><span class="p">,</span>
+  <span class="s">&#39;tblcurrent&#39;</span> <span class="p">:</span> <span class="n">_tblCurrentTmpl</span><span class="p">,</span>
+  <span class="s">&#39;tblbathy&#39;</span> <span class="p">:</span> <span class="n">_tblBathyTmpl</span>
+
+<span class="p">}</span>
+
+
+<span class="c">#------------------------------------------------------------------</span>
+<span class="c">#  Class Utility Methods</span>
+<span class="c">#------------------------------------------------------------------</span>
+<span class="k">def</span> <span class="nf">recordToDict</span><span class="p">(</span> <span class="nb">object</span> <span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Turns a record pulled from the database into a dictionary.</span>
+<span class="sd">  In :py:func:`wavecon.DBman.accessTable` this method is attached to</span>
+<span class="sd">  the Base object from which all classes representing databse objects</span>
+<span class="sd">  descend.  It provides a convienant way to reduce a database record</span>
+<span class="sd">  to a basic Python object.</span>
+
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="n">dictionary</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="k">for</span>
+    <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">object</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span> <span class="n">value</span> <span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;__&#39;</span><span class="p">)</span>
+    <span class="ow">and</span> <span class="ow">not</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;_&#39;</span><span class="p">)</span> 
+  <span class="p">)</span>
+
+  <span class="k">return</span> <span class="n">dictionary</span>
+
+
+<span class="c">#------------------------------------------------------------------</span>
+<span class="c">#  Database Access Functions</span>
+<span class="c">#------------------------------------------------------------------</span>
+<div class="viewcode-block" id="accessTable"><a class="viewcode-back" href="../../DBman.html#wavecon.DBman.accessTable">[docs]</a><span class="k">def</span> <span class="nf">accessTable</span><span class="p">(</span> <span class="n">DBconfig</span><span class="p">,</span> <span class="n">template</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="bp">None</span> <span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Returns a Class that can be used to spawn objects which are </span>
+<span class="sd">  suitable for serialization to a database table.</span>
+
+<span class="sd">  Argument Info:</span>
+
+<span class="sd">    * *DBconfig*:</span>
+<span class="sd">        A python dictionary containing access credentials for the</span>
+<span class="sd">        database server.  See :py:data:`wavecon.config.DBconfig`</span>
+<span class="sd">        for the structure of this dictionary.</span>
+
+<span class="sd">    * *template*</span>
+<span class="sd">        A string specifying the Schema that should be used to model</span>
+<span class="sd">        the database table you are trying to access.  I.E. if you</span>
+<span class="sd">        are trying to access a table that is defined like</span>
+<span class="sd">        ``tblWave`` in ``DB.psql`` then pass the string</span>
+<span class="sd">        ``&#39;tblwave&#39;``</span>
+
+<span class="sd">    * *name*</span>
+<span class="sd">        An optional name for the database table. I.E. you are</span>
+<span class="sd">        trying to access a table that has the same schema as</span>
+<span class="sd">        ``tblWave`` but is called ``tblWaveModeled``.  You would</span>
+<span class="sd">        then pass ``&#39;tblwave&#39;`` for the *template* parameter and</span>
+<span class="sd">        ``&#39;tblwavemodeled&#39;`` for the *name* parameter.  If left</span>
+<span class="sd">        blank it will default to the value passed for *template*</span>
+
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">template</span>
+
+  <span class="c"># SQLAlchmey whines because it can&#39;t figure out what to do with</span>
+  <span class="c"># GIS columns in the database.  This shuts it up.</span>
+  <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s">&#39;ignore&#39;</span><span class="p">)</span>
+
+    <span class="n">engine</span> <span class="o">=</span> <span class="n">connectTo</span><span class="p">(</span> <span class="n">DBconfig</span> <span class="p">)</span>
+
+    <span class="n">meta</span> <span class="o">=</span> <span class="n">MetaData</span><span class="p">(</span> <span class="n">bind</span> <span class="o">=</span> <span class="n">engine</span> <span class="p">)</span>
+    <span class="n">meta</span><span class="o">.</span><span class="n">reflect</span><span class="p">()</span>
+
+    <span class="n">BaseClass</span> <span class="o">=</span> <span class="n">declarative_base</span><span class="p">(</span> <span class="n">metadata</span> <span class="o">=</span> <span class="n">meta</span> <span class="p">)</span>
+    <span class="c"># Add helper methods that will filter to all classes and objects</span>
+    <span class="c"># through inheritance.</span>
+    <span class="n">BaseClass</span><span class="o">.</span><span class="n">recordToDict</span> <span class="o">=</span> <span class="n">recordToDict</span>
+  
+    <span class="n">Class</span> <span class="o">=</span> <span class="n">_DATABASE_TEMPLATES</span><span class="p">[</span><span class="n">template</span><span class="p">](</span> <span class="n">name</span><span class="p">,</span> <span class="n">BaseClass</span> <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">Class</span>
+</div>
+<div class="viewcode-block" id="startSession"><a class="viewcode-back" href="../../DBman.html#wavecon.DBman.startSession">[docs]</a><span class="k">def</span> <span class="nf">startSession</span><span class="p">(</span> <span class="n">DBconfig</span> <span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Returns an object representing a connection to the database.</span>
+<span class="sd">  This object may be used in combination with a class returned</span>
+<span class="sd">  by ``accessTable()`` to add objects to the database, run queries,</span>
+<span class="sd">  perform updates and do all kinds of useful things.</span>
+
+<span class="sd">  The following websites explain how to use ``session`` objects:</span>
+
+<span class="sd">    * `SQLAlchemy`_ documentation.  Describes basic usage.</span>
+
+<span class="sd">    * `GeoAlchemy`_ documentation.  Describes how to run PostGIS</span>
+<span class="sd">      enabled queries.</span>
+
+<span class="sd">  See :py:data:`wavecon.config.DBconfig` for a description of the</span>
+<span class="sd">  *DBconfig* parameter.</span>
+
+<span class="sd">    .. _SQLAlchemy: http://www.sqlalchemy.org/docs/ormtutorial.html#</span>
+<span class="sd">         creating-a-session</span>
+
+<span class="sd">    .. _GeoAlchemy: http://www.geoalchemy.org/tutorial.html#</span>
+<span class="sd">         performing-spatial-queries</span>
+
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="n">engine</span> <span class="o">=</span> <span class="n">connectTo</span><span class="p">(</span> <span class="n">DBconfig</span> <span class="p">)</span>
+  <span class="n">Session</span> <span class="o">=</span> <span class="n">sessionmaker</span><span class="p">(</span> <span class="n">bind</span> <span class="o">=</span> <span class="n">engine</span> <span class="p">)</span>
+
+  <span class="k">return</span> <span class="n">Session</span><span class="p">()</span>
+
+</div>
+<span class="k">def</span> <span class="nf">connectTo</span><span class="p">(</span> <span class="n">DBconfig</span> <span class="p">):</span>
+  <span class="n">url</span> <span class="o">=</span> <span class="s">&quot;{type}://{username}:{password}@{server}/{database}&quot;</span>\
+    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">DBconfig</span><span class="p">)</span>
+
+  <span class="n">engine</span> <span class="o">=</span> <span class="n">create_engine</span><span class="p">(</span> <span class="n">url</span> <span class="p">)</span>
+  <span class="k">return</span> <span class="n">engine</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">WaveConnect v0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, Nir Berezovsky, Charlie Sharpsteen, Colin Sheppard.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.1.
+    </div>
+  </body>
+</html>

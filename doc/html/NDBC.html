@@ -1,0 +1,183 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>The NDBC Module &mdash; WaveConnect v0.1 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/js/jsMath/easy/load.js"></script>
+    <link rel="top" title="WaveConnect v0.1 documentation" href="index.html" />
+    <link rel="prev" title="The DBman Module" href="DBman.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="DBman.html" title="The DBman Module"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">WaveConnect v0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-wavecon.NDBC">
+<span id="the-ndbc-module"></span><h1>The <tt class="docutils literal"><span class="pre">NDBC</span></tt> Module<a class="headerlink" href="#module-wavecon.NDBC" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>This module interfaces with the National Data Buoy Center (NDBC) archives and
+extracts wave data and wind data for NDBC 3 meter buoys and SCRIPPS waverider
+buoys.</p>
+<p>The primary interface is <tt class="docutils literal"><span class="pre">py/bin/buoyboy.py</span></tt> which is a python command line
+script.  BuoyBoy must be able to find the <tt class="docutils literal"><span class="pre">py/lib/wavecon</span></tt> module.  A
+description of the command line arguments can be obtained by running <tt class="docutils literal"><span class="pre">python</span>
+<span class="pre">buoyboy.py</span> <span class="pre">--help</span></tt> in the command prompt.  Example usages of BuoyBoy can be
+found in the file <tt class="docutils literal"><span class="pre">py/tests/buoyboy</span></tt>.</p>
+<p>The NDBC module can format downloaded data into the following formats:</p>
+<ul class="simple">
+<li>JavaScript Object Notation (JSON) through the standard python json module.</li>
+<li>Matlab <tt class="docutils literal"><span class="pre">.mat</span></tt> files using the <tt class="docutils literal"><span class="pre">savemat</span></tt> function contained in the
+<tt class="docutils literal"><span class="pre">scipy.io</span></tt> module.</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>Matlab output has been found to require the following:</p>
+<ul class="simple">
+<li>Python version 2.7 or greater.</li>
+<li>NumPy version 1.5 or greater.</li>
+<li>SciPy version 0.8 or greater.</li>
+</ul>
+<p class="last">Previous versions have been found to be incapable of transcribing Python
+objects to Matlab Structs and Cell Arrays.</p>
+</div>
+<ul class="simple">
+<li>SQL records to commit to a PostGIS database through the SqlAlchemy and
+GeoAlchemy modules (currently disabled due to code reorginizaiton).</li>
+</ul>
+</div>
+<div class="section" id="downloaded-data">
+<h2>Downloaded Data<a class="headerlink" href="#downloaded-data" title="Permalink to this headline">¶</a></h2>
+<p>The NDBC module downloads two types of data- wind records and wave records.</p>
+<p>A wind record is a structure that contains the following:</p>
+<div class="highlight-python"><pre>{
+  'buoyNumber': # The NDBC buoy number.
+  'datetime':   # An ISO 8601 datestring.
+  'winDirection': # The wind direction in nautical degrees.
+  'winSpeed': # The windspeed in knots.
+}</pre>
+</div>
+<p>A wave record is a structure that <strong>MAY</strong> contain the following:</p>
+<div class="highlight-python"><pre>{
+  'buoyNumber': # The NDBC buoy number (will be present).
+  'datetime':   # An ISO 8601 datestring (will be present).
+  'wavPeakDir': # The peak direction (may be missing).
+  'wavPeakPeriod': # The peak period (may be missing).
+  'wavHeight': # The significant wave height (may be missing).
+  'density': # The frequency spectra (may be missing).
+  'densityBins': # The cut values used to partition the frequency spectra.
+                 # (may be missing if density is missing).
+  'directionAlpha1': # The Alpha1 direction spectra (may be missing).
+  'directionAlpha1Bins': # The cut values used to partition the Alpha1 spectra.
+                         # (may be missing if directionAlpha1 is missing).
+  'directionAlpha2': # The Alpha2 direction spectra (may be missing).
+  'directionAlpha2Bins': # The cut values used to partition the Alpha2 spectra.
+                         # (may be missing if directionAlpha2 is missing).
+  'directionR1': # The R1 direction spectra (may be missing).
+  'directionR1Bins': # The cut values used to partition the R1 spectra.
+                     # (may be missing if directionR1 is missing).
+  'directionR2': # The R2 direction spectra (may be missing).
+  'directionR2Bins': # The cut values used to partition the R2 spectra.
+                     # (may be missing if directionR2 is missing).
+}</pre>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">The <tt class="docutils literal"><span class="pre">NDBC</span></tt> Module</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#downloaded-data">Downloaded Data</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="DBman.html"
+                        title="previous chapter">The <tt class="docutils literal docutils literal"><span class="pre">DBman</span></tt> Module</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/NDBC.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="DBman.html" title="The DBman Module"
+             >previous</a> |</li>
+        <li><a href="index.html">WaveConnect v0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, Nir Berezovsky, Charlie Sharpsteen, Colin Sheppard.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.1.
+    </div>
+  </body>
+</html>
