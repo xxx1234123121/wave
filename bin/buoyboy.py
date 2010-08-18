@@ -119,7 +119,7 @@ if __name__ == '__main__':
   if args.output_format == 'json':
 
     if args.windFile:
-      file = open( windFile, 'w' )
+      file = open( args.windFile, 'w' )
     else:
       file = sys.stdout
 
@@ -132,7 +132,7 @@ if __name__ == '__main__':
     if args.windFile: file.close()
 
     if args.waveFile:
-      file = open( waveFile, 'w' )
+      file = open( args.waveFile, 'w' )
     else:
       file = sys.stdout
 
@@ -143,11 +143,4 @@ if __name__ == '__main__':
     ))
     
   else:
-    print 'database commit- to be added.'
-    #NDBC.commitToDB( windRecords )
-    #NDBC.commitToDB( waveRecords )
-
-
-  #print json.dumps( windData, indent = 4, default = checkForDate )
-
-  #print "\n\n Stats: %i objects for %i days worth of data.\n" % ( len(windData), (args.stopTime - args.startTime).days )
+    raise NotImplementedError("Database support has not been finalized yet.")

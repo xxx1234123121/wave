@@ -1,7 +1,11 @@
 #!/bin/bash
 cd ../bin
 if [ -z "$1" -o "$1" == 'short' ]; then
-  time ./buoyboy.py 46022 "10/20/2008 00:00:00" "10/20/2008 02:00:00"
+  time ./buoyboy.py 46212 "10/20/2008 00:00:00" "10/20/2008 02:00:00"
 elif [ "$1" == 'long' ]; then
   time ./buoyboy.py 46022 "10/20/2008 00:00:00" "11/20/2008 00:00:00"
+elif [ "$1" == 'JSON' ]; then
+  time ./buoyboy.py 46022 "10/20/2008 00:00:00" "10/20/2008 02:00:00" windData.json waveData.json
+elif [ "$1" == 'DB' ]; then
+  time ./buoyboy.py --format database 46022 "10/20/2008 00:00:00" "10/20/2008 02:00:00"
 fi
