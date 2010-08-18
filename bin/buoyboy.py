@@ -36,20 +36,14 @@ from wavecon.NDBC import fetchBuoyRecords
 def ISO_datestring( aString ):
   """Takes a string in 'unambiguous format' and returns a datetime object.
 
-  Here, 'unambiguous format' is arbitrarily declared to be that used by R if
-  no format specification is provided:
+  Here, 'unambiguous format' is arbitrarily declared to be a subset of the
+  ISO 8601 format:
 
-     %m/%d/%Y %H:%M:%S
+     %Y-%m-%dT%H:%M:%S
 
   """
 
-  return datetime.datetime.strptime( aString, '%m/%d/%Y %H:%M:%S' )
-
-def JSON_datestring( aObject ):
-  if isinstance( aObject, datetime.datetime ):
-    return aObject.isoformat()
-  else:
-    return None
+  return datetime.datetime.strptime( aString, '%Y-%m-%dT%H:%M:%S' )
 
 
 """
@@ -88,7 +82,7 @@ def processArgs():
 
   parser.add_argument( 'startTime', metavar = 'StartTime', type = ISO_datestring,
                         help = '''The starting time for data you wish to download. Must be in the 
-                        following format "month/day/year hour:minute:second"''' )
+                        following format "year-month-dayThour:minute:second"''' )
   parser.add_argument( 'stopTime', metavar = 'StopTime', type = ISO_datestring,
                         help = '''The end of the time range for which data is to be downloaded. 
                         Uses the same format as described above.''' ) 
