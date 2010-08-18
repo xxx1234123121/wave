@@ -18,7 +18,7 @@ Data Center (`NDBC`_).
 #  Imports from Python 2.7 standard library
 #------------------------------------------------------------------------------
 from datetime import datetime, timedelta
-from collections import namedtuple
+from collections import OrderedDict
 
 import urllib
 import urllib2
@@ -233,74 +233,75 @@ def rawToRecords( rawData, buoyNum, dataType ):
   else:
     C = 4
 
-  if dataType == 'meteorological':  records = [
+  if dataType == 'meteorological':
+    records = [
       (
-        {
-          'buoyNumber': buoyNum,
-          'datetime': dateFromRaw( line[0:C] ),
-          'winDirection': float(line[C]),
-          'winSpeed': float(line[C+1])
-        },
-        { 
-          'buoyNumber': buoyNum,
-          'datetime':  dateFromRaw( line[0:C] ),
-          'wavHeight': float(line[C+3]),
-          'wavPeakDir': float(line[C+4]),
-          'wavPeakPeriod': float(line[C+6])
-        }
+        OrderedDict([
+          ('buoyNumber', buoyNum),
+          ('datetime', dateFromRaw( line[0:C] )),
+          ('winDirection', float(line[C])),
+          ('winSpeed', float(line[C+1]))
+        ]),
+        OrderedDict([ 
+          ('buoyNumber', buoyNum),
+          ('datetime',  dateFromRaw( line[0:C] )),
+          ('wavHeight', float(line[C+3])),
+          ('wavPeakDir', float(line[C+4])),
+          ('wavPeakPeriod', float(line[C+6]))
+        ])
       )
       for line in parsedData
     ]
   elif dataType == 'specDensity':
     records = [
-      { 
-        'buoyNumber': buoyNum,
-        'datetime': dateFromRaw( line[0:C] ),
-        'densityBins': [ float(x) for x in binLine[C:] ], 
+      OrderedDict([
+        ('buoyNumber', buoyNum),
+        ('datetime', dateFromRaw( line[0:C] )),
+        ('density', [ float(x) for x in line[C:] ]),
         # Not the most efficient to store a copy of the bins in each record but
         # this allows the bins to change over time.
-        'density': [ float(x) for x in line[C:] ]
-      }
+        ('densityBins', [ float(x) for x in binLine[C:] ])
+      ])
       for line in parsedData
     ]
   elif dataType == 'directionAlpha1':
     records = [
-      { 
-        'buoyNumber': buoyNum,
-        'datetime': dateFromRaw( line[0:C] ),
-        'directionAlpha1Bins': [ float(x) for x in binLine[C:] ], 
-        'directionAlpha1': [ float(x) for x in line[C:] ]
-      }
+      OrderedDict([ 
+        ('buoyNumber', buoyNum),
+        ('datetime', dateFromRaw( line[0:C] )),
+        ('directionAlpha1', [ float(x) for x in line[C:] ]),
+        ('directionAlpha1Bins', [ float(x) for x in binLine[C:] ])
+      ])
       for line in parsedData
     ]
   elif dataType == 'directionAlpha2':
     records = [
-      { 
-        'buoyNumber': buoyNum,
-        'datetime': dateFromRaw( line[0:C] ),
-        'directionAlpha2Bins': [ float(x) for x in binLine[C:] ], 
-        'directionAlpha2': [ float(x) for x in line[C:] ]
-      }
+      OrderedDict([
+        ('buoyNumber', buoyNum),
+        ('datetime', dateFromRaw( line[0:C] )),
+        ('directionAlpha2', [ float(x) for x in line[C:] ]),
+        ('directionAlpha2Bins', [ float(x) for x in binLine[C:] ])
+      ])
       for line in parsedData
     ]
   elif dataType == 'directionR1':
     records = [
-      { 
-        'buoyNumber': buoyNum,
-        'datetime': dateFromRaw( line[0:C] ),
-        'directionR1Bins': [ float(x) for x in binLine[C:] ], 
-        'directionR1': [ float(x) for x in line[C:] ]
-      }
+      OrderedDict([
+        ('buoyNumber', buoyNum),
+        ('datetime', dateFromRaw( line[0:C] )),
+        ('directionR1', [ float(x) for x in line[C:] ]),
+        ('directionR1Bins', [ float(x) for x in binLine[C:] ])
+      ])
       for line in parsedData
     ]
   elif dataType == 'directionR2':
     records = [
-      { 
-        'buoyNumber': buoyNum,
-        'datetime': dateFromRaw( line[0:C] ),
-        'directionR2Bins': [ float(x) for x in binLine[C:] ], 
-        'directionR2': [ float(x) for x in line[C:] ]
-      }
+      OrderedDict([
+        ('buoyNumber', buoyNum),
+        ('datetime', dateFromRaw( line[0:C] )),
+        ('directionR2', [ float(x) for x in line[C:] ]),
+        ('directionR2Bins', [ float(x) for x in binLine[C:] ])
+      ])
       for line in parsedData
     ]
   else:
