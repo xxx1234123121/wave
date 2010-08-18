@@ -18,7 +18,6 @@ Data Center (`NDBC`_).
 #  Imports from Python 2.7 standard library
 #------------------------------------------------------------------------------
 from datetime import datetime, timedelta
-from collections import namedtuple
 
 import urllib
 import urllib2
@@ -40,7 +39,7 @@ def fetchBuoyRecords( buoyNum, startTime, stopTime, verbose = False ):
 
   if startTime > stopTime:
     raise RuntimeError(
-      """You specified a start time of {} and a stop time of {}.  The stop time
+      """You specified a start time of {0} and a stop time of {1}.  The stop time
       must be later than the start time.""".format(
         startTime.isoformat(), stopTime.isoformat()
       )
@@ -72,8 +71,8 @@ def fetchBuoyRecords( buoyNum, startTime, stopTime, verbose = False ):
     # Check to see if we got meteorlogical data.  If we didn't, we probably did
     # not get any data so wipe out with an error.
     raise RuntimeError(
-      """Did not recieve any meterological data from NDBC for buoy {}, for the
-      time period starting on {} and ending on {}.  It is likely that data
+      """Did not recieve any meterological data from NDBC for buoy {0}, for the
+      time period starting on {1} and ending on {2}.  It is likely that data
       either does not exist or there was an error in parsing the NDBC
       output.""".format( 
         buoyNum, startTime.isoformat(), stopTime.isoformat() 
@@ -185,24 +184,22 @@ def fetchData( time, buoyNum, dataType ):
 
   if time[0] == 'year':
     dataDict = {
-      'filename' : "{}{}{}.txt.gz".format( buoyNum, case['fileSep'], time[1] ),
-      'dir' : "data/historical/{}/".format( case['dataDir'] )
+      'filename' : "{0}{1}{2}.txt.gz".format( buoyNum, case['fileSep'], time[1] ),
+      'dir' : "data/historical/{0}/".format( case['dataDir'] )
     }
   elif time[0] == 'month':
     year = datetime.now().year
     month = datetime(2000,time[1],1).strftime('%b')
     dataDict = {
-      'filename' : "{}{}{}.txt.gz".format( buoyNum, time[1], year ),
-      'dir' : "data/{}/{}/".format( case['dataDir'], month )
+      'filename' : "{0}{1}{2}.txt.gz".format( buoyNum, time[1], year ),
+      'dir' : "data/{0}/{1}/".format( case['dataDir'], month )
     }
 
   # Annoying thing about Python's URL encoder- it will ALWAYS substitute characters.
   # E.g slashes, /, will become %2. The urllib.unquote function fixes this.
   urlData = urllib.unquote(urllib.urlencode( dataDict ))
 
-  #print "{}?{}".format( BASE_URL, urlData )
-
-  NDBC = urllib2.urlopen( "{}?{}".format( BASE_URL, urlData ) )
+  NDBC = urllib2.urlopen( "{0}?{1}".format( BASE_URL, urlData ) )
   data = NDBC.read()
   NDBC.close()
 
