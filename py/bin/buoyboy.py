@@ -1,13 +1,12 @@
 #!/usr/bin/env python
-"""
--------------------------------------------------------------------
-This script retrieves buoy data from the NDBC.
 
-Version:       0.1.0
-Author:        Charlie Sharpsteen <source@sharpsteen.net>
-Last Modified: August 17, 2010 by Charlie Sharpsteen
--------------------------------------------------------------------
-"""
+#------------------------------------------------------------------
+# This script retrieves buoy data from the NDBC.
+# 
+# Version:       0.1.0
+# Author:        Charlie Sharpsteen <source@sharpsteen.net>
+# Last Modified: August 17, 2010 by Charlie Sharpsteen
+#------------------------------------------------------------------
 
 import sys
 if sys.version_info < (2, 7):
@@ -28,11 +27,9 @@ import datetime
 from wavecon.NDBC import fetchBuoyRecords
 
 
-"""
--------------------------------------------------------------------
-   Utility Functions
--------------------------------------------------------------------
-"""
+#------------------------------------------------------------------
+#  Utility Functions
+#------------------------------------------------------------------
 def ISO_datestring( aString ):
   """Takes a string in 'unambiguous format' and returns a datetime object.
 
@@ -46,11 +43,9 @@ def ISO_datestring( aString ):
   return datetime.datetime.strptime( aString, '%Y-%m-%dT%H:%M:%S' )
 
 
-"""
--------------------------------------------------------------------
-   Main Script and Supporting Functions
--------------------------------------------------------------------
-"""
+#------------------------------------------------------------------
+#  Main Script and Supporting Functions
+#------------------------------------------------------------------
 def processArgs():
   """Processes command-line arguments and returns a loaded ArgumentParser."""
   import argparse

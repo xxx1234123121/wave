@@ -28,19 +28,10 @@ import re
 from itertools import chain
 
 #------------------------------------------------------------------------------
-#  Imports from third party libraries
-#------------------------------------------------------------------------------
-from geoalchemy import WKTSpatialElement
-
-#------------------------------------------------------------------------------
 #  Imports from other NDBC submodules
 #------------------------------------------------------------------------------
 from .globals import *
 
-
-#------------------------------------------------------------------------------
-#  Metadata, Object Classes and Other Constants
-#------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 #  Data Retrieval
@@ -321,24 +312,6 @@ def rawToRecords( rawData, buoyNum, dataType ):
 #---------------------------------------------------------------------
 #  Utility Functions
 #---------------------------------------------------------------------
-def getBuoyName( buoyNum ):
-  buoyNum = str( buoyNum )
-  try:
-    name = "{}-{}".format( BUOY_META[buoyNum]['type'], buoyNum )
-  except:
-    print "There exists no buoy with the number: {}".format( buoyNum )
-    raise
-
-  return name
-
-
-def getBuoyLoc( buoyNum, asWKT = False ):
-  buoyLoc = BUOY_META[ str(buoyNum) ]['location']
-  if asWKT:
-    return WKTSpatialElement( "POINT({} {})".format(*buoyLoc) )
-  else:
-    return buoyLoc
-
 def calcDownloadDates( startTime, stopTime ):
   # NDBC data is stored in yearly chunks for historical data and monthly chunks
   # for current data.  This script determines which chunks need to be downloaded
