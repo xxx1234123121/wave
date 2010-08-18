@@ -5,7 +5,7 @@ This script retrieves buoy data from the NDBC.
 
 Version:       0.1.0
 Author:        Charlie Sharpsteen <source@sharpsteen.net>
-Last Modified: July 23, 2010 by Charlie Sharpsteen
+Last Modified: August 17, 2010 by Charlie Sharpsteen
 -------------------------------------------------------------------
 """
 
@@ -25,9 +25,7 @@ sys.path.insert( 0, waveLibs )
 
 import datetime
 
-import json
-
-from wavecon.NDBC import downloader
+from wavecon.NDBC import fetchBuoyRecords
 
 
 """
@@ -70,17 +68,21 @@ def processArgs():
                        help = 'Should BuoyBoy pretend he is called ChattyCathy?' )
 
   parser.add_argument( '--format', action = 'store', dest ='output_format',
-                       choices = ['database', 'json'], default = 'json',
-                       help = '''The format of output- may be 'database' or
-                       'json'.  If database is selected, downloaded data will be
-                       serialized to a relational database.  If json output is
-                       selected, downloaded data will be serialized to JSON
-                       format and either dumped to the screen or written to a
-                       file depending on the values of windFile and waveFile.'''
+                       choices = ['database', 'json','matlab'], 
+                       default = 'json',
+                       help = '''The format of output- may be 'database', 'json'
+                       or 'matlab'.  If database is selected, downloaded data
+                       will be serialized to a relational database.  If json
+                       output is selected, downloaded data will be serialized to
+                       JSON format and either dumped to the screen or written to
+                       a file depending on the values of windFile and
+                       waveFile.  When matlab is selected, the SciPy library
+                       will be used to create a mat file, again using the names
+                       passed by windFile and waveFile.'''
                      )
 
-  # Positional arguments- these are not identified by a flag.  Rather their meaning is
-  # inferred from their position in the command line.
+  # Positional arguments- these are not identified by a flag.  Rather their
+  # meaning is inferred from their position in the command line.
   parser.add_argument( 'buoyNum', metavar = 'Buoy#', type = int,
                        help = 'The number of the NDBC buoy for which you wish to fetch data.' )
 
@@ -106,41 +108,48 @@ def processArgs():
 
 
 if __name__ == '__main__':
-  """
-  This is the actual script part.  Building a script file this way allows it to be used
-  as both a command line tool and a python library.  Then other Python scripts can import
-  functions from this one without running the script.
+  """ 
+  This is the actual script part.  Building a script file this way allows it to
+  be used as both a command line tool and a python library.  Then other Python
+  scripts can import functions from this one without running the script.
   """
   
   args = processArgs()
 
-  windRecords, waveRecords = downloader.fetchBuoyRecords( args.buoyNum, args.startTime, args.stopTime, 'meteorological' )
+  windRecords, waveRecords = fetchBuoyRecords( args.buoyNum,
+    args.startTime, args.stopTime,
+    'meteorological'
+  )
 
   if args.output_format == 'json':
+    from wavecon.NDBC.JSON import writeJSON
 
     if args.windFile:
       file = open( args.windFile, 'w' )
+      writeJSON( windRecords, file )
+      file.close()
     else:
       file = sys.stdout
-
-    file.write(json.dumps(
-      windRecords,
-      indent = 2,
-      default = JSON_datestring
-    ))
-
-    if args.windFile: file.close()
+      writeJSON( windRecords, file )
 
     if args.waveFile:
       file = open( args.waveFile, 'w' )
+      writeJSON( waveRecords, file )
+      file.close()
     else:
       file = sys.stdout
+      writeJSON( waveRecords, file )
 
-    file.write(json.dumps(
-      waveRecords,
-      indent = 2,
-      default = JSON_datestring
-    ))
+  elif args.output_format == "matlab":
+    from wavecon.NDBC.matlab import writeMatFile
+
+    if not args.windFile:
+      args.windFile = "NDBCwindData.mat"
+    writeMatFile( windRecords, 'NDBCwind', args.windFile )
+
+    if not args.waveFile:
+      args.waveFile = "NDBCwaveData.mat"
+    writeMatFile( waveRecords, 'NDBCwave', args.waveFile )
     
   else:
     raise NotImplementedError("Database support has not been finalized yet.")
