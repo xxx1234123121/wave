@@ -24,7 +24,6 @@ module to a SQL database.
 #  Imports from WaveConnect libraries
 #------------------------------------------------------------------------------
 from .globals import BUOY_META
-from .data import getBuoyName
 from wavecon import DBman
 
 
@@ -82,3 +81,25 @@ def commitToDB( records ):
   _session.commit()
 
   return None
+
+
+#---------------------------------------------------------------------
+#  Utility Functions
+#---------------------------------------------------------------------
+def getBuoyName( buoyNum ):
+  buoyNum = str( buoyNum )
+  try:
+    name = "{}-{}".format( BUOY_META[buoyNum]['type'], buoyNum )
+  except:
+    print "There exists no buoy with the number: {}".format( buoyNum )
+    raise
+
+  return name
+
+
+def getBuoyLoc( buoyNum, asWKT = False ):
+  buoyLoc = BUOY_META[ str(buoyNum) ]['location']
+  if asWKT:
+    return WKTSpatialElement( "POINT({} {})".format(*buoyLoc) )
+  else:
+    return buoyLoc
