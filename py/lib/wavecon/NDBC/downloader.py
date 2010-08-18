@@ -61,6 +61,9 @@ def fetchBuoyRecords( buoyNum, startTime, stopTime, verbose = False ):
   metData =  fetchRecords( timeSpan, buoyNum, 'meteorological' )
   densityData = fetchRecords( timeSpan, buoyNum, 'specDensity' )
   alpha1Data = fetchRecords( timeSpan, buoyNum, 'directionAlpha1' )
+  alpha2Data = fetchRecords( timeSpan, buoyNum, 'directionAlpha2' )
+  r1Data = fetchRecords( timeSpan, buoyNum, 'directionR1')
+  r2Data = fetchRecords( timeSpan, buoyNum, 'directionR2' )
 
   # Unfortunately, there is not always corresponding spectra data available for
   # wave height, peak direction or frequency given by the meterological data, or
@@ -94,7 +97,7 @@ def fetchBuoyRecords( buoyNum, startTime, stopTime, verbose = False ):
     ])
 
     waveRecords = joinWithSpectra( waveRecords, waveTimestamps, 
-        densityData, densityTimestamps )
+      densityData, densityTimestamps )
 
   if len( alpha1Data ) > 0:
     alpha1Data, alpha1Timestamps = zip(*[
@@ -104,7 +107,37 @@ def fetchBuoyRecords( buoyNum, startTime, stopTime, verbose = False ):
     ])
 
     waveRecords = joinWithSpectra( waveRecords, waveTimestamps, 
-        alpha1Data, alpha1Timestamps )
+      alpha1Data, alpha1Timestamps )
+
+  if len( alpha2Data ) > 0:
+    alpha2Data, alpha2Timestamps = zip(*[
+      ( alpha2, alpha2['datetime'] ) 
+      for alpha2 in alpha2Data 
+      if isInsideTimespan( alpha2['datetime'], startTime, stopTime )
+    ])
+
+    waveRecords = joinWithSpectra( waveRecords, waveTimestamps, 
+      alpha2Data, alpha2Timestamps )
+
+  if len( r1Data ) > 0:
+    r1Data, r1Timestamps = zip(*[
+      ( r1, r1['datetime'] ) 
+      for r1 in r1Data 
+      if isInsideTimespan( r1['datetime'], startTime, stopTime )
+    ])
+
+    waveRecords = joinWithSpectra( waveRecords, waveTimestamps, 
+      r1Data, r1Timestamps )
+
+  if len( r2Data ) > 0:
+    r2Data, r2Timestamps = zip(*[
+      ( r2, r2['datetime'] ) 
+      for r2 in r2Data 
+      if isInsideTimespan( r2['datetime'], startTime, stopTime )
+    ])
+
+    waveRecords = joinWithSpectra( waveRecords, waveTimestamps, 
+      r2Data, r2Timestamps )
 
   return windRecords, waveRecords
 
@@ -138,6 +171,21 @@ def fetchData( year, buoyNum, dataType ):
     'directionAlpha1' : {
       'fileSep' : 'd',
       'dataDir' : 'data/historical/swdir/'
+    },
+
+    'directionAlpha2' : {
+      'fileSep' : 'i',
+      'dataDir' : 'data/historical/swdir2/'
+    },
+
+    'directionR1' : {
+      'fileSep' : 'j',
+      'dataDir' : 'data/historical/swr1/'
+    },
+
+    'directionR2' : {
+      'fileSep' : 'k',
+      'dataDir' : 'data/historical/swr2/'
     }
 
   }
@@ -219,10 +267,38 @@ def rawToRecords( rawData, buoyNum, dataType ):
       { 
         'buoyNumber': buoyNum,
         'datetime': dateFromRaw( line[0:C] ),
-        'alpha1Bins': [ float(x) for x in binLine[C:] ], 
-        # Not the most efficient to store a copy of the bins in each record but
-        # this allows the bins to change over time.
-        'alpha1': [ float(x) for x in line[C:] ]
+        'directionAlpha1Bins': [ float(x) for x in binLine[C:] ], 
+        'directionAlpha1': [ float(x) for x in line[C:] ]
+      }
+      for line in parsedData
+    ]
+  elif dataType == 'directionAlpha2':
+    records = [
+      { 
+        'buoyNumber': buoyNum,
+        'datetime': dateFromRaw( line[0:C] ),
+        'directionAlpha2Bins': [ float(x) for x in binLine[C:] ], 
+        'directionAlpha2': [ float(x) for x in line[C:] ]
+      }
+      for line in parsedData
+    ]
+  elif dataType == 'directionR1':
+    records = [
+      { 
+        'buoyNumber': buoyNum,
+        'datetime': dateFromRaw( line[0:C] ),
+        'directionR1Bins': [ float(x) for x in binLine[C:] ], 
+        'directionR1': [ float(x) for x in line[C:] ]
+      }
+      for line in parsedData
+    ]
+  elif dataType == 'directionR2':
+    records = [
+      { 
+        'buoyNumber': buoyNum,
+        'datetime': dateFromRaw( line[0:C] ),
+        'directionR2Bins': [ float(x) for x in binLine[C:] ], 
+        'directionR2': [ float(x) for x in line[C:] ]
       }
       for line in parsedData
     ]
