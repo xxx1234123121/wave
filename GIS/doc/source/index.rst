@@ -58,10 +58,10 @@ were used:
    NOAAcharts
 
 Tools
-=====
+-----
 
 QGIS
-----
+++++
 
 Quantum GIS (QGIS) is an open source Geospatial Information System (GIS) that is
 used to assemble and manage the datasets described by this document. QGIS was
@@ -84,7 +84,7 @@ relevant to obtaining and using QGIS:
    ``WaveConnect.qgs`` file.
  
 GDAL
-----
+++++
 
 The Geospatial Data Abstraction Library (GDAL) is the standard open
 source tool kit for manipulating and transcoding geospatial data.
