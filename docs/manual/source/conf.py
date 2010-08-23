@@ -19,7 +19,7 @@ from os import path
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #sys.path.append(os.path.abspath('.'))
 docRoot = path.dirname(path.abspath( __file__ ))
-waveLibs = path.abspath(path.join( docRoot, '..', '..', 'lib' ))
+waveLibs = path.abspath(path.join( docRoot, '..', '..', '..', 'py', 'lib' ))
 sys.path.append( waveLibs )
 
 # -- General configuration -----------------------------------------------------
@@ -41,10 +41,10 @@ source_suffix = '.rst'
 #source_encoding = 'utf-8-sig'
 
 # The master toctree document.
-master_doc = 'index'
+master_doc = 'contents'
 
 # General information about the project.
-project = u'WaveConnect Python Modules'
+project = u'WaveConnect'
 copyright = u'2010, Nir Berezovsky, Charlie Sharpsteen, Colin Sheppard'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -172,7 +172,7 @@ html_static_path = ['_static']
 #html_file_suffix = ''
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'WaveConnectdoc'
+htmlhelp_basename = 'WaveConnectMan'
 
 
 # -- Options for LaTeX output --------------------------------------------------
