@@ -1,12 +1,12 @@
 #!/bin/bash
 if [ -z "$1" -o "$1" == 'short' ]; then
-  time ../bin/buoyboy.py 46022 2010-01-20T00:00:00 2010-01-20T02:00:00
+  time ../bin/getNDBCdata.py 46022 2010-01-20T00:00:00 2010-01-20T02:00:00
 elif [ "$1" == 'long' ]; then
-  time ../bin/buoyboy.py 46022 2008-10-20T00:00:00 2008-11-20T00:00:00
+  time ../bin/getNDBCdata.py 46022 2008-10-20T00:00:00 2008-11-20T00:00:00
 elif [ "$1" == 'JSON' ]; then
-  time ../bin/buoyboy.py 46022 2008-10-20T00:00:00 2008-11-20T00:00:00 windData.json waveData.json
+  time ../bin/getNDBCdata.py 46022 2008-10-20T00:00:00 2008-11-20T00:00:00 windData.json waveData.json
 elif [ "$1" == 'DB' ]; then
-  time ../bin/buoyboy.py --format database 46022 2008-10-20T00:00:00 2008-11-20T00:00:00
+  time ../bin/getNDBCdata.py --format database 46022 2008-10-20T00:00:00 2008-11-20T00:00:00
 elif [ "$1" == 'matlab' ]; then
-  time ../bin/buoyboy.py --format matlab 46022 2008-10-20T00:00:00 2008-11-20T00:00:00
+  time ../bin/getNDBCdata.py --format matlab 46022 2008-10-20T00:00:00 2008-11-20T00:00:00
 fi
