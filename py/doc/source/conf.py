@@ -44,7 +44,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'WaveConnect'
+project = u'WaveConnect Python Modules'
 copyright = u'2010, Nir Berezovsky, Charlie Sharpsteen, Colin Sheppard'
 
 # The version info for the project you're documenting, acts as replacement for
