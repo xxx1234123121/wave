@@ -140,5 +140,12 @@ if __name__ == '__main__':
       args.waveFile = "NDBCwaveData.mat"
     writeMatFile( waveRecords, 'NDBCwave', args.waveFile )
     
+  elif args.output_format == "database":
+    from wavecon.NDBC.DB import formDatabaseRecords
+    
+    print "hello, world!"
+
   else:
-    raise NotImplementedError("Database support has not been finalized yet.")
+    raise NotImplementedError('''The output format you specified, {0}, does not
+    exist.  In fact, you should not have been allowed to specify it.  In either
+    case, there is no implementation.'''.format( args.output_format ))

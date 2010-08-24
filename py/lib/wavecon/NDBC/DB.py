@@ -36,9 +36,15 @@ from wavecon.config import DBconfig as _DBconfig
 BuoySource = DBman.accessTable( _DBconfig, 'tblsource' )
 WindRecord = DBman.accessTable( _DBconfig, 'tblwind' )
 WaveRecord = DBman.accessTable( _DBconfig, 'tblwave' )
+SpectraRecord = DBman.accessTable( _DBconfig, 'tblspectra' )
 
 _session = DBman.startSession( _DBconfig )
 
+
+#------------------------------------------------------------------------------
+#  Forming and Committing Database Records
+#------------------------------------------------------------------------------
+def formDatabaseRecords( NDBCrecords ):
 
 #---------------------------------------------------------------------
 #  Database Interaction
