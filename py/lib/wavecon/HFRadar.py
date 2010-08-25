@@ -14,7 +14,12 @@ This module provides an interface to data stored at the Integrated Ocean Observi
 
 import time
 
+from math import atan2
+from math import pi
+from math import isnan
+
 import datetime
+from datetime import datetime
 from numpy import *
 
 import urllib
@@ -26,6 +31,17 @@ import functools
 import itertools
 
 from geoalchemy import WKTSpatialElement
+
+
+"""
+For developmenet purposes: if not running as a library, execute the following here:
+
+import sys
+from os import path
+scriptLocation = path.dirname(path.abspath("./HFRadarCurrent.py"))
+waveLibs = path.abspath(path.join( scriptLocation, '..' ))
+sys.path.insert( 0, waveLibs )
+"""
 
 from wavecon import DBman
 from wavecon.config import DBconfig as _DBconfig
@@ -54,14 +70,14 @@ _session = DBman.startSession( _DBconfig )
 #---------------------------------------------------------------------
 #  Data Retrieval
 #---------------------------------------------------------------------
-def fetchRecords( north, south, west, east, startTime, stopTime, 
+def fetchRecords( north, south, west, east, startTime, stopTime, resolution,
     verbose = False ):
 
-  fetchData = getData( north, south, west, east, startTime, stopTime, dataType )
-    buoyNum = buoyNum, dataType = dataType )
+  records = getData( north, south, west, east, startTime, stopTime, resolution)
+  return records
 
 """
-  dataSets = [ rawToRecords( data, dataType ) for data 
+  dataSets = [ rawToRecords( data, resolution) for data 
     in [fetchData( year ) for year in timeSpan]
     if NDBCGaveData(data) 
   ]
@@ -74,12 +90,10 @@ def fetchRecords( north, south, west, east, startTime, stopTime,
       startTime, stopTime ) ]
 
 """
-  return records
 
 
-
-def getData( north, south, west, east, startTime, stopTime, dataType ):
-  url = HF_CURRENT_META[ dataType ]['url']
+def getData( north, south, west, east, startTime, stopTime, resolution ):
+  url = HF_CURRENT_META[ resolution ]['url']
   dataset = open(url)
 
   allLons = dataset.lon[:]
@@ -92,66 +106,55 @@ def getData( north, south, west, east, startTime, stopTime, dataType ):
   lats = [allLats[i] for i in yIndex]
   times = [allTimes[i] for i in tIndex]
 
-  u = dataset.u[tIndex,yIndex,xIndex]
-  v = dataset.v[tIndex,yIndex,xIndex]
-  #u = dataset.u[min(tIndex):max(tIndex),min(yIndex):max(yIndex),min(xIndex):max(xIndex)]
-  #v = dataset.v[min(tIndex):max(tIndex),min(yIndex):max(yIndex),min(xIndex):max(xIndex)]
+  #u = dataset['u'][tIndex,yIndex,xIndex]
+  #v = dataset.v[tIndex,yIndex,xIndex]
+  u = dataset.u[min(tIndex):max(tIndex),min(yIndex):max(yIndex),min(xIndex):max(xIndex)]
+  v = dataset.v[min(tIndex):max(tIndex),min(yIndex):max(yIndex),min(xIndex):max(xIndex)]
   
-  return [times,lats,lons,u,v]
+  return rawToRecords(times,lats,lons,u,v,resolution)
 
+def rawToRecords(times,lats,longs,u,v,resolution):
+  vel = (u**2+v**2)**0.5
+  dir = array(map(lambda x,y: dirMathToMet(180.0 * atan2(x,y)/pi),v.ravel(),u.ravel())).reshape(u.shape)
 
-"""
-def NDBCGaveData( responseString ):
-  if 'Unable to access' in responseString:
-    return False
-  else:
-    return True
+  records = [ 
+    CurrentRecord(
+      curDateTime = datetime.fromtimestamp(times[t]),
+      curLocation = WKTSpatialElement('POINT('+str(lat)+' '+str(lon)+')'),
+      curSpeed = float(vel[t,y,x]),
+      curDirection = float(dir[t,y,x])
+    ) for t,time in enumerate(times) if t < len(times)-1
+    for x,lon in enumerate(longs) if x < len(longs)-1
+    for y,lat in enumerate(lats) if y < len(lats)-1 ]
 
-def rawToRecords( rawData, dataType ):
-  # Need to use re.split('\s+',line) instead of line.split(' ') because
-  # there is a variable amount of whitespace seperating elements.
-  parsedData = [ re.split('\s+', line) for line in rawData.splitlines()
-    if not line.startswith('#') ]
-
-  if dataType == 'wind':
-    records = [ 
-      WindRecord( 
-        winDateTime =  datetime.datetime(*[int(x) for x in line[0:5]]),
-        winDirection = float(line[5]),
-        winSpeed = float(line[6])
-      ) for line in parsedData ]
-  else:
-    raise TypeError
-
-  return records
+  return [associateWithSource(record,resolution) for record in records if not (isnan(record.curspeed) or isnan(record.curdirection))]
 
 
 #---------------------------------------------------------------------
 #  Database Interaction 
 #---------------------------------------------------------------------
-def getBuoyFromDB( buoyNum ):
-  buoy = _session.query(BuoySource)\
-      .filter( BuoySource.srcname == getBuoyName( buoyNum ) ).first()
+def getSourceFromDB( resolution ):
+  src = _session.query(Source)\
+      .filter( Source.srcname == 'hfradar-'+resolution ).first()
 
-  if buoy:
-    return buoy
+  if src:
+    return src 
   else:
-    # A record for this buoy does not exist in the DB. Create it.
-    buoy = BuoySource( srcName = getBuoyName( buoyNum ) )
+    # A record for this source does not exist in the DB. Create it.
+    src = Source( srcName = 'hfradar-'+resolution )
 
-    _session.add( buoy )
+    _session.add( src )
     _session.commit()
 
-    return buoy
+    return src
 
-def getBuoyID( buoyNum ):
-  id = getBuoyFromDB( buoyNum ).srcid
+def getSourceID( resolution ):
+  id = getSourceFromDB( resolution ).srcid
   return id
 
 
-def associateWithBuoy( record, buoyNum ):
-  record.location = getBuoyLoc( buoyNum, asWKT = True )
-  record.sourceid = getBuoyID( buoyNum )
+def associateWithSource( record, resolution ):
+  record.sourceid = getSourceID( resolution )
 
   return record
     
@@ -167,29 +170,16 @@ def commitToDB( records ):
 #---------------------------------------------------------------------
 #  Utility Functions
 #---------------------------------------------------------------------
-def getBuoyName( buoyNum ):
-  buoyNum = str( buoyNum )
-  try:
-    name = "{}-{}".format( BUOY_META[buoyNum]['type'], buoyNum )
-  except:
-    print "There exists no buoy with the number: {}".format( buoyNum )
-    raise
-
-  return name
-
-
-def getBuoyLoc( buoyNum, asWKT = False ):
-  buoyLoc = BUOY_META[ str(buoyNum) ]['location']
-  if asWKT:
-    return WKTSpatialElement( "POINT({} {})".format(*buoyLoc) )
-  else:
-    return buoyLoc
-
-
 def isInsideTimespan( aDate, startTime, stopTime ):
   if startTime <= aDate and stopTime >= aDate:
     return True
   else:
     return False
 
-"""
+def dirMathToMet(math):
+  met = 90 - math
+  while met<0:
+    met += 360
+  while met>=360:
+    met -= 360
+  return met

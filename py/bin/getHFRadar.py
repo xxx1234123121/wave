@@ -27,7 +27,7 @@ sys.path.insert( 0, waveLibs )
 import datetime
 import json
 from wavecon import DBman
-#from wavecon import NDBC
+from wavecon import HFRadar
 from wavecon.config import DBconfig
 
 """
@@ -49,7 +49,7 @@ def ISO_datestring( aString ):
 """
 -------------------------------------------------------------------
    Main Script and Supporting Functions
-   example usage:  python hfradarcurrent.py -v 38 42 -128 -123 "07/25/2010 00:00:00" "07/26/2010 00:00:00"
+   example usage:  python hfradar.py -v 38 42 -128 -123 "07/25/2010 00:00:00" "07/26/2010 00:00:00" 6km
 -------------------------------------------------------------------
 """
 def processArgs():
@@ -78,6 +78,9 @@ def processArgs():
   parser.add_argument( 'stopTime', metavar = 'StopTime', type = ISO_datestring,
                         help = '''The end of the time range for which data is to be downloaded. 
                         Uses the same format as described above.''' ) 
+  parser.add_argument( 'resolution', metavar = 'Resolution', type = str,
+                        help = '''What resolution grid should be fetched, typically "6km" is used
+                        and is the only resolution available in the Humboldt domain.''' ) 
 
   args = parser.parse_args()
   return args
@@ -94,12 +97,18 @@ if __name__ == '__main__':
 
   print "\n\nFetching data between [" + str(args.southernLatitude) + ", " + str(args.westernLongitude) + "] to ["  \
     + str(args.northernLatitude) + ", " + str(args.easternLongitude)+ "] from " + str(args.startTime) + " to " +   \
-    str(args.stopTime) + "\n"
+    str(args.stopTime) + " at a resolution of " + str(args.resolution) + "\n"
 
-  #windRecords = NDBC.fetchRecords( args.buoyNum, args.startTime, args.stopTime, 'wind' )
-  #NDBC.commitToDB( windRecords )
-  #for record in windRecords:
+  currentRecords = HFRadar.fetchRecords( args.northernLatitude, args.southernLatitude, args.westernLongitude, \
+      args.easternLongitude, args.startTime, args.stopTime, args.resolution )
+  """
+  Again, a useful command for development at the interpreter command line:
+  currentRecords = HFRadar.fetchRecords(42,38,-128,-123,ISO_datestring("07/25/2010 00:00:00"),ISO_datestring("07/26/2010 00:00:00"),"6km")
+  """
+  HFRadar.commitToDB( currentRecords )
+  #for record in currentRecords:
     #print record
+    #print "--"
 
   #checkForDate = lambda obj: obj.isoformat() if isinstance( obj, datetime.datetime ) else None
   #print json.dumps( windData, indent = 4, default = checkForDate )

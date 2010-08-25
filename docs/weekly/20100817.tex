@@ -168,7 +168,7 @@ be used in the model.
   \href{http://www.sccoos.org/data/hfrnet/oi.php}{Southern California Coastal Ocean Observing System}
 \item
   Gridded wind forecasts,
-  \href{http://www.nco.ncep.noaa.gov/pmb/nwprod/analysis/}{National Center for Environmental Observation, NAM}
+  \href{http://www.nco.ncep.noaa.gov/pmb/nwprod/analysis/}{National Center for Environmental Observation, WRF-NAM}
 \end{itemize}
 \subsection{Database Design}
 
@@ -204,7 +204,7 @@ design accomodates the following:
   Buoy data or for all model runs).
 \end{itemize}
 \begin{figure}
-\includegraphics{images/wave-database-20100720.png}
+\includegraphics{../images/wave-database-20100720.png}
 \caption{Preliminary Database Schematic}
 \label{db-schematic}
 \end{figure}
@@ -236,12 +236,55 @@ array of the same dimension and size as the wind or current data.
 \subsection{Data Flow}
 
 
-\subsection{Data Flow}
+\subsection{Input Data Retrieval}
 
+Before a CMS model run can be initiated, the appropriate input data must be collected, formatted, and specified in the appropriate configuration files.  In order to facilitate the use of CMS in a real-time context, the process of gathering data from online sources must be reliable and fully automated.  To accomplish this, we created a set of Python scripts to connect to remote data archives, parse the relevant data, and store to the PostgreSQL database (Table \ref{tab:inputHarvest}).  Python was chosen as a platform for this task due to the availability of extensive libraries that facilitate working with a wide variety of data formats.
 
+\begin{table}[b!]
+\caption{Python scripts for retrieval of input data to CMS.}
+\begin{center}
+{
+\begin{tabular}{| llll |}
+\hline
+\textbf{Name} & \textbf{Description} & \textbf{Data Source} & \textbf{Destinations} \\
+ \hline
+getNDBCWind.py & retrieves wind data from & \footnotesize http://www.ndbc.noaa.gov/ & tblWind\\
+& any specified NDBC buoy & & \\
+ \hline
+getNAM12Wind.py & retrieves gridded wind  & \footnotesize http://www.nco.ncep.noaa.gov & tblWind\\
+& data from the WRF-NAM model & & \\
+ \hline
+getWW3Spectra.py & retrieves directional spectra  &\footnotesize ftp://polar.ncep.noaa.gov/ & tblWave,\\
+&from WWIII output& & tblSpectraBin \\
+ \hline
+hfradar.py & retrieves gridded current data &\footnotesize http://www.sccoos.org & tblCurrent \\
+& from HF Radar sources & & \\
+\hline
+\end{tabular}}
+\end{center}
+\label{tab:inputHarvest}
+\end{table}
+
+\newpage
+\section{List of Acronyms}
+\label{loacronyms} 
+\begin{singlespace}
+\begin{eqnarray*}
+\mbox{} & = & \mbox{}\\
+\mbox{ACE} & = & \mbox{Army Corps of Engineers}\\
+\mbox{CMS} & = & \mbox{Coastal Modeling System}\\
+\mbox{D3D} & = & \mbox{Delft 3D}\\
+\mbox{GIS} & = & \mbox{Geographic Information System}\\
+\mbox{NOAA} & = & \mbox{National Oceanic \& Atmospheric Administration}\\
+\mbox{PG\&E} & = & \mbox{Pacific Gas and Electric}\\
+\mbox{WEC} & = & \mbox{Wave Energy Converter}\\
+\mbox{WRF-NAM} & = & \mbox{Weather and Research Forecast Model - North American Mesoscale}\\
+\mbox{WWIII} & = & \mbox{Wave Watch III}\\
+\end{eqnarray*}
+\end{singlespace}
 
 
 \bibliographystyle{plain}
-\bibliography{WaveConnect}
+\bibliography{/Users/colinsheppard/Documents/wave-git/wave/docs/WaveConnect}
 
 \end{document}
