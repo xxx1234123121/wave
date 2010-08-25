@@ -141,9 +141,14 @@ if __name__ == '__main__':
     writeMatFile( waveRecords, 'NDBCwave', args.waveFile )
     
   elif args.output_format == "database":
-    from wavecon.NDBC.DB import formDatabaseRecords
-    
-    print "hello, world!"
+    from wavecon.NDBC.DB import formDatabaseRecords, commitToDB
+
+    windRecords = formDatabaseRecords( windRecords )
+    print windRecords
+    commitToDB( windRecords )
+
+    waveRecords = formDatabaseRecords( waveRecords )
+    print waveRecords
 
   else:
     raise NotImplementedError('''The output format you specified, {0}, does not

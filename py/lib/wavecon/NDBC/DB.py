@@ -6,7 +6,7 @@ This module provides routines for serializing data obtained by the data.py
 module to a SQL database.
 
 **Development Status:**
-  **Last Modified:** August 16, 2010 by Charlie Sharpsteen
+  **Last Modified:** August 25, 2010 by Charlie Sharpsteen
 
 
 """
@@ -19,11 +19,11 @@ module to a SQL database.
 #------------------------------------------------------------------------------
 #  Imports from third party libraries
 #------------------------------------------------------------------------------
+from geoalchemy import WKTSpatialElement
 
 #------------------------------------------------------------------------------
 #  Imports from WaveConnect libraries
 #------------------------------------------------------------------------------
-from .globals import BUOY_META
 from wavecon import DBman
 
 
@@ -40,18 +40,80 @@ SpectraRecord = DBman.accessTable( _DBconfig, 'tblspectra' )
 
 _session = DBman.startSession( _DBconfig )
 
+# Import NDBC global variables
+from .globals import BUOY_META
+
 
 #------------------------------------------------------------------------------
 #  Forming and Committing Database Records
 #------------------------------------------------------------------------------
 def formDatabaseRecords( NDBCrecords ):
+  recordType = NDBCrecords[0]['type']
 
-#---------------------------------------------------------------------
-#  Database Interaction
-#---------------------------------------------------------------------
+  # Assuming all the records in the list are from the same buoy.
+  buoyNum = NDBCrecords[0]['buoyNumber']
+  buoyID = getBuoyID( buoyNum )
+  buoyLocation = getBuoyLoc( buoyNum, asWKT = True )
+
+  if recordType == 'windRecords':
+    print "got wind records!"
+    records = [
+      makeWindRecord(
+        record,
+        buoyID,
+        buoyLocation )
+      for record in NDBCrecords
+    ]
+
+  elif recordType == 'waveRecords':
+    print "got wave records!"
+    records = None
+
+  else:
+    raise TypeError("Do not know how do deal with records of type {0}!".format(
+      recordType
+    ))
+
+  return records
+
+def makeWindRecord( NDBCrecord, buoyID, buoyLocation ):
+
+  record = WindRecord(
+    winDateTime = NDBCrecord['datetime'],
+    winDirection = NDBCrecord['winDirection'],
+    winSpeed = NDBCrecord['winSpeed']
+  )
+
+  record.sourceid = buoyID
+  record.location = buoyLocation
+
+  return record
+
+
+#------------------------------------------------------------------------------
+#  Database Buoy Representation
+#------------------------------------------------------------------------------
+def associateWithBuoy( record, buoyID, buoyLocation ):
+  record.sourceid = buoyID
+  record.location = buoyLocation
+
+  return record
+
+def getBuoyID( buoyNum ):
+  id = getBuoyFromDB( buoyNum ).srcid
+  return id
+
+def getBuoyLoc( buoyNum, asWKT = False ):
+  buoyLoc = BUOY_META[ str(buoyNum) ]['location']
+  if asWKT:
+    return WKTSpatialElement( "POINT({0} {1})".format(*buoyLoc) )
+  else:
+    return buoyLoc
+
 def getBuoyFromDB( buoyNum ):
-  buoy = _session.query(BuoySource)\
-      .filter( BuoySource.srcname == getBuoyName( buoyNum ) ).first()
+  buoy = _session.query(BuoySource).filter( 
+    BuoySource.srcname == getBuoyName( buoyNum ) 
+  ).first()
 
   if buoy:
     return buoy
@@ -64,16 +126,24 @@ def getBuoyFromDB( buoyNum ):
 
     return buoy
 
-def getBuoyID( buoyNum ):
-  id = getBuoyFromDB( buoyNum ).srcid
-  return id
+def getBuoyName( buoyNum ):
+  buoyNum = str( buoyNum )
+  try:
+    name = "{0}-{1}".format( BUOY_META[buoyNum]['type'], buoyNum )
+  except:
+    print "There exists no buoy with the number: {0}".format( buoyNum )
+    raise
 
+  return name
 
-def associateWithBuoy( record, buoyNum ):
-  record.location = getBuoyLoc( buoyNum, asWKT = True )
-  record.sourceid = getBuoyID( buoyNum )
+#---------------------------------------------------------------------
+#  Database Interaction
+#---------------------------------------------------------------------
+def commitToDB( records ):
+  _session.add_all( records )
+  _session.commit()
 
-  return record
+  return None
 
 def formWaveRecord( waveRecord, spectra, buoyNum ):
   waveRecord = associateWithBuoy( waveRecord, buoyNum )
@@ -82,30 +152,3 @@ def formWaveRecord( waveRecord, spectra, buoyNum ):
 
   return waveRecord
 
-def commitToDB( records ):
-  _session.add_all( records )
-  _session.commit()
-
-  return None
-
-
-#---------------------------------------------------------------------
-#  Utility Functions
-#---------------------------------------------------------------------
-def getBuoyName( buoyNum ):
-  buoyNum = str( buoyNum )
-  try:
-    name = "{}-{}".format( BUOY_META[buoyNum]['type'], buoyNum )
-  except:
-    print "There exists no buoy with the number: {}".format( buoyNum )
-    raise
-
-  return name
-
-
-def getBuoyLoc( buoyNum, asWKT = False ):
-  buoyLoc = BUOY_META[ str(buoyNum) ]['location']
-  if asWKT:
-    return WKTSpatialElement( "POINT({} {})".format(*buoyLoc) )
-  else:
-    return buoyLoc

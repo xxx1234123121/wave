@@ -3,7 +3,7 @@ from collections import namedtuple
 # Custom objects
 Location = namedtuple( 'Location', 'lon lat' )
 
-# Metadata setup
+# Buoy Metadata
 BUOY_META = {
 
   '46022' : {

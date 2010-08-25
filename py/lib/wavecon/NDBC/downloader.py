@@ -233,12 +233,14 @@ def rawToRecords( rawData, buoyNum, dataType ):
   if dataType == 'meteorological':  records = [
       (
         {
+          'type': 'windRecords',
           'buoyNumber': buoyNum,
           'datetime': dateFromRaw( line[0:C] ),
           'winDirection': float(line[C]),
           'winSpeed': float(line[C+1])
         },
         { 
+          'type': 'waveRecords',
           'buoyNumber': buoyNum,
           'datetime':  dateFromRaw( line[0:C] ),
           'wavHeight': float(line[C+3]),
@@ -251,6 +253,7 @@ def rawToRecords( rawData, buoyNum, dataType ):
   elif dataType == 'specDensity':
     records = [
       { 
+        'type': 'waveRecords',
         'buoyNumber': buoyNum,
         'datetime': dateFromRaw( line[0:C] ),
         'densityBins': [ float(x) for x in binLine[C:] ], 
@@ -263,6 +266,7 @@ def rawToRecords( rawData, buoyNum, dataType ):
   elif dataType == 'directionAlpha1':
     records = [
       { 
+        'type': 'waveRecords',
         'buoyNumber': buoyNum,
         'datetime': dateFromRaw( line[0:C] ),
         'directionAlpha1Bins': [ float(x) for x in binLine[C:] ], 
@@ -273,6 +277,7 @@ def rawToRecords( rawData, buoyNum, dataType ):
   elif dataType == 'directionAlpha2':
     records = [
       { 
+        'type': 'waveRecords',
         'buoyNumber': buoyNum,
         'datetime': dateFromRaw( line[0:C] ),
         'directionAlpha2Bins': [ float(x) for x in binLine[C:] ], 
@@ -283,6 +288,7 @@ def rawToRecords( rawData, buoyNum, dataType ):
   elif dataType == 'directionR1':
     records = [
       { 
+        'type': 'waveRecords',
         'buoyNumber': buoyNum,
         'datetime': dateFromRaw( line[0:C] ),
         'directionR1Bins': [ float(x) for x in binLine[C:] ], 
@@ -293,6 +299,7 @@ def rawToRecords( rawData, buoyNum, dataType ):
   elif dataType == 'directionR2':
     records = [
       { 
+        'type': 'waveRecords',
         'buoyNumber': buoyNum,
         'datetime': dateFromRaw( line[0:C] ),
         'directionR2Bins': [ float(x) for x in binLine[C:] ], 
