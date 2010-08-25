@@ -41,15 +41,15 @@ def ISO_datestring( aString ):
   Here, 'unambiguous format' is arbitrarily declared to be that used by R if
   no format specification is provided:
 
-     %m/%d/%Y %H:%M:%S
+     %Y-%m-%d %H:%M:%S
 
   """
-  return datetime.datetime.strptime( aString, '%m/%d/%Y %H:%M:%S' )
+  return datetime.datetime.strptime( aString, '%Y-%m-%d %H:%M:%S' )
 
 """
 -------------------------------------------------------------------
    Main Script and Supporting Functions
-   example usage:  python hfradar.py -v 38 42 -128 -123 "07/25/2010 00:00:00" "07/26/2010 00:00:00" 6km
+   example usage:  python hfradar.py -v 38 42 -128 -123 "2010-07-25 00:00:00" "2010-07-26 00:00:00" 6km
 -------------------------------------------------------------------
 """
 def processArgs():
@@ -103,13 +103,9 @@ if __name__ == '__main__':
       args.easternLongitude, args.startTime, args.stopTime, args.resolution )
   """
   Again, a useful command for development at the interpreter command line:
-  currentRecords = HFRadar.fetchRecords(42,38,-128,-123,ISO_datestring("07/25/2010 00:00:00"),ISO_datestring("07/26/2010 00:00:00"),"6km")
+  currentRecords = HFRadar.fetchRecords(42,38,-128,-123,ISO_datestring("2010-07-25 00:00:00"),ISO_datestring("2010-07-26 00:00:00"),"6km")
   """
   HFRadar.commitToDB( currentRecords )
   #for record in currentRecords:
     #print record
     #print "--"
-
-  #checkForDate = lambda obj: obj.isoformat() if isinstance( obj, datetime.datetime ) else None
-  #print json.dumps( windData, indent = 4, default = checkForDate )
-  #print "\n\n Stats: %i objects for %i days worth of data.\n" % ( len(windData), (args.stopTime - args.startTime).days )
