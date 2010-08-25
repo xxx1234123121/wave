@@ -145,7 +145,7 @@ if __name__ == '__main__':
 
     windRecords = formDatabaseRecords( windRecords )
     print windRecords
-    commitToDB( windRecords )
+    #commitToDB( windRecords )
 
     waveRecords = formDatabaseRecords( waveRecords )
     print waveRecords
