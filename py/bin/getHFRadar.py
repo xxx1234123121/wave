@@ -95,7 +95,7 @@ if __name__ == '__main__':
   
   args = processArgs()
 
-  print "\n\nFetching data between [" + str(args.southernLatitude) + ", " + str(args.westernLongitude) + "] to ["  \
+  print "\nFetching data between [" + str(args.southernLatitude) + ", " + str(args.westernLongitude) + "] to ["  \
     + str(args.northernLatitude) + ", " + str(args.easternLongitude)+ "] from " + str(args.startTime) + " to " +   \
     str(args.stopTime) + " at a resolution of " + str(args.resolution) + "\n"
 

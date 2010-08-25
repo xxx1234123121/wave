@@ -53,7 +53,7 @@ from dap.client import open
 HF_CURRENT_META = {
 
   '6km' : {
-    'url' : 'http://sdf.ndbc.noaa.gov:8080/thredds/dodsC/hfradar_uswc_6km'
+    'url' : 'http://sdf.ndbc.noaa.gov/thredds/dodsC/hfradar_uswc_6km'
   }
 
 }
@@ -121,7 +121,7 @@ def getSourceTypeFromDB( typeName ):
     return srcType 
   else:
     # A record for this source type does not exist in the DB. Create it.
-    srcType = SourceType( srcName = typeName)
+    srcType = SourceType( sourceTypeName = typeName)
 
     _session.add( srcType )
     _session.commit()
@@ -130,14 +130,14 @@ def getSourceTypeFromDB( typeName ):
 
 def getSourceFromDB( resolution ):
   src = _session.query(Source)\
-      .filter( Source.srcname == 'hfradar-'+resolution ).first()
+      .filter( Source.srcname == 'HFRadar-'+resolution ).first()
 
   if src:
     return src 
   else:
     # A record for this source does not exist in the DB. Create it. First find the source type
-    srcType = getSourceTypeFromDB( 'hfradar' )
-    src = Source( srcName = 'hfradar-'+resolution, srcsourcetypeid=srcType.srcsourcetypeid )
+    srcType = getSourceTypeFromDB( 'HFRadar' )
+    src = Source( srcName = 'HFRadar-'+resolution, srcSourceTypeID=srcType.sourcetypeid )
 
     _session.add( src )
     _session.commit()
