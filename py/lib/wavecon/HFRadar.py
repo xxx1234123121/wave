@@ -7,9 +7,6 @@ This module provides an interface to data stored at the Integrated Ocean Observi
 **Development Status:**
   **Last Modified:** July 26, 2010 by Colin Sheppard
 
-
-.. _NDBC: http://www.ndbc.noaa.gov/
-
 """
 
 import time
@@ -62,6 +59,7 @@ HF_CURRENT_META = {
 }
 
 Source = DBman.accessTable( _DBconfig, 'tblsource' )
+SourceType = DBman.accessTable( _DBconfig, 'tblsourcetype' )
 CurrentRecord = DBman.accessTable( _DBconfig, 'tblcurrent' )
 
 _session = DBman.startSession( _DBconfig )
@@ -75,22 +73,6 @@ def fetchRecords( north, south, west, east, startTime, stopTime, resolution,
 
   records = getData( north, south, west, east, startTime, stopTime, resolution)
   return records
-
-"""
-  dataSets = [ rawToRecords( data, resolution) for data 
-    in [fetchData( year ) for year in timeSpan]
-    if NDBCGaveData(data) 
-  ]
-
-  # dataSets contains a list of records- one list for each year.
-  # Flatten them into a single list containing all records.
-  records = [ associateWithBuoy( record, buoyNum ) for record 
-    in itertools.chain.from_iterable( dataSets )
-    if isInsideTimespan( record.datetime, 
-      startTime, stopTime ) ]
-
-"""
-
 
 def getData( north, south, west, east, startTime, stopTime, resolution ):
   url = HF_CURRENT_META[ resolution ]['url']
@@ -106,8 +88,6 @@ def getData( north, south, west, east, startTime, stopTime, resolution ):
   lats = [allLats[i] for i in yIndex]
   times = [allTimes[i] for i in tIndex]
 
-  #u = dataset['u'][tIndex,yIndex,xIndex]
-  #v = dataset.v[tIndex,yIndex,xIndex]
   u = dataset.u[min(tIndex):max(tIndex),min(yIndex):max(yIndex),min(xIndex):max(xIndex)]
   v = dataset.v[min(tIndex):max(tIndex),min(yIndex):max(yIndex),min(xIndex):max(xIndex)]
   
@@ -133,6 +113,21 @@ def rawToRecords(times,lats,longs,u,v,resolution):
 #---------------------------------------------------------------------
 #  Database Interaction 
 #---------------------------------------------------------------------
+def getSourceTypeFromDB( typeName ):
+  srcType = _session.query(SourceType)\
+      .filter( SourceType.sourcetypename == typeName ).first()
+
+  if srcType:
+    return srcType 
+  else:
+    # A record for this source type does not exist in the DB. Create it.
+    srcType = SourceType( srcName = typeName)
+
+    _session.add( srcType )
+    _session.commit()
+
+    return srcType
+
 def getSourceFromDB( resolution ):
   src = _session.query(Source)\
       .filter( Source.srcname == 'hfradar-'+resolution ).first()
@@ -140,8 +135,9 @@ def getSourceFromDB( resolution ):
   if src:
     return src 
   else:
-    # A record for this source does not exist in the DB. Create it.
-    src = Source( srcName = 'hfradar-'+resolution )
+    # A record for this source does not exist in the DB. Create it. First find the source type
+    srcType = getSourceTypeFromDB( 'hfradar' )
+    src = Source( srcName = 'hfradar-'+resolution, srcsourcetypeid=srcType.srcsourcetypeid )
 
     _session.add( src )
     _session.commit()

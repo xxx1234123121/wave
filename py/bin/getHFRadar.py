@@ -49,7 +49,7 @@ def ISO_datestring( aString ):
 """
 -------------------------------------------------------------------
    Main Script and Supporting Functions
-   example usage:  python hfradar.py -v 38 42 -128 -123 "2010-07-25 00:00:00" "2010-07-26 00:00:00" 6km
+   example usage:  python getHFRadar.py -v 38 42 -128 -123 "2010-07-25 00:00:00" "2010-07-26 00:00:00" 6km
 -------------------------------------------------------------------
 """
 def processArgs():
