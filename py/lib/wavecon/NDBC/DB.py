@@ -19,6 +19,9 @@ module to a SQL database.
 #------------------------------------------------------------------------------
 #  Imports from third party libraries
 #------------------------------------------------------------------------------
+from sqlalchemy import or_
+from sqlalchemy.sql.expression import cast
+from sqlalchemy.dialects.postgresql import ARRAY, DOUBLE_PRECISION
 from geoalchemy import WKTSpatialElement
 
 #------------------------------------------------------------------------------
@@ -34,7 +37,7 @@ from wavecon import DBman
 from wavecon.config import DBconfig as _DBconfig
 
 BuoySource = DBman.accessTable( _DBconfig, 'tblsource' )
-SourceType = DBman.accessTable( _DBconfig, 'tblsourcetype' )
+SourceTypeRecord = DBman.accessTable( _DBconfig, 'tblsourcetype' )
 WindRecord = DBman.accessTable( _DBconfig, 'tblwind' )
 WaveRecord = DBman.accessTable( _DBconfig, 'tblwave' )
 SpectraRecord = DBman.accessTable( _DBconfig, 'tblspectra' )
@@ -109,11 +112,84 @@ def makeWaveRecord( NDBCrecord, buoyID, buoyLocation ):
   if 'wavPeakPeriod' in NDBCrecord:
     record.wavPeakDir = NDBCrecord['wavPeakPeriod']
 
+  densityBins, directionBins = getBinsFromRecord( NDBCrecord )
+
+  record.wavspectraid = getSpectraID( densityBins, directionBins )
+  record.wavspectra = getSpectraFromRecord( NDBCrecord )
+
   record.sourceid = buoyID
   record.location = buoyLocation
 
   return record
 
+def getBinsFromRecord( NDBCrecord ):
+  WAVE_DIRECTION_BINS = [
+    'directionAlpha1Bins',
+    'directionAlpha2Bins',
+    'directionR1Bins',
+    'directionR2Bins'
+  ]
+
+  if 'densityBins' in NDBCrecord.keys():
+    densityBins = NDBCrecord['densityBins']
+  else:
+    densityBins = None
+
+  directionBins = [
+    set(NDBCrecord[key])
+    for key in NDBCrecord.keys()
+    if key in WAVE_DIRECTION_BINS
+  ]
+
+  if len( directionBins ) == 0:
+    # There were no direction bins.
+    directionBins = None
+  elif len(set.difference(*directionBins)) == 0:
+    # There were many direction bins but they are all the same.  However they
+    # were converted to sets, which destroys ordering.  Use one of the original
+    # bin lists.
+    directionBins = [
+      NDBCrecord[key]
+      for key in NDBCrecord.keys()
+      if key in WAVE_DIRECTION_BINS
+    ][0]
+  else:
+    # Need better error message. Should probably be logged.
+    raise TypeError("Directional spectra have different bin ranges!")
+
+  return densityBins, directionBins
+
+def getSpectraFromRecord( NDBCrecord ):
+  spectra = [ [],[],[],[],[] ]
+
+  keys = NDBCrecord.keys()
+
+  if 'density' in keys:
+    spectra[0] = NDBCrecord['density']
+  else:
+    raise TypeError("No frequency spectra! Cowardly refusing to make a record!")
+
+  if 'directionAlpha1' in keys:
+    spectra[1] = NDBCrecord['directionAlpha1']
+  else:
+    spectra[1] = [-99] * len(spectra[0])
+
+  if 'directionAlpha2' in keys:
+    spectra[2] = NDBCrecord['directionAlpha2']
+  else:
+    spectra[2] = [-99] * len(spectra[0])
+
+  if 'directionR1' in keys:
+    spectra[3] = NDBCrecord['directionR1']
+  else:
+    spectra[3] = [-99] * len(spectra[0])
+
+  if 'directionR2' in keys:
+    spectra[4] = NDBCrecord['directionR2']
+  else:
+    spectra[4] = [-99] * len(spectra[0])
+
+  return spectra
 
 #------------------------------------------------------------------------------
 #  Database Buoy Representation
@@ -180,20 +256,42 @@ def getBuoySourceType( buoyNum ):
 #  Database SourceType Representation
 #------------------------------------------------------------------------------
 def getSourceTypeID( buoyNum ):
-  buoyType = _session.query(SourceType).filter( 
-    SourceType.sourcetypename == getBuoySourceType( buoyNum ) 
+  buoyType = _session.query(SourceTypeRecord).filter( 
+    SourceTypeRecord.sourcetypename == getBuoySourceType( buoyNum ) 
   ).first()
 
   if buoyType:
     return buoyType.id
   else:
     # A record for this buoy does not exist in the DB. Create it.
-    buoyType = SourceType( sourceTypeName = getBuoySourceType( buoyNum ) )
+    buoyType = SourceTypeRecord( sourceTypeName = getBuoySourceType( buoyNum ) )
 
     _session.add( buoyType )
     _session.commit()
 
     return buoyType.id
+
+
+#------------------------------------------------------------------------------
+#  Database Spectra Representation
+#------------------------------------------------------------------------------
+def getSpectraID( freqBins = None, dirBins = None ):
+  spectra = _session.query(SpectraRecord).filter(or_(
+    SpectraRecord.spectrafreq == cast( freqBins, ARRAY(DOUBLE_PRECISION) ),
+    SpectraRecord.spectradir == cast( dirBins, ARRAY(DOUBLE_PRECISION) )
+  )).first()
+
+  if spectra:
+    return spectra.id
+  else:
+    # Create a record for the spectra.
+    spectra = SpectraRecord( spectraFreq = freqBins, spectraDir = dirBins )
+
+    _session.add( spectra )
+    _session.commit()
+
+    return spectra.id
+
 
 #---------------------------------------------------------------------
 #  Database Interaction
