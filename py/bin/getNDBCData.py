@@ -144,11 +144,9 @@ if __name__ == '__main__':
     from wavecon.NDBC.DB import formDatabaseRecords, commitToDB
 
     windRecords = formDatabaseRecords( windRecords )
-    print windRecords[0]
     commitToDB( windRecords )
 
     waveRecords = formDatabaseRecords( waveRecords )
-    print waveRecords[0]
     commitToDB( waveRecords )
 
   else:

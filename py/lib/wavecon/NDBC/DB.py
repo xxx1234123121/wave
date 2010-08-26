@@ -60,7 +60,6 @@ def formDatabaseRecords( NDBCrecords ):
   buoyLocation = getBuoyLoc( buoyNum, asWKT = True )
 
   if recordType == 'windRecords':
-    print "got wind records!"
     records = [
       makeWindRecord(
         record,
@@ -70,7 +69,6 @@ def formDatabaseRecords( NDBCrecords ):
     ]
 
   elif recordType == 'waveRecords':
-    print "got wave records!"
     records = [
       makeWaveRecord(
         record,
