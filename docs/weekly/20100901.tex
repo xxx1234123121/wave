@@ -1,0 +1,129 @@
+\documentclass[11pt,letterpaper,oneside,reqno]{article}
+\usepackage[top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[latin1]{inputenc}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\usepackage{subfigure}
+\usepackage{amsmath}
+\usepackage{float,graphicx}
+\usepackage{natbib}
+
+\usepackage{fourier}
+
+%\usepackage{stix}
+%\usepackage{ccfonts,eulervm}
+%\usepackage[T1]{fontenc}
+\renewcommand{\rmdefault}{put}
+%\geometry{letterpaper}
+\usepackage[parfill]{parskip}
+
+%\usepackage[intlimits]{amsmath}
+
+\usepackage{setspace}
+\usepackage{amsthm}
+\usepackage{appendix}
+
+%\usepackage{fancyvrb}
+%\usepackage{supertabular}
+
+\usepackage[font={bf,footnotesize},textfont=md,margin=30pt,aboveskip=0pt,belowskip=0pt]{caption}
+
+\usepackage{lastpage}
+
+\DeclareCaptionLabelFormat{appcaption}{#1 \oldthesection-#2}
+\setlength{\headheight}{15pt}
+
+\renewcommand{\topfraction}{0.9}    % max fraction of floats at top
+    \renewcommand{\bottomfraction}{0.8} % max fraction of floats at bottom
+    %   Parameters for TEXT pages (not float pages):
+    \setcounter{topnumber}{2}
+    \setcounter{bottomnumber}{2}
+    \setcounter{totalnumber}{4}     % 2 may work better
+    \setcounter{dbltopnumber}{2}    % for 2-column pages
+    \renewcommand{\dbltopfraction}{0.9} % fit big float above 2-col. text
+    \renewcommand{\textfraction}{0.07}  % allow minimal text w. figs
+    %   Parameters for FLOAT pages (not text pages):
+    \renewcommand{\floatpagefraction}{0.7}  % require fuller float pages
+    % N.B.: floatpagefraction MUST be less than topfraction !!
+    \renewcommand{\dblfloatpagefraction}{0.7}   % require fuller float pages
+
+\newenvironment{myenumerate}{
+\begin{enumerate}
+  \setlength{\itemsep}{1pt}
+  \setlength{\parskip}{0pt}
+  \setlength{\parsep}{0pt}}{\end{enumerate}
+}
+\newenvironment{myitemize}{
+\begin{itemize}
+  \setlength{\itemsep}{1pt}
+  \setlength{\parskip}{0pt}
+  \setlength{\parsep}{0pt}}{\end{itemize}
+}
+\usepackage[uline]{hhtensor}
+\usepackage{ctable}
+%\usepackage{fancyhdr}
+\usepackage{listings}
+
+%\usepackage[style=asceish,sorting=nyt,natbib=true]{biblatex}
+%\bibliography{capstone_figparts}
+
+\usepackage[pdftex,bookmarks,colorlinks,breaklinks,pdfpagelabels]{hyperref}
+
+\hypersetup{linkcolor=black,citecolor=black,filecolor=black,urlcolor=black}
+%\bibliographystyle{ascelike}
+%\bibliographystyle{apalike}
+%\bibpunct{[}{]}{;}{a}{}{,}
+\newcommand{\p}{\partial}
+\newcommand{\del}{\nabla}
+\renewcommand{\deg}{^\circ}
+\newcommand{\comp}{\overline}
+\newcommand{\dd}{\; \mathrm{d}}
+
+%
+%%%%%%%%%%%%%% Title and TOC %%%%%%%%%%%%%%%%%%%
+%
+
+\begin{document}
+\centerline{\Large \bf Wave Modeling, Monitoring, and Analysis} 
+\centerline{\Large \bf for PG\&E WaveConnect Pilot Project}
+\centerline{Colin Sheppard; Nir Berezovsky; Charlie Sharpsteen;}
+\centerline{Jim Zoellick; Charles Chamberlin}
+\centerline{Schatz Energy Research Center}
+\bigskip
+\bigskip
+
+\noindent {\bf Subject:} Progress Report
+
+\noindent {\bf To:} Brendan Dooher, PG\&E
+
+\noindent {\bf Submitted by:} Colin Sheppard
+
+\noindent {\bf Date:} August 18, 2010 
+
+\noindent {\bf Attachments:} Current draft of overall project report.
+
+\textbf{Activity to Date}\\
+Since the start of the contract term (May 2010), the team from the Schatz Energy Research Center (SERC) has engaged in the following activities in pursuit of the project goals:
+\begin{itemize}
+\item Research and review of relevant literature (wave/current modeling, x-band radar monitoring of wave spectra, statistical methods) 
+\item Research and procurement of necessary equipment and software (multi-core, high performance computer, Matlab + related toolboxes)
+\item Deliberation and decision to use the Army Corps. Coastal Modeling System (CMS) as the foundation of the wave modeling effort
+\item Development of data harvesting software to retrieve inputs to the model
+\item Development/debugging of the CMS-Unix source code to accommodate recent changes in data formats 
+\item Packaged NDBC buoy harvesting software for use by Brendan Dooher for 100-year return analysis of wind data.
+\end{itemize}
+
+\textbf{Upcoming Activity}\\
+We intend to accomplish the following in the coming weeks (along with expected time horizon until completion):
+\begin{itemize}
+\item Finalize configuration of CMS and determination of input formats (\texttildelow 2 weeks).
+\item Use data retrieval scripts to download all available data relevant to our modeling effort (\texttildelow 2 weeks).
+\item Complete acquisition of computer hardware for use in model execution (\texttildelow 3 weeks).
+\item Organize travel arrangements to Ocean Renewable Energy Conference, September 28-30 in Portland (\texttildelow 3 weeks).
+\item Develop model control scripts in Matlab (\texttildelow 4 weeks).
+\item Conduct runs for preliminary resource estimation for the Humboldt domain (\texttildelow 6 weeks).
+\end{itemize}
+
+
+\end{document}
