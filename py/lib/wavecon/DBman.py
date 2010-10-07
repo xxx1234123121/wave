@@ -116,23 +116,23 @@ def _tblSourceTmpl( tableName, BaseClass ):
   return Source
 
 
-def _tblSpectraTmpl( tableName, BaseClass ):
+def _tblSpectraBinTmpl( tableName, BaseClass ):
 
-  class Spectra(BaseClass):
+  class SpectraBin(BaseClass):
     __tablename__ = tableName
     __table_args__ = {'autoload' : True, 'useexisting' : True } 
 
-    def __init__( self, spectraFreq = None, spectraDir = None ):
-      self.spectrafreq = spectraFreq
-      self.spectradir = spectraDir
+    def __init__( self, spcFreq = None, spcDir = None ):
+      self.spcfreq = spcFreq
+      self.spcdir = spcDir
 
     def __repr__(self):
-      return "<SpectraRecord('{}','{}')>".format(
-        self.spectrafreq, self.spectradir )
+      return "<SpectraBinRecord('{}','{}')>".format(
+        self.spcfreq, self.spcdir )
 
     spectraid = synonym( 'id', map_column = True )
 
-  return Spectra
+  return SpectraBin
 
 
 def _tblWaveTmpl( tableName, BaseClass ):
@@ -156,8 +156,13 @@ def _tblWaveTmpl( tableName, BaseClass ):
       self.wavpeakperiod = wavPeakPeriod
 
     def __repr__(self):
+<<<<<<< HEAD
       return "<WaveRecord('{}','{}','{}','{}','{}','{}','{}','{}')>"\
         .format( self.wavsourceid, self.wavspectraid, self.wavlocation,
+=======
+      return "<SpectraRecord('{}','{}','{}','{}','{}','{}','{}','{}')>"\
+        .format( self.wavsourceid, self.wavspectrabinid, self.wavlocation,
+>>>>>>> DBman
           self.wavdatetime, self.wavspectra, self.wavheight,
           self.wavpeakdir, self.wavpeakperiod )
 
@@ -233,18 +238,18 @@ def _tblBathyTmpl( tableName, BaseClass ):
   class Bathy(BaseClass):
     __tablename__ = tableName
     __table_args__ = {'autoload' : True, 'useexisting' : True } 
-    bathylocation = GeometryColumn( Point(2) )
+    batlocation = GeometryColumn( Point(2) )
 
-    def __init__( self, bathySourceID = None, bathyLocation = None, 
-      bathyDepth = None 
+    def __init__( self, batSourceID = None, batLocation = None, 
+      batDepth = None 
     ):
-      self.bathysourceid = bathySourceID
-      self.bathylocation = bathyLocation
-      self.bathydepth = bathyDepth
+      self.batsourceid = batSourceID
+      self.batlocation = batLocation
+      self.batdepth = batDepth
 
     def __repr__(self):
       return "<BathyRecord('{}','{}','{}')>".format(
-        self.bathysourceid, self.bathylocation, self.bathydepth )
+        self.batsourceid, self.batlocation, self.batdepth )
 
     bathyid = synonym( 'id', map_column = True )
     bathysourceid = synonym( 'sourceid', map_column = True )
@@ -258,7 +263,7 @@ _DATABASE_TEMPLATES = {
 
   'tblsourcetype' : _tblSourceTypeTmpl,
   'tblsource' : _tblSourceTmpl,
-  'tblspectra' : _tblSpectraTmpl,
+  'tblspectrabin' : _tblSpectraBinTmpl,
   'tblwave' : _tblWaveTmpl,
   'tblwind' : _tblWindTmpl,
   'tblcurrent' : _tblCurrentTmpl,
