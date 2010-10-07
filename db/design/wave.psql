@@ -1,7 +1,9 @@
+DROP TABLE  IF EXISTS tblSourceType CASCADE;
 CREATE  TABLE  tblSourceType (
   sourceTypeID TEXT DEFAULT uuid_generate_v4() PRIMARY KEY ,
   sourceTypeName TEXT NULL);
 
+DROP TABLE  IF EXISTS tblSource CASCADE;
 CREATE  TABLE  tblSource (
   srcID TEXT DEFAULT uuid_generate_v4() PRIMARY KEY,
   srcName TEXT NULL ,
@@ -16,15 +18,17 @@ CREATE  TABLE  tblSource (
     ON UPDATE CASCADE);
 CREATE INDEX plSourceTypeIND ON tblSource (srcSourceTypeID ASC) ;
 
-CREATE  TABLE  tblSpectra (
-  spectraID TEXT DEFAULT uuid_generate_v4() PRIMARY KEY,
-  spectraFreq FLOAT[] NULL ,
-  spectraDir FLOAT[] NULL);
+DROP TABLE  IF EXISTS tblSpectraBin CASCADE;
+CREATE  TABLE  tblSpectraBin (
+  spcID TEXT DEFAULT uuid_generate_v4() PRIMARY KEY,
+  spcFreq FLOAT[] NULL ,
+  spcDir FLOAT[] NULL);
 
+DROP TABLE  IF EXISTS tblWave;
 CREATE  TABLE  tblWave (
   wavID TEXT DEFAULT uuid_generate_v4() PRIMARY KEY,
   wavSourceID TEXT NOT NULL ,
-  wavSpectraID TEXT NOT NULL ,
+  wavSpectraBinID TEXT NOT NULL ,
   wavDateTime TIMESTAMP NULL ,
   wavSpectra FLOAT[][] NULL ,
   wavHeight FLOAT NULL ,
@@ -35,15 +39,16 @@ CREATE  TABLE  tblWave (
     REFERENCES tblSource (srcID )
     ON DELETE CASCADE
     ON UPDATE CASCADE,
-  CONSTRAINT wavSpectraIND
-    FOREIGN KEY (wavSpectraID )
-    REFERENCES tblSpectra (spectraID )
+  CONSTRAINT wavSpectraBinIND
+    FOREIGN KEY (wavSpectraBinID )
+    REFERENCES tblSpectraBin (spcID )
     ON DELETE CASCADE
     ON UPDATE CASCADE);
 CREATE INDEX wavSourceIND ON tblWave (wavSourceID ASC) ;
-CREATE INDEX wavSpectraIND ON tblWave (wavSpectraID ASC) ;
+CREATE INDEX wavSpectraBinIND ON tblWave (wavSpectraBinID ASC) ;
 SELECT AddGeometryColumn( 'tblwave', 'wavlocation', 4326, 'POINT', 2 );
 
+DROP TABLE  IF EXISTS tblWind CASCADE;
 CREATE  TABLE  tblWind (
   winID TEXT DEFAULT uuid_generate_v4() PRIMARY KEY,
   winSourceID TEXT NOT NULL ,
@@ -58,6 +63,7 @@ CREATE  TABLE  tblWind (
 CREATE INDEX winSourceIND ON tblWind (winSourceID ASC) ;
 SELECT AddGeometryColumn( 'tblwind', 'winlocation', 4326, 'POINT', 2 );
 
+DROP TABLE  IF EXISTS tblCurrent CASCADE;
 CREATE  TABLE  tblCurrent (
   curID TEXT DEFAULT uuid_generate_v4() PRIMARY KEY,
   curSourceID TEXT NOT NULL ,
@@ -72,14 +78,15 @@ CREATE  TABLE  tblCurrent (
 CREATE INDEX curSourceIND ON tblCurrent (curSourceID ASC) ;
 SELECT AddGeometryColumn( 'tblcurrent', 'curlocation', 4326, 'POINT', 2 );
 
+DROP TABLE  IF EXISTS tblBathy CASCADE;
 CREATE  TABLE  tblBathy (
-  bathyID TEXT DEFAULT uuid_generate_v4() PRIMARY KEY,
-  bathySourceID TEXT NULL ,
-  bathyDepth FLOAT NULL ,
-  CONSTRAINT bathySourceIND
-    FOREIGN KEY (bathySourceID )
+  batID TEXT DEFAULT uuid_generate_v4() PRIMARY KEY,
+  batSourceID TEXT NULL ,
+  batDepth FLOAT NULL ,
+  CONSTRAINT batSourceIND
+    FOREIGN KEY (batSourceID )
     REFERENCES tblSource (srcID )
     ON DELETE CASCADE
     ON UPDATE CASCADE);
-CREATE INDEX bathySourceIND ON tblBathy (bathySourceID ASC) ;
-SELECT AddGeometryColumn( 'tblbathy', 'bathylocation', 4326, 'POINT', 2 );
+CREATE INDEX batSourceIND ON tblBathy (batSourceID ASC) ;
+SELECT AddGeometryColumn( 'tblbathy', 'batlocation', 4326, 'POINT', 2 );
