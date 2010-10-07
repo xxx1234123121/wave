@@ -1,4 +1,4 @@
-classdef spectrum
+classdef spectra
     %SPECTRA A class for representing one or two dimensional surface wave
     %spectra.
     %   Detailed explanation goes here
@@ -21,7 +21,7 @@ classdef spectrum
     end
     
     methods
-        function spec = spectrum(datetime,location,projection,spec,...
+        function spec = spectra(datetime,location,projection,spec,...
             freqbin,dirbin)
             spec.datetime   = datevec(datetime,'yyyy-mm-dd HH:MM:SS');
             spec.location   = location;
