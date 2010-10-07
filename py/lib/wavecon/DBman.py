@@ -130,7 +130,7 @@ def _tblSpectraBinTmpl( tableName, BaseClass ):
       return "<SpectraBinRecord('{}','{}')>".format(
         self.spcfreq, self.spcdir )
 
-    spectraid = synonym( 'id', map_column = True )
+    spcid = synonym( 'id', map_column = True )
 
   return SpectraBin
 
@@ -142,12 +142,12 @@ def _tblWaveTmpl( tableName, BaseClass ):
     __table_args__ = {'autoload' : True, 'useexisting' : True } 
     wavlocation = GeometryColumn( Point(2) )
 
-    def __init__( self, wavSourceID = None, wavSpectraID = None, 
+    def __init__( self, wavSourceID = None, wavSpectraBinID = None, 
       wavLocation = None, wavDateTime = None, wavSpectra = None, 
       wavHeight = None, wavPeakDir = None, wavPeakPeriod = None
     ):
       self.wavsourceid = wavSourceID
-      self.wavspectraid = wavSpectraID
+      self.wavspectrabinid = wavSpectraBinID
       self.wavlocation = wavLocation
       self.wavdatetime = wavDateTime
       self.wavspectra = wavSpectra
@@ -156,13 +156,8 @@ def _tblWaveTmpl( tableName, BaseClass ):
       self.wavpeakperiod = wavPeakPeriod
 
     def __repr__(self):
-<<<<<<< HEAD
-      return "<WaveRecord('{}','{}','{}','{}','{}','{}','{}','{}')>"\
-        .format( self.wavsourceid, self.wavspectraid, self.wavlocation,
-=======
       return "<SpectraRecord('{}','{}','{}','{}','{}','{}','{}','{}')>"\
         .format( self.wavsourceid, self.wavspectrabinid, self.wavlocation,
->>>>>>> DBman
           self.wavdatetime, self.wavspectra, self.wavheight,
           self.wavpeakdir, self.wavpeakperiod )
 
@@ -251,10 +246,10 @@ def _tblBathyTmpl( tableName, BaseClass ):
       return "<BathyRecord('{}','{}','{}')>".format(
         self.batsourceid, self.batlocation, self.batdepth )
 
-    bathyid = synonym( 'id', map_column = True )
-    bathysourceid = synonym( 'sourceid', map_column = True )
-    bathydatetime = synonym( 'datetime', map_column = True )
-    bathylocation = synonym( 'location', map_column = True )
+    batid = synonym( 'id', map_column = True )
+    batsourceid = synonym( 'sourceid', map_column = True )
+    batdatetime = synonym( 'datetime', map_column = True )
+    batlocation = synonym( 'location', map_column = True )
 
   return Bathy
 
