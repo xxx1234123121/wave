@@ -6,8 +6,7 @@ classdef spectra
     properties
         % TIME AND LOCATION
         datetime;   % datevec
-        location;   % x,y GIS coordinates
-        projection; % associated GIS projection
+        location;   % x,y Lat/Lon coordinates
         
         % SPECTRA
         spec;       % the 1D or 2D matrix of spectral values
@@ -21,13 +20,14 @@ classdef spectra
     end
     
     methods
-        function spec = spectra(datetime,location,projection,spec,...
-            freqbin,dirbin)
-            spec.datetime   = datevec(datetime,'yyyy-mm-dd HH:MM:SS');
-            spec.location   = location;
-            spec.projection = projection;
-            spec.freqbin    = freqbin;
-            if nargin<5,spec.dirbin = dirbin; end
+        function spec = spectra(datetime,location,sp,freqbin,dirbin)
+            if(nargin>0)
+                spec.datetime   = datevec(datetime,'yyyy-mm-dd HH:MM:SS');
+                spec.location   = location;
+                spec.spec       = sp;
+                spec.freqbin    = freqbin;
+                if nargin>4,spec.dirbin = dirbin; end
+            end
         end
     end
     
