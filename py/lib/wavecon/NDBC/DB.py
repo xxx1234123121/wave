@@ -40,7 +40,7 @@ BuoySource = DBman.accessTable( _DBconfig, 'tblsource' )
 SourceTypeRecord = DBman.accessTable( _DBconfig, 'tblsourcetype' )
 WindRecord = DBman.accessTable( _DBconfig, 'tblwind' )
 WaveRecord = DBman.accessTable( _DBconfig, 'tblwave' )
-SpectraRecord = DBman.accessTable( _DBconfig, 'tblspectra' )
+SpectraRecord = DBman.accessTable( _DBconfig, 'tblspectrabin' )
 
 _session = DBman.startSession( _DBconfig )
 
@@ -112,7 +112,7 @@ def makeWaveRecord( NDBCrecord, buoyID, buoyLocation ):
 
   densityBins, directionBins = getBinsFromRecord( NDBCrecord )
 
-  record.wavspectraid = getSpectraID( densityBins, directionBins )
+  record.wavspectrabinid = getSpectraBinID( densityBins, directionBins )
   record.wavspectra = getSpectraFromRecord( NDBCrecord )
 
   record.sourceid = buoyID
@@ -273,17 +273,17 @@ def getSourceTypeID( buoyNum ):
 #------------------------------------------------------------------------------
 #  Database Spectra Representation
 #------------------------------------------------------------------------------
-def getSpectraID( freqBins = None, dirBins = None ):
+def getSpectraBinID( freqBins = None, dirBins = None ):
   spectra = _session.query(SpectraRecord).filter(or_(
-    SpectraRecord.spectrafreq == cast( freqBins, ARRAY(DOUBLE_PRECISION) ),
-    SpectraRecord.spectradir == cast( dirBins, ARRAY(DOUBLE_PRECISION) )
+    SpectraRecord.spcfreq == cast( freqBins, ARRAY(DOUBLE_PRECISION) ),
+    SpectraRecord.spcdir == cast( dirBins, ARRAY(DOUBLE_PRECISION) )
   )).first()
 
   if spectra:
     return spectra.id
   else:
     # Create a record for the spectra.
-    spectra = SpectraRecord( spectraFreq = freqBins, spectraDir = dirBins )
+    spectra = SpectraRecord( spcFreq = freqBins, spcDir = dirBins )
 
     _session.add( spectra )
     _session.commit()
@@ -303,7 +303,7 @@ def commitToDB( records ):
 def formWaveRecord( waveRecord, spectra, buoyNum ):
   waveRecord = associateWithBuoy( waveRecord, buoyNum )
   waveRecord.wavspectra = spectra
-  waveRecord.wavspectraid = '1'
+  waveRecord.wavspectrabinid = '1'
 
   return waveRecord
 
