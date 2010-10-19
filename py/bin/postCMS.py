@@ -21,6 +21,7 @@ scriptLocation = path.dirname(path.abspath( __file__ ))
 waveLibs = path.abspath(path.join( scriptLocation, '..', 'lib' ))
 sys.path.insert( 0, waveLibs )
 
+from wavecon.CMS import load_cms_data
 
 #------------------------------------------------------------------
 #  Utility Functions
@@ -84,4 +85,6 @@ if __name__ == '__main__':
   
   args = processArgs()
 
-  print path.abspath( args.cmcards )
+  cms_data = load_cms_data( args.cmcards ) 
+
+  print cms_data
