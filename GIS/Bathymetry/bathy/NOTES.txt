@@ -30,7 +30,7 @@ Included Files
 
    **Original Resolution:** 1 m
 
-   **Original File Format:** ArcGIS Binary Raster
+   **Original File Format:** ArcGIS Binary Raster (GRID)
 
    **Original Projection:** UTM Zone 10, WGS84 Ellipsoid, WGS84 Datum
    (EPSG:32610)
@@ -53,9 +53,9 @@ Included Files
 
    **Original Resolution:** 2 m
 
-   **Original File Format:** ArcGIS Binary Raster
+   **Original File Format:** ArcGIS Binary Raster (GRID)
 
-   **Original Projection:** UTM Zone 10, GRS80 Ellipsoid, NAD83 Datum
+   **Original Projection:** UTM Zone 10N, GRS80 Ellipsoid, NAD83 Datum
    (EPSG:26910)
 
    **Survey Date:** 2009
@@ -87,10 +87,11 @@ Included Files
 Raster File Processing
 ----------------------
 
-Reprojected to EPSG:4326 Lat/Lon coordinate system using:
+Reprojected to EPSG:32610 UTM Zone 10N (WGS84) coordinate system using:
 
 ::
-
-    gdalwarp -t_srs EPSG:4326 -of Gtiff hdr.adf [output].tif
-
+    
+    gdalwarp -t_srs EPSG:32610\
+      -co "COMPRESS=LZW" -co "TFW=YES" -co "PREDICTOR=2"\
+      -dstnodata 0
 
