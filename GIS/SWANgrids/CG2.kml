@@ -4,8 +4,6 @@
 <Schema name="CG2" id="CG2">
 	<SimpleField name="Name" type="string"></SimpleField>
 	<SimpleField name="Description" type="string"></SimpleField>
-	<SimpleField name="Name" type="string"></SimpleField>
-	<SimpleField name="Descriptio" type="string"></SimpleField>
 </Schema>
   <Placemark>
 	<name></name>
@@ -15,6 +13,6 @@
 		<SimpleData name="Name"></SimpleData>
 		<SimpleData name="Description"></SimpleData>
 	</SchemaData></ExtendedData>
-      <Polygon><outerBoundaryIs><LinearRing><coordinates>-124.486800000000002,40.381500000000003 -124.486800000000002,41.1415 -124.116299999999995,41.1415 -124.116299999999995,40.384899999999824 -124.116499999999149,40.381500000000003 -124.486800000000002,40.381500000000003</coordinates></LinearRing></outerBoundaryIs></Polygon>
+      <Polygon><outerBoundaryIs><LinearRing><coordinates>-124.486800000001068,40.381499999999235 -124.486800000001054,41.141499999999205 -124.116300000000209,41.141499999999851 -124.116300000000237,40.384899999999675 -124.116499999999405,40.381499999999853 -124.486800000001068,40.381499999999235</coordinates></LinearRing></outerBoundaryIs></Polygon>
   </Placemark>
 </Folder></Document></kml>
