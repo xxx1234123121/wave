@@ -12,7 +12,7 @@
 		<SimpleData name="Name">46022</SimpleData>
 		<SimpleData name="Description">NBDC Buoy</SimpleData>
 	</SchemaData></ExtendedData>
-      <Point><coordinates>-124.577000000001448,40.748999999998901</coordinates></Point>
+      <Point><coordinates>-124.577000000002897,40.7489999999978</coordinates></Point>
   </Placemark>
   <Placemark>
 	<name>46212</name>
@@ -21,7 +21,7 @@
 		<SimpleData name="Name">46212</SimpleData>
 		<SimpleData name="Description">SCRIPPS Waverider</SimpleData>
 	</SchemaData></ExtendedData>
-      <Point><coordinates>-124.313000000000557,40.752999999999616</coordinates></Point>
+      <Point><coordinates>-124.313000000001125,40.752999999999233</coordinates></Point>
   </Placemark>
   <Placemark>
 	<name>46244</name>
@@ -30,7 +30,7 @@
 		<SimpleData name="Name">46244</SimpleData>
 		<SimpleData name="Description">SCRIPPS Waverider</SimpleData>
 	</SchemaData></ExtendedData>
-      <Point><coordinates>-124.357000000000653,40.887999999999536</coordinates></Point>
+      <Point><coordinates>-124.357000000001307,40.887999999999082</coordinates></Point>
   </Placemark>
   <Placemark>
 	<name>HBYC1</name>
@@ -39,6 +39,6 @@
 		<SimpleData name="Name">HBYC1</SimpleData>
 		<SimpleData name="Description">NOAA tide guage</SimpleData>
 	</SchemaData></ExtendedData>
-      <Point><coordinates>-124.217000000000382,40.766999999999761</coordinates></Point>
+      <Point><coordinates>-124.217000000000766,40.76699999999952</coordinates></Point>
   </Placemark>
 </Folder></Document></kml>
