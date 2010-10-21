@@ -32,6 +32,10 @@ Included Files
 
    **Original File Format:** ArcGIS Binary Raster (GRID)
 
+   **Original Vertical Datum:** NAVD88
+
+   **Original Horizontal Datum:** WGS 1984 (EPSG:4326)
+
    **Original Projection:** UTM Zone 10, WGS84 Ellipsoid, WGS84 Datum
    (EPSG:32610)
 
@@ -55,6 +59,10 @@ Included Files
 
    **Original File Format:** ArcGIS Binary Raster (GRID)
 
+   **Original Vertical Datum:** NAVD88
+
+   **Original Horizontal Datum:** NAD 1983 (EPSG:4269)
+
    **Original Projection:** UTM Zone 10N, GRS80 Ellipsoid, NAD83 Datum
    (EPSG:26910)
 
@@ -76,9 +84,9 @@ Included Files
 
    **Original File Format:** Binary Raster (.flt file)
 
-   **Horizontal Datum:** NAD 1983 (EPSG:4269)
+   **Original Horizontal Datum:** NAD 1983 (EPSG:4269)
 
-   **Vertical Datum:** Mean sea level?  Possibly mean lower low water.
+   **Original Vertical Datum:** Mean sea level?  Possibly mean lower low water.
 
    **Original Projection:** None. Use horizontal datum to refrence lat/lons.
 
@@ -106,9 +114,9 @@ Included Files
 
    **Original File Format:** Binary Raster (.flt file)
 
-   **Horizontal Datum:** WGS 1984 (EPSG:4623)
+   **Original Horizontal Datum:** WGS 1984 (EPSG:4623)
 
-   **Vertical Datum:** Mean sea level.
+   **Original Vertical Datum:** Mean sea level.
 
    **Original Projection:** None. Use horizontal datum to refrence lat/lons.
 
