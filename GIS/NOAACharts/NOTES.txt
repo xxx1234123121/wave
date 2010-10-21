@@ -19,6 +19,8 @@ Lat/Lon coordinate system using:
 
 ::
 
-    gdalwarp -t_srs EPSG:4326 -of Gtiff [chart#].KAP [chart#].tif
+    gdalwarp -t_srs EPSG:32610\
+      -co "COMPRESS=LZW" -co "TFW=YES" -co "PREDICTOR=2"\
+      -dstnodata 0 [chart#].KAP [chart#].tif
 
 
