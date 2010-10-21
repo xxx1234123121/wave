@@ -67,21 +67,61 @@ Included Files
 --------------
 
 
--  **northCoast.tif**
+-  **northShelfFineBathy.tif**
 
    3 arc second DEM from the National Geophysical Data Center (GEODAS)
    Coastal Relief Model. Covers a wide area of the north coast.
 
    **Original Resolution:** 3 seconds of arc
 
-   **Original File Format:** ArcGIS Binary Raster
+   **Original File Format:** Binary Raster (.flt file)
 
-   **Original Projection:** Unspecified Lat/Lon (Possibly EPSG:4326?)
+   **Horizontal Datum:** NAD 1983 (EPSG:4269)
+
+   **Vertical Datum:** Mean sea level?  Possibly mean lower low water.
+
+   **Original Projection:** None. Use horizontal datum to refrence lat/lons.
 
    **Survey Date:** Various
 
    **Source:**
-   `http://seafloor.csumb.edu/csmp/csmp\_datacatalog.html <http://seafloor.csumb.edu/csmp/csmp_datacatalog.html>`_
+   `http://www.ngdc.noaa.gov/mgg/coastal/crm.html <http://www.ngdc.noaa.gov/mgg/coastal/crm.html>`_
+
+   **Extent Used:**
+     - **N:** 42°
+     - **S:** 40°
+     - **E:** -124°
+     - **W:** -126°
+
+
+--------------
+
+
+-  **northShelfCoarseBathy.tif**
+
+   1 minute DEM from the National Geophysical Data Center (GEODAS)
+   ETOPO1 database. Covers the worlds oceans.
+
+   **Original Resolution:** 1 minute of arc.
+
+   **Original File Format:** Binary Raster (.flt file)
+
+   **Horizontal Datum:** WGS 1984 (EPSG:4623)
+
+   **Vertical Datum:** Mean sea level.
+
+   **Original Projection:** None. Use horizontal datum to refrence lat/lons.
+
+   **Survey Date:** Various
+
+   **Source:**
+   `http://www.ngdc.noaa.gov/mgg/global/index.html <http://www.ngdc.noaa.gov/mgg/global/index.html>`_
+
+   **Extent Used:**
+     - **N:** 42°
+     - **S:** 40°
+     - **E:** -124°
+     - **W:** -126°
 
 
 Raster File Processing
