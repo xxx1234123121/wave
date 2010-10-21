@@ -4,12 +4,15 @@
 <Schema name="StudyArea" id="StudyArea">
 	<SimpleField name="Name" type="string"></SimpleField>
 	<SimpleField name="Description" type="string"></SimpleField>
-	<SimpleField name="id" type="int"></SimpleField>
-	<SimpleField name="lonx" type="float"></SimpleField>
-	<SimpleField name="laty" type="float"></SimpleField>
 </Schema>
   <Placemark>
+	<name></name>
+	<description></description>
   <Style><LineStyle><color>ff0000ff</color></LineStyle>  <PolyStyle><fill>0</fill></PolyStyle></Style>
-      <Polygon><outerBoundaryIs><LinearRing><coordinates>-124.248016699999994,40.829700000000003 -124.257900000000006,40.8333333 -124.238783299999994,40.8633667 -124.228899999999996,40.859733300000002 -124.248016699999994,40.829700000000003</coordinates></LinearRing></outerBoundaryIs></Polygon>
+	<ExtendedData><SchemaData schemaUrl="#StudyArea">
+		<SimpleData name="Name"></SimpleData>
+		<SimpleData name="Description"></SimpleData>
+	</SchemaData></ExtendedData>
+      <Polygon><outerBoundaryIs><LinearRing><coordinates>-124.248016700000406,40.82969999999974 -124.257900000000447,40.833333299999708 -124.238783300000406,40.863366699999737 -124.228900000000408,40.859733299999746 -124.248016700000406,40.82969999999974</coordinates></LinearRing></outerBoundaryIs></Polygon>
   </Placemark>
 </Folder></Document></kml>
