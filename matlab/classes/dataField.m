@@ -52,7 +52,7 @@ classdef dataField
                 t = df.T(1);
             end
             
-            % find the point closest to x,y in Euclidean space
+            % find the point closest to x,y,t in Euclidean space
             iNearby = knnsearch([x,y,t],[df.X df.Y,df.T]);
             
             
