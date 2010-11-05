@@ -70,6 +70,14 @@ def processArgs():
                        passed by windFile and waveFile.'''
                      )
 
+  parser.add_argument( '--num-dir-bins', action = 'store', dest = 'n_dir_bin',
+                       default = 16, type = int,
+                       help = '''The number of directional bins to use when
+                       disaggregating density and directional spectra into a
+                       single frequency-direction spectra.  If 0 is specified,
+                       data will not be disaggregated.  Default value is 16.'''
+                     )
+
   # Positional arguments- these are not identified by a flag.  Rather their
   # meaning is inferred from their position in the command line.
   parser.add_argument( 'buoyNum', metavar = 'Buoy#', type = int,
@@ -104,6 +112,8 @@ if __name__ == '__main__':
   """
   
   args = processArgs()
+
+  print args.n_dir_bin
 
   windRecords, waveRecords = fetchBuoyRecords( args.buoyNum,
     args.startTime, args.stopTime,
