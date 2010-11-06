@@ -26,10 +26,12 @@ import re
 
 from itertools import chain
 
+from math import pi, cos, radians
+
 #------------------------------------------------------------------------------
 #  Imports from third party libraries
 #------------------------------------------------------------------------------
-from numpy import zeros, linspace
+from numpy import linspace, array
 
 
 #------------------------------------------------------------------------------
@@ -135,10 +137,8 @@ def fetchBuoyRecords( buoyNum, startTime, stopTime, num_dir_bins, verbose = Fals
     waveRecords = joinWithSpectra( waveRecords, waveTimestamps, 
       r2Data, r2Timestamps )
 
-  if num_dir_bins != 0:
-    dir_bins = linspace(0, 360, num_dir_bins)
-    waveRecords = [ disaggregateSpectra(record, dir_bins)
-      for record in waveRecords ]
+  waveRecords = [ collapseSpectra(record, num_dir_bins)
+    for record in waveRecords ]
 
   return windRecords, waveRecords
 
@@ -154,6 +154,7 @@ def fetchRecords( timeSpan, buoyNum, dataType ):
   # sublist containing records for one year.  The chain function is
   # used to flatten the list of lists into a single list.
   return list(chain.from_iterable( records ))
+
 
 def fetchData( time, buoyNum, dataType ):
   BASE_URL = "http://www.ndbc.noaa.gov/view_text_file.php"
@@ -222,6 +223,7 @@ def NDBCGaveData( responseString ):
     return False
   else:
     return True
+
 
 def rawToRecords( rawData, buoyNum, dataType ):
   # Need to use re.split('\s+',line) instead of line.split(' ') because
@@ -413,8 +415,67 @@ def splitWaveRecords( records, timestamps ):
   return recordsToJoin, recordsToPass
 
 
-def disaggregateSpectra( record, dir_bins ):
+def collapseSpectra( record, num_dir_bins ):
+  WAVE_SPECTRA = [
+    'density',
+    'directionAlpha1',
+    'directionAlpha2',
+    'directionR1',
+    'directionR2'
+  ]
+
+  if all([spectra in record for spectra in WAVE_SPECTRA]):
+    # We have 5 disaggregated direction and density spectra---enough to make a
+    # 2D spectra or to report them using an array.
+    if num_dir_bins == 0:
+      # Collapse the density and direction spectra into a single array.
+      record['spectra'] = array([record[spectra] for spectra in WAVE_SPECTRA])
+      record['spectraType'] = '2D-aggregated'
+
+    else:
+      # First, we create the directio bins:
+      dir_bins = linspace(0, 360, num_dir_bins)
+
+      # First, we collapse the 5 vectors of spectra into a single vector of
+      # tuples:
+      #     (density, alpha1, alpha2, r1, r2)
+      parameters = zip(*[record[spectra] for spectra in WAVE_SPECTRA]) 
+
+      record['spectra'] = make2Dspectra(parameters, dir_bins)
+      record['spectraType'] = '2D'
+      record['directionBins'] = dir_bins
+
+  elif 'density' in record:
+    # We can only make a 1D spectra.
+    record['spectra'] = array(record['density'])
+    record['spectraType'] = '1D'
+
+  # Remove old information.
+  for key in WAVE_SPECTRA:
+    del record[key]
+
+  # Transform frequency bins to an array.
+  record['frequencyBins'] = array(record['frequencyBins'])
+
   return record
+
+
+def make2Dspectra( parameters, dirBins ):
+  # NDBC reports R1 and R2 scaled by 100
+  spectra = array([ [calc2Dspectra( density, alpha1, alpha2,
+      r1 / 100, r2 / 100, angle )
+      for density, alpha1, alpha2, r1, r2 in parameters ]
+    for angle in dirBins])
+
+  return spectra
+
+
+def calc2Dspectra( density, Alpha1, Alpha2, R1, R2, A, ):
+  return density * (1/pi) * (
+      0.5 +
+      R1 * cos(radians( A - Alpha1 )) +
+      R2 * cos(radians( 2 * (A - Alpha2) ))
+    )
 
 
 def dateFromRaw( line ):
