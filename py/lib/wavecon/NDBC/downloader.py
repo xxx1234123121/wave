@@ -6,7 +6,7 @@ This module provides an interface to data stored at the National Buoy
 Data Center (`NDBC`_).
 
 **Development Status:**
-  **Last Modified:** August 16, 2010 by Charlie Sharpsteen
+  **Last Modified:** November 5, 2010 by Charlie Sharpsteen
 
 
 .. _NDBC: http://www.ndbc.noaa.gov/
@@ -27,6 +27,12 @@ import re
 from itertools import chain
 
 #------------------------------------------------------------------------------
+#  Imports from third party libraries
+#------------------------------------------------------------------------------
+from numpy import zeros, linspace
+
+
+#------------------------------------------------------------------------------
 #  Imports from other NDBC submodules
 #------------------------------------------------------------------------------
 from .globals import *
@@ -35,7 +41,7 @@ from .globals import *
 #------------------------------------------------------------------------------
 #  Data Retrieval
 #------------------------------------------------------------------------------
-def fetchBuoyRecords( buoyNum, startTime, stopTime, verbose = False ):
+def fetchBuoyRecords( buoyNum, startTime, stopTime, num_dir_bins, verbose = False ):
 
   if startTime > stopTime:
     raise RuntimeError(
@@ -128,6 +134,11 @@ def fetchBuoyRecords( buoyNum, startTime, stopTime, verbose = False ):
 
     waveRecords = joinWithSpectra( waveRecords, waveTimestamps, 
       r2Data, r2Timestamps )
+
+  if num_dir_bins != 0:
+    dir_bins = linspace(0, 360, num_dir_bins)
+    waveRecords = [ disaggregateSpectra(record, dir_bins)
+      for record in waveRecords ]
 
   return windRecords, waveRecords
 
@@ -351,6 +362,7 @@ def isInsideTimespan( aDate, startTime, stopTime ):
   else:
     return False
 
+
 def joinWithSpectra( waveRecords, waveTimestamps,
     spectraRecords, spectraTimestamps
 ):
@@ -359,9 +371,31 @@ def joinWithSpectra( waveRecords, waveTimestamps,
   spectraToJoin, spectraToPass = splitWaveRecords( spectraRecords, spectraTimestamps )
 
   for wave, spectra in zip( waveToJoin, spectraToJoin ):
+    # Find the bins in the spectral record.
+    binKey = [key for key in spectra.keys()
+      if key.endswith('Bins')].pop()
+
+    # If the wave record does not have frequency bins for spectra, we create
+    # them using the bins in the wave record.
+    if 'frequencyBins' not in wave:
+      wave['frequencyBins'] = spectra[binKey]
+
+    else:
+      # Otherwise, we check to ensure the wave record frequency bins and the
+      # spectra frequency bins are the same.
+      binDiff = set.difference( set(wave['frequencyBins']),
+        set(spectra[binKey]) )
+
+      if not len(binDiff) == 0:
+        raise RuntimeError('''Got a differing number of frequency bins for a
+        wave record and a spectra record!''')
+
+    del spectra[binKey]
+
     wave.update( spectra )
 
-  return waveToPass + waveToJoin + spectraToPass
+  return waveToJoin
+
 
 def splitWaveRecords( records, timestamps ):
   recordsToJoin = [
@@ -377,6 +411,11 @@ def splitWaveRecords( records, timestamps ):
   ]
 
   return recordsToJoin, recordsToPass
+
+
+def disaggregateSpectra( record, dir_bins ):
+  return record
+
 
 def dateFromRaw( line ):
   # Ugly hack #2: This one is truly hideous- not all hourly

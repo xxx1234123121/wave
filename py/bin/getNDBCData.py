@@ -113,11 +113,8 @@ if __name__ == '__main__':
   
   args = processArgs()
 
-  print args.n_dir_bin
-
   windRecords, waveRecords = fetchBuoyRecords( args.buoyNum,
-    args.startTime, args.stopTime,
-    'meteorological'
+    args.startTime, args.stopTime, args.n_dir_bin, args.be_verbose
   )
 
   if args.output_format == 'json':
