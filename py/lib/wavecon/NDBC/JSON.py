@@ -23,5 +23,5 @@ def writeJSON( NDBCrecords, fileHandle ):
 def clobber( object ):
   return json.loads(json.dumps(
     object,
-    cls = DatetimeEncoder
+    cls = BuoyRecordEncoder
   ))
