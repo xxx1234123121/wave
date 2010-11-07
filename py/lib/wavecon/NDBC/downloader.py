@@ -31,7 +31,6 @@ from math import pi, cos, radians
 #------------------------------------------------------------------------------
 #  Imports from third party libraries
 #------------------------------------------------------------------------------
-from numpy import linspace, array
 
 
 #------------------------------------------------------------------------------
@@ -429,12 +428,12 @@ def collapseSpectra( record, num_dir_bins ):
     # 2D spectra or to report them using an array.
     if num_dir_bins == 0:
       # Collapse the density and direction spectra into a single array.
-      record['spectra'] = array([record[spectra] for spectra in WAVE_SPECTRA])
+      record['spectra'] = [record[spectra] for spectra in WAVE_SPECTRA]
       record['spectraType'] = '2D-aggregated'
 
     else:
-      # First, we create the directio bins:
-      dir_bins = linspace(0, 360, num_dir_bins)
+      # First, we create the direction bins:
+      dir_bins = linspace_list(0, 360, num_dir_bins)
 
       # First, we collapse the 5 vectors of spectra into a single vector of
       # tuples:
@@ -447,25 +446,26 @@ def collapseSpectra( record, num_dir_bins ):
 
   elif 'density' in record:
     # We can only make a 1D spectra.
-    record['spectra'] = array(record['density'])
+    record['spectra'] = record['density']
     record['spectraType'] = '1D'
 
   # Remove old information.
   for key in WAVE_SPECTRA:
-    del record[key]
+    if key in record:
+      del record[key]
 
   # Transform frequency bins to an array.
-  record['frequencyBins'] = array(record['frequencyBins'])
+  record['frequencyBins'] = record['frequencyBins']
 
   return record
 
 
 def make2Dspectra( parameters, dirBins ):
   # NDBC reports R1 and R2 scaled by 100
-  spectra = array([ [calc2Dspectra( density, alpha1, alpha2,
-      r1 / 100, r2 / 100, angle )
+  spectra = [
+      [ calc2Dspectra( density, alpha1, alpha2, r1 / 100, r2 / 100, angle )
       for density, alpha1, alpha2, r1, r2 in parameters ]
-    for angle in dirBins])
+    for angle in dirBins ]
 
   return spectra
 
@@ -477,6 +477,9 @@ def calc2Dspectra( density, Alpha1, Alpha2, R1, R2, A, ):
       R2 * cos(radians( 2 * (A - Alpha2) ))
     )
 
+
+def linspace_list( ll, ul, n ):
+  return [ ll + pos * (ul - ll)/(n-1) for pos in range(0,n)]
 
 def dateFromRaw( line ):
   # Ugly hack #2: This one is truly hideous- not all hourly

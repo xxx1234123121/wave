@@ -2,11 +2,11 @@
 Overview
 --------
 
-This module provides routines for serializing data obtained by the data.py
+This module provides routines for serializing data obtained by the downloader.py
 module to a SQL database.
 
 **Development Status:**
-  **Last Modified:** August 25, 2010 by Charlie Sharpsteen
+  **Last Modified:** November, 6 2010 by Charlie Sharpsteen
 
 
 """
@@ -19,7 +19,7 @@ module to a SQL database.
 #------------------------------------------------------------------------------
 #  Imports from third party libraries
 #------------------------------------------------------------------------------
-from sqlalchemy import or_
+from sqlalchemy import and_
 from sqlalchemy.sql.expression import cast
 from sqlalchemy.dialects.postgresql import ARRAY, DOUBLE_PRECISION
 from geoalchemy import WKTSpatialElement
@@ -84,6 +84,7 @@ def formDatabaseRecords( NDBCrecords ):
 
   return records
 
+
 def makeWindRecord( NDBCrecord, buoyID, buoyLocation ):
   record = WindRecord(
     winDateTime = NDBCrecord['datetime'],
@@ -95,6 +96,7 @@ def makeWindRecord( NDBCrecord, buoyID, buoyLocation ):
   record.location = buoyLocation
 
   return record
+
 
 def makeWaveRecord( NDBCrecord, buoyID, buoyLocation ):
   record = WaveRecord(
@@ -110,84 +112,30 @@ def makeWaveRecord( NDBCrecord, buoyID, buoyLocation ):
   if 'wavPeakPeriod' in NDBCrecord:
     record.wavPeakDir = NDBCrecord['wavPeakPeriod']
 
-  densityBins, directionBins = getBinsFromRecord( NDBCrecord )
+  frequencyBins, directionBins = getBinsFromRecord( NDBCrecord )
 
-  record.wavspectrabinid = getSpectraBinID( densityBins, directionBins )
-  record.wavspectra = getSpectraFromRecord( NDBCrecord )
+  record.wavspectrabinid = getSpectraBinID( frequencyBins, directionBins )
+  record.wavspectra = NDBCrecord['spectra']
 
   record.sourceid = buoyID
   record.location = buoyLocation
 
   return record
 
+
 def getBinsFromRecord( NDBCrecord ):
-  WAVE_DIRECTION_BINS = [
-    'directionAlpha1Bins',
-    'directionAlpha2Bins',
-    'directionR1Bins',
-    'directionR2Bins'
-  ]
-
-  if 'densityBins' in NDBCrecord.keys():
-    densityBins = NDBCrecord['densityBins']
+  if 'frequencyBins' in NDBCrecord:
+    frequencyBins = NDBCrecord['frequencyBins']
   else:
-    densityBins = None
+    frequencyBins = []
 
-  directionBins = [
-    set(NDBCrecord[key])
-    for key in NDBCrecord.keys()
-    if key in WAVE_DIRECTION_BINS
-  ]
-
-  if len( directionBins ) == 0:
-    # There were no direction bins.
-    directionBins = None
-  elif len(set.difference(*directionBins)) == 0:
-    # There were many direction bins but they are all the same.  However they
-    # were converted to sets, which destroys ordering.  Use one of the original
-    # bin lists.
-    directionBins = [
-      NDBCrecord[key]
-      for key in NDBCrecord.keys()
-      if key in WAVE_DIRECTION_BINS
-    ][0]
+  if 'directionBins' in NDBCrecord:
+    directionBins = NDBCrecord['directionBins']
   else:
-    # Need better error message. Should probably be logged.
-    raise TypeError("Directional spectra have different bin ranges!")
+    directionBins = []
 
-  return densityBins, directionBins
+  return frequencyBins, directionBins
 
-def getSpectraFromRecord( NDBCrecord ):
-  spectra = [ [],[],[],[],[] ]
-
-  keys = NDBCrecord.keys()
-
-  if 'density' in keys:
-    spectra[0] = NDBCrecord['density']
-  else:
-    raise TypeError("No frequency spectra! Cowardly refusing to make a record!")
-
-  if 'directionAlpha1' in keys:
-    spectra[1] = NDBCrecord['directionAlpha1']
-  else:
-    spectra[1] = [-99] * len(spectra[0])
-
-  if 'directionAlpha2' in keys:
-    spectra[2] = NDBCrecord['directionAlpha2']
-  else:
-    spectra[2] = [-99] * len(spectra[0])
-
-  if 'directionR1' in keys:
-    spectra[3] = NDBCrecord['directionR1']
-  else:
-    spectra[3] = [-99] * len(spectra[0])
-
-  if 'directionR2' in keys:
-    spectra[4] = NDBCrecord['directionR2']
-  else:
-    spectra[4] = [-99] * len(spectra[0])
-
-  return spectra
 
 #------------------------------------------------------------------------------
 #  Database Buoy Representation
@@ -198,9 +146,11 @@ def associateWithBuoy( record, buoyID, buoyLocation ):
 
   return record
 
+
 def getBuoyID( buoyNum ):
   id = getBuoyFromDB( buoyNum ).srcid
   return id
+
 
 def getBuoyLoc( buoyNum, asWKT = False ):
   buoyLoc = BUOY_META[ str(buoyNum) ]['location']
@@ -208,6 +158,7 @@ def getBuoyLoc( buoyNum, asWKT = False ):
     return WKTSpatialElement( "POINT({0} {1})".format(*buoyLoc) )
   else:
     return buoyLoc
+
 
 def getBuoyFromDB( buoyNum ):
   buoy = _session.query(BuoySource).filter( 
@@ -228,6 +179,7 @@ def getBuoyFromDB( buoyNum ):
 
     return buoy
 
+
 def getBuoyName( buoyNum ):
   buoyNum = str( buoyNum )
   try:
@@ -237,6 +189,7 @@ def getBuoyName( buoyNum ):
     raise
 
   return name
+
 
 def getBuoySourceType( buoyNum ):
   buoyNum = str( buoyNum )
@@ -274,7 +227,7 @@ def getSourceTypeID( buoyNum ):
 #  Database Spectra Representation
 #------------------------------------------------------------------------------
 def getSpectraBinID( freqBins = None, dirBins = None ):
-  spectra = _session.query(SpectraRecord).filter(or_(
+  spectra = _session.query(SpectraRecord).filter(and_(
     SpectraRecord.spcfreq == cast( freqBins, ARRAY(DOUBLE_PRECISION) ),
     SpectraRecord.spcdir == cast( dirBins, ARRAY(DOUBLE_PRECISION) )
   )).first()
@@ -299,6 +252,7 @@ def commitToDB( records ):
   _session.commit()
 
   return None
+
 
 def formWaveRecord( waveRecord, spectra, buoyNum ):
   waveRecord = associateWithBuoy( waveRecord, buoyNum )
