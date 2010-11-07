@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+#SEE BELOW FOR COMMAND LINE ARGUMENTS
+#EXAMPLE CALL: python getWW3Spectra.py 50 35 -120 -130 2005/01/01 2005/01/02 /tmp
 
 ################################
 # IMPORT MODULES
