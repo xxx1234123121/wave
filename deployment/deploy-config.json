@@ -1,4 +1,4 @@
 {
   "user": "wave",
-  "recipes": ["main"]
+  "run_list": ["main"]
 }
