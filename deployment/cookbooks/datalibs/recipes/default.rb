@@ -2,7 +2,6 @@ case node[:platform]
 when "debian", "ubuntu"
   package "libatlas-amd64sse3-dev"
   package "libhdf5-serial-dev"
-  package "libsuitesparse-dev"
 else
   puts "Warning: The waveconnect deployment is only battle tested on Ubuntu!"
   package "hdf5"
