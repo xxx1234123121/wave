@@ -85,10 +85,10 @@ The following needs to be added to the deployment routine:
 - Install pyDAP
 - Install CMS
 - Install NCAR NCL library and Python module
-- Create a wave user
-- Use git to check out the SERC wave repository
 - Create a new postgres database using the SQL files in the SERC repository and
   assign ownership to the wave user
+- Link wave repository if it was downloaded via other means, such as a tarball.
+  Homebew would be a good place to look for an example of this behavior.
 - Add OS X support.  Possibly by grabbing the Chef recipie for Homebrew used by
   the [Smeagol][smeagol] project.
 
