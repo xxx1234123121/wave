@@ -1,11 +1,13 @@
 puts "Bootstrapping Development Environment."
 
+include_recipe "buildtools"
 include_recipe "git"
-include_recipe "gfortran"
-include_recipe "datalibs"
+include_recipe "libraries"
 
 include_recipe "python"
 include_recipe "pip"
+
+puts "Adding Python Modules."
 
 pipRoot = File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "pip"))
 require pipRoot + "/providers/pip"
