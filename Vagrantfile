@@ -8,7 +8,7 @@ Vagrant::Config.run do |config|
 
   # The url from where the 'config.vm.box' box will be fetched if it
   # doesn't already exist on the user's system.
-  # config.vm.box_url = "/Users/sharpie/Desktop/VagrantBoxes"
+  # config.vm.box_url = "http://dl.dropbox.com/u/72178/dist/ubuntu64.box"
 
   # Boot with a GUI so you can see the screen. (Default is headless)
   # config.vm.boot_mode = :gui

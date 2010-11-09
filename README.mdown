@@ -1,0 +1,99 @@
+Automagic Deployment
+====================
+
+This directory contains resources that can be used to manage the deployment of
+SERC wave modelling software.  Using the software contained in this directory
+the provisioning of new development and production servers running the software
+should be close to a "turnkey" operation.
+
+The [Chef][chef] configuration management software is used to manage deployment
+of software to the folloing environments:
+
+- Debian-based servers, particularily Ubuntu 10.10
+- Apple OS X (currently not implemented)
+
+Additionally, support is provided for quickly creating and recreating virtual
+servers running the modeling environment using [Vagrant][vagrant].  Machines
+created by Vagrant run Ubuntu Server 10.10 (64 bit) and provide ideal testing
+and development environments as they are both disposible and reproducible.
+
+
+Development With Vagrant
+------------------------
+
+To get started with [Vagrant][vagrant], first download and install [Oracle
+VirtualBox][vbox].  VirtualBox is used to run virtualized copies of the Ubuntu
+server while Vagrant is used to create and manage those copies.
+
+The first step is to create a new Vagrant box named `WaveLab` based on an Ubuntu
+server.  The following command will accomplish this-- but it will take some time
+as an Ubuntu disk image ~500 MB in size must be downloaded:
+
+    vagrant box add WaveLab boxUrl 
+
+Next, run the following command from the directory containing this README file:
+
+    vagrant up
+
+This will unpack the disk image, create a new virtual machine and run Chef
+scripts to provision the new server with all the required software.  Once the
+box is up and running, a ssh connection can be established using:
+
+    vagrant ssh
+
+Once again, the above command must be run from the directory containing this
+readme file.  If something went wrong during the provisioning of the server by
+`vagrant up` a likely culprit was a network timeout---i.e. a download of some
+required software got hung up and failed.  The easiest fix is to try re-running
+the chef setup scripts on the virtual machine via:
+
+    vagrant provsion
+
+
+Deployment With Chef
+--------------------
+
+*To be written...*
+
+
+Implementation Details
+----------------------
+
+The following packages are installed by Chef:
+
+- gfortran 4.5
+- git
+- Python 2.7
+- ATLAS SSE3 -> optimized BLAS and LAPACK libraries.  Possibly only compatible
+  with 64 bit Intel chips.
+- SuiteSparse libraries
+- HDF5 libraries
+- The Pip package manager for Python
+
+The following Python packages are installed by Pip:
+
+- numpy
+- scipy
+- sphinx
+- h5py
+
+The following needs to be added to the deployment routine:
+
+- Install postgresql
+- Install psycopg2
+- Install sqlalchemy and geoalchemy
+- Install pyDAP
+- Install CMS
+- Install NCAR NCL library and Python module
+- Create a wave user
+- Use git to check out the SERC wave repository
+- Create a new postgres database using the SQL files in the SERC repository and
+  assign ownership to the wave user
+- Add OS X support.  Possibly by grabbing the Chef recipie for Homebrew used by
+  the [Smeagol][smeagol] project.
+
+
+  [chef]: http://opscode.com/chef
+  [vagrant]: http://vagrantup.com
+  [vbox]: http://www.virtualbox.org
+  [smeagol]: https://github.com/atmos/smeagol
