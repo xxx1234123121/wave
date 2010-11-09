@@ -1,4 +1,5 @@
 {
   "user": "wave",
+  "user_password": "$1$tVOjLsRs$NYK5.YP9zIq93OMY/qUFj1",
   "run_list": ["main"]
 }

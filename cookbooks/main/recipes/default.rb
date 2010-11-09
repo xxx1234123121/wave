@@ -1,13 +1,21 @@
 puts "Bootstrapping Development Environment."
 
+
+#===============================================================================
+#  Programs and libraries
+#===============================================================================
+
 include_recipe "buildtools"
-include_recipe "git"
 include_recipe "libraries"
+include_recipe "git"
 
 include_recipe "python"
 include_recipe "pip"
 
-puts "Adding Python Modules."
+
+#===============================================================================
+#  Python modules
+#===============================================================================
 
 pipRoot = File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "pip"))
 require pipRoot + "/providers/pip"
@@ -39,5 +47,26 @@ pip_package "h5py" do
   # version goes higher than 1.3.0.
   version "1.3.0"
   file "http://dl.dropbox.com/u/72178/dist/h5py-1.3.0.tar.gz"
+end
+
+
+#===============================================================================
+#  Environment setup
+#===============================================================================
+
+case node[:platform]
+when "debian", "ubuntu"
+  # To allow Chef to set user passwords
+  package "libshadow-ruby1.8"
+end
+
+user node[:user] do
+  password node[:user_password]
+end
+
+git "SERC Software" do
+  repository "git://github.com/serc/wave.git"
+  destination "/usr/local/wave"
+  action :sync
 end
 
