@@ -1,7 +1,7 @@
 case node[:platform]
-when 'debian', 'ubuntu'
-  package 'gfortran-4.5'
+when "debian", "ubuntu"
+  package "gfortran"
 else
   puts "Warning: The waveconnect deployment is only battle tested on Ubuntu!"
-  package 'gfortran'
+  package "gfortran"
 end
