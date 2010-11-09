@@ -1,6 +1,7 @@
 case node[:platform]
 when 'debian', 'ubuntu'
   package 'python2.7'
+  package 'python2.7-dev'
   package 'python-setuptools'
 else
   puts <<-EOS.undent

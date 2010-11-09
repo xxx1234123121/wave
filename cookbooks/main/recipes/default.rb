@@ -2,6 +2,8 @@ puts "Bootstrapping Development Environment."
 
 include_recipe "git"
 include_recipe "gfortran"
+include_recipe "datalibs"
+
 include_recipe "python"
 include_recipe "pip"
 
@@ -11,4 +13,5 @@ require pipRoot + "/resources/pip_package"
 
 pip_package "sphinx"
 pip_package "flask"
+pip_package "numpy"
 
