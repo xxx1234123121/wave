@@ -29,7 +29,7 @@ The first step is to create a new Vagrant box named `WaveLab` based on an Ubuntu
 server.  The following command will accomplish this-- but it will take some time
 as an Ubuntu disk image ~500 MB in size must be downloaded:
 
-    vagrant box add WaveLab boxUrl 
+    vagrant box add WaveLab http://dl.dropbox.com/u/72178/dist/ubuntu64.box
 
 Next, run the following command from the directory containing this README file:
 
