@@ -42,12 +42,12 @@ box is up and running, a ssh connection can be established using:
     vagrant ssh
 
 Once again, the above command must be run from the directory containing this
-readme file.  If something went wrong during the provisioning of the server by
+README file.  If something went wrong during the provisioning of the server by
 `vagrant up` a likely culprit was a network timeout---i.e. a download of some
 required software got hung up and failed.  The easiest fix is to try re-running
 the chef setup scripts on the virtual machine via:
 
-    vagrant provsion
+    vagrant provision
 
 
 Deployment With Chef
