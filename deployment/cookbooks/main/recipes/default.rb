@@ -1,9 +1,8 @@
-puts "Bootstrapping Development Environment."
-
-
 #===============================================================================
 #  Programs and libraries
 #===============================================================================
+
+log "Bootstrapping Development Environment."
 
 include_recipe "buildtools"
 include_recipe "libraries"
@@ -19,9 +18,11 @@ include_recipe "pip"
 #  Python modules
 #===============================================================================
 
+log "Installing Python packages."
+
 pipRoot = File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "pip"))
-require pipRoot + "/providers/pip"
-require pipRoot + "/resources/pip_package"
+require File.join(pipRoot, "providers", "pip")
+require File.join(pipRoot, "resources", "pip_package")
 
 pip_package "sphinx"
 pip_package "flask"
@@ -53,8 +54,10 @@ end
 
 
 #===============================================================================
-#  Environment setup
+#  Wave Model Setup
 #===============================================================================
+
+log "Setting up wave modelling software."
 
 case node[:platform]
 when "debian", "ubuntu"
