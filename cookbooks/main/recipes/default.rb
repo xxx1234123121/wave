@@ -9,6 +9,8 @@ include_recipe "buildtools"
 include_recipe "libraries"
 include_recipe "git"
 
+include_recipe "postgresql::server"
+
 include_recipe "python"
 include_recipe "pip"
 
