@@ -2,7 +2,7 @@
 #  Programs and libraries
 #===============================================================================
 
-log "Bootstrapping Development Environment."
+log "Installing required software."
 
 include_recipe "buildtools"
 include_recipe "libraries"
@@ -52,12 +52,19 @@ pip_package "h5py" do
   file "http://dl.dropbox.com/u/72178/dist/h5py-1.3.0.tar.gz"
 end
 
+pip_package "psycopg2"
+pip_package "sqlalchemy"
+pip_package "geoalchemy"
+
 
 #===============================================================================
 #  Wave Model Setup
 #===============================================================================
 
-log "Setting up wave modelling software."
+#  User creation
+#-------------------------------------------------------------------------------
+
+log "Isolating modeling environment with a new user."
 
 case node[:platform]
 when "debian", "ubuntu"
@@ -67,11 +74,102 @@ end
 
 user node[:user] do
   password node[:user_password]
+  home node[:user_home]
+  shell "/bin/bash"
+  supports :manage_home => true
 end
+
+#  Code Checkout
+#-------------------------------------------------------------------------------
+
+log "Downloading project code."
 
 git "SERC Software" do
   repository "git://github.com/serc/wave.git"
-  destination "/usr/local/wave"
+  user node[:user]
+  destination File.join(node[:user_home], 'wave')
   action :sync
+end
+
+#  Database Creation
+#-------------------------------------------------------------------------------
+
+log "Setting up databases."
+
+script "Create postgres user" do
+  interpreter "ruby"
+  user node[:postgres_config][:admin_user]
+  code <<-RUBY
+    user_check = `psql -t -c "SELECT usename FROM pg_user WHERE usename = '#{node[:user]}';"`
+    `psql -c "CREATE USER #{node[:user]} WITH PASSWORD '#{node[:postgrespass]}';"` unless user_check.chomp.size > 0
+  RUBY
+end
+
+case node[:platform]
+when "debian", "ubuntu"
+  pg_contrib = File.join("/usr/share/postgresql", node[:postgresql][:version], "contrib")
+end
+
+pg_uuid = File.join(pg_contrib, "uuid-ossp.sql")
+# Naughty assumptions about PostGIS version number
+pg_postgis = File.join(pg_contrib, "postgis-1.5", "postgis.sql" )
+pg_spatial = File.join(pg_contrib, "postgis-1.5", "spatial_ref_sys.sql" )
+
+wave_model_schema = File.join(node[:user_home], "wave", "db", "design", "wave.psql")
+
+pg_db = node[:postgres_config][:productionDB]
+script "Create production database" do
+  interpreter "ruby"
+  user node[:postgres_config][:admin_user]
+  code <<-RUBY
+    db_check = `psql -t -c "SELECT datname FROM pg_database WHERE datname = '#{pg_db}';"`
+    unless db_check.chomp.size > 0
+
+      `createdb #{pg_db}`
+      `createlang plpgsql #{pg_db}`
+
+      `psql -d #{pg_db} -f#{pg_uuid}`
+      `psql -d #{pg_db} -f#{pg_postgis}`
+      `psql -d #{pg_db} -f#{pg_spatial}`
+      `psql -d #{pg_db} -f#{wave_model_schema}`
+
+      table_grants = `psql -t -d #{pg_db} -c "select
+        'grant all on '||schemaname||'.'||tablename||' to #{node[:user]};' 
+        from pg_tables where schemaname in ('public') order by schemaname, tablename;"`.split "\n"
+      
+      table_grants.each do |grant|
+        `psql -d #{pg_db} -c "\#{grant}"`
+      end
+
+    end
+  RUBY
+end
+
+pg_db = node[:postgres_config][:testDB]
+script "Create test database" do
+  interpreter "ruby"
+  user node[:postgres_config][:admin_user]
+  code <<-RUBY
+    db_check = `psql -t -c "SELECT datname FROM pg_database WHERE datname = '#{pg_db}';"`
+    unless db_check.chomp.size > 0
+
+      `createdb #{pg_db}`
+      `createlang plpgsql #{pg_db}`
+
+      `psql -d #{pg_db} -f#{pg_uuid}`
+      `psql -d #{pg_db} -f#{pg_postgis}`
+      `psql -d #{pg_db} -f#{pg_spatial}`
+      `psql -d #{pg_db} -f#{wave_model_schema}`
+
+      table_grants = `psql -t -d #{pg_db} -c "select
+        'grant all on '||schemaname||'.'||tablename||' to #{node[:user]};' 
+        from pg_tables where schemaname in ('public') order by schemaname, tablename;"`.split "\n"
+      
+      table_grants.each do |grant|
+        `psql -d #{pg_db} -c "\#{grant}"`
+      end
+
+    end
+  RUBY
 end
 

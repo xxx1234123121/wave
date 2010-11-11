@@ -28,6 +28,7 @@ end
 
 package "postgresql"
 package "postgresql-contrib" # For UUID support
+package "libpq-dev" # So Python packages can be compiled against the PostgreSQL libraries
 
 include_recipe "postgresql::postgis"
 
