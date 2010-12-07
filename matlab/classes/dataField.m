@@ -54,11 +54,11 @@ classdef dataField
             
             % find the point closest to x,y,t in Euclidean space
             iNearby = knnsearch([x,y,t],[df.X df.Y,df.T]);
-            
+
             if(collapse & ndims(df.Z(1).spec)==2)
                 
             end
-            
+
             
             
         
