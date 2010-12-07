@@ -1,0 +1,128 @@
+\documentclass[11pt,letterpaper,oneside,reqno]{article}
+\usepackage[top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[latin1]{inputenc}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\usepackage{subfigure}
+\usepackage{amsmath}
+\usepackage{float,graphicx}
+\usepackage{natbib}
+
+\usepackage{fourier}
+
+%\usepackage{stix}
+%\usepackage{ccfonts,eulervm}
+%\usepackage[T1]{fontenc}
+\renewcommand{\rmdefault}{put}
+%\geometry{letterpaper}
+\usepackage[parfill]{parskip}
+
+%\usepackage[intlimits]{amsmath}
+
+\usepackage{setspace}
+\usepackage{amsthm}
+\usepackage{appendix}
+
+%\usepackage{fancyvrb}
+%\usepackage{supertabular}
+
+\usepackage[font={bf,footnotesize},textfont=md,margin=30pt,aboveskip=0pt,belowskip=0pt]{caption}
+
+\usepackage{lastpage}
+
+\DeclareCaptionLabelFormat{appcaption}{#1 \oldthesection-#2}
+\setlength{\headheight}{15pt}
+
+\renewcommand{\topfraction}{0.9}    % max fraction of floats at top
+    \renewcommand{\bottomfraction}{0.8} % max fraction of floats at bottom
+    %   Parameters for TEXT pages (not float pages):
+    \setcounter{topnumber}{2}
+    \setcounter{bottomnumber}{2}
+    \setcounter{totalnumber}{4}     % 2 may work better
+    \setcounter{dbltopnumber}{2}    % for 2-column pages
+    \renewcommand{\dbltopfraction}{0.9} % fit big float above 2-col. text
+    \renewcommand{\textfraction}{0.07}  % allow minimal text w. figs
+    %   Parameters for FLOAT pages (not text pages):
+    \renewcommand{\floatpagefraction}{0.7}  % require fuller float pages
+    % N.B.: floatpagefraction MUST be less than topfraction !!
+    \renewcommand{\dblfloatpagefraction}{0.7}   % require fuller float pages
+
+\newenvironment{myenumerate}{
+\begin{enumerate}
+  \setlength{\itemsep}{1pt}
+  \setlength{\parskip}{0pt}
+  \setlength{\parsep}{0pt}}{\end{enumerate}
+}
+\newenvironment{myitemize}{
+\begin{itemize}
+  \setlength{\itemsep}{1pt}
+  \setlength{\parskip}{0pt}
+  \setlength{\parsep}{0pt}}{\end{itemize}
+}
+\usepackage[uline]{hhtensor}
+\usepackage{ctable}
+%\usepackage{fancyhdr}
+\usepackage{listings}
+
+%\usepackage[style=asceish,sorting=nyt,natbib=true]{biblatex}
+%\bibliography{capstone_figparts}
+
+\usepackage[pdftex,bookmarks,colorlinks,breaklinks,pdfpagelabels]{hyperref}
+
+\hypersetup{linkcolor=black,citecolor=black,filecolor=black,urlcolor=black}
+%\bibliographystyle{ascelike}
+%\bibliographystyle{apalike}
+%\bibpunct{[}{]}{;}{a}{}{,}
+\newcommand{\p}{\partial}
+\newcommand{\del}{\nabla}
+\renewcommand{\deg}{^\circ}
+\newcommand{\comp}{\overline}
+\newcommand{\dd}{\; \mathrm{d}}
+
+%
+%%%%%%%%%%%%%% Title and TOC %%%%%%%%%%%%%%%%%%%
+%
+
+\begin{document}
+\centerline{\Large \bf Wave Modeling, Monitoring, and Analysis} 
+\centerline{\Large \bf for PG\&E WaveConnect Pilot Project}
+\centerline{Colin Sheppard; Nir Berezovsky; Charlie Sharpsteen;}
+\centerline{Jim Zoellick; Charles Chamberlin}
+\centerline{Schatz Energy Research Center}
+\bigskip
+\bigskip
+
+\noindent {\bf Subject:} Progress Report
+
+\noindent {\bf To:} Brendan Dooher, PG\&E
+
+\noindent {\bf Submitted by:} Colin Sheppard
+
+\noindent {\bf Date:} December 7, 2010 
+
+%\noindent {\bf Attachments:} Current draft of overall project report.
+
+\textbf{Activity to Date}\\
+Since the last submitted progress report (Septembrer 23, 2010), the team from the Schatz Energy Research Center (SERC) has engaged in the following activities in pursuit of the project goals:
+\begin{itemize}
+\item Attended Ocean Renewable Energy Conference, September 28-30 in Portland.
+\item Finalized configuration of CMS and determination of input formats.
+\item Continued to develop model control scripts capable of controling CMS model (work still incomplete).
+\item Corrected several issues with the bathymetric data set (for Humboldt domain): standardized the x,y coordinates of all data to a common projection and transformed the vertical datums to mean sea level.
+\item Updated the buoy data harvest script to transform spectral wave data from NOAA format (as coefficients) into directional spectra.
+\item Developed code for extracting results from CMS output to be inserted into the database (work still incomplete).
+\item Created deployment scripts for Ubuntu Linux capable of downloading and installing packages, source code, and the database necessary to run CMS (work still incomplete).
+\item Continued development of Matlab classes capable of retreiving, representing, and visualizing model results (work still incomplete).
+\item Developed html documentation for several Python modules as well as the GIS resources used in the project.
+\end{itemize}
+
+\textbf{Upcoming Activity}\\
+We intend to accomplish the following in the month of December (pending funding from PG\&E):
+\begin{itemize}
+\item Complete development of model control scripts capable of controling CMS model.
+\item Complete code for extracting results from CMS output to be inserted into the database.
+\item Complete development of Matlab classes for retreival and visualization of model results.
+\end{itemize}
+
+\end{document}
