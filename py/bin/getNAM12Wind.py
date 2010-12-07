@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 #SEE BELOW FOR COMMAND LINE ARGUMENTS
 #EXAMPLE CALL: python getNAM12Wind.py 50 35 -120 -130 2005/01/01 2005/01/02 /tmp
 

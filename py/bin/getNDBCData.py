@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 
 #------------------------------------------------------------------
 # This script retrieves buoy data from the NDBC.
@@ -70,6 +70,24 @@ def processArgs():
                        passed by windFile and waveFile.'''
                      )
 
+  parser.add_argument( '--num-dir-bins', action = 'store', dest = 'n_dir_bin',
+                       default = 16, type = int,
+                       help = '''The number of directional bins to use when
+                       disaggregating density and directional spectra into a
+                       single frequency-direction spectra.  If 0 is specified,
+                       data will not be disaggregated.  Default value is 16.'''
+                     )
+
+  parser.add_argument( '--wind-file', action = 'store', dest="windFile", default = '',
+                       help = '''If --format was set to json (the default),
+                       specifies the name of the output file to which downloaded
+                       wind data should be dumped as JSON records.  If left
+                       blank, records will be written to the screen.''' )
+
+  parser.add_argument( '--wave-file', action = 'store', dest='waveFile', default = '',
+                       help = '''Controls output of downloaded wave data.  See
+                       the windFile argument for details.''' )
+
   # Positional arguments- these are not identified by a flag.  Rather their
   # meaning is inferred from their position in the command line.
   parser.add_argument( 'buoyNum', metavar = 'Buoy#', type = int,
@@ -81,16 +99,6 @@ def processArgs():
   parser.add_argument( 'stopTime', metavar = 'StopTime', type = ISO_datestring,
                         help = '''The end of the time range for which data is to be downloaded. 
                         Uses the same format as described above.''' ) 
-
-  parser.add_argument( 'windFile', nargs = '?', action = 'store', default = '',
-                       help = '''If --format was set to json (the default),
-                       specifies the name of the output file to which downloaded
-                       wind data should be dumped as JSON records.  If left
-                       blank, records will be written to the screen.''' )
-
-  parser.add_argument( 'waveFile', nargs = '?', action = 'store', default = '',
-                       help = '''Controls output of downloaded wave data.  See
-                       the windFile argument for details.''' )
 
   args = parser.parse_args()
   return args
@@ -106,8 +114,7 @@ if __name__ == '__main__':
   args = processArgs()
 
   windRecords, waveRecords = fetchBuoyRecords( args.buoyNum,
-    args.startTime, args.stopTime,
-    'meteorological'
+    args.startTime, args.stopTime, args.n_dir_bin, args.be_verbose
   )
 
   if args.output_format == 'json':

@@ -1,7 +1,7 @@
 import json
 from datetime import datetime
 
-class DatetimeEncoder(json.JSONEncoder):
+class BuoyRecordEncoder(json.JSONEncoder):
   def default( self, obj ):
     if isinstance( obj, datetime ):
       return obj.isoformat()
@@ -12,7 +12,7 @@ def writeJSON( NDBCrecords, fileHandle ):
   fileHandle.write(json.dumps(
     NDBCrecords,
     indent = 2,
-    cls = DatetimeEncoder
+    cls = BuoyRecordEncoder
   ))
 
   return None
@@ -20,5 +20,5 @@ def writeJSON( NDBCrecords, fileHandle ):
 def clobber( object ):
   return json.loads(json.dumps(
     object,
-    cls = DatetimeEncoder
+    cls = BuoyRecordEncoder
   ))
