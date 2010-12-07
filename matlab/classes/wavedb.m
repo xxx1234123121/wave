@@ -1,4 +1,4 @@
-classdef wavedb
+classdef waveDB
     %WAVEDB Database layer specifically for interacting with the wave
     %database
     %
@@ -10,14 +10,14 @@ classdef wavedb
     end
     
     methods
-        function db = wavedb(dbconfig)
+        function db = waveDB(dbconfig)
             db.con = database(dbconfig.database,dbconfig.username,...
                 dbconfig.password,dbconfig.jdbcDriver,dbconfig.driverURL);
             setdbprefs('DataReturnFormat','structure');
         end
-        function spec = selectSpectra(db,source,tBegin,tEnd,location)
+        function dField = selectSpectra(db,source,tBegin,tEnd,location)
             if(nargin==1)
-                rawspec = fetch(db.con,strcat('SELECT  ',...
+                 rawspec = fetch(db.con,strcat('SELECT  ',...
                     '  tblwave.wavdatetime,         ',...
                     '  tblwave.wavspectra,          ',...
                     '  tblwave.wavheight,           ',...
@@ -48,7 +48,7 @@ classdef wavedb
                         double(rawspec.spcfreq{i}.getArray()),...
                         double(rawspec.spcdir{i}.getArray()));
                 end
-                
+                dField = dataField(spec);
             else
                 con = source + tBegin + tEnd +location;
             end
