@@ -95,7 +95,7 @@ while date < stoptime :
     filename = 'enp.' + locale + '*'
     command = '{0} {1} {2}/{3}'.format('wget -A.gz -qP',tmpdir,url,filename)
     system(command)
-    command = 'gunzip ' + tmpdir + '/' + filename
+    command = 'gunzip -f ' + tmpdir + '/' + filename  
     system(command)
     
     ################################
@@ -138,7 +138,7 @@ while date < stoptime :
         # parse lat/lon
         lat = latlon_match[0][0:5]
         lon = latlon_match[0][5:]
-        loc = WKTSpatialElement('POINT('+lat+' '+lon+')')
+        loc = WKTSpatialElement('POINT('+lon+' '+lat+')')
         
         # parse freq/dir bins
         # NOTE DIRS = DIRECTION OF TRAVEL
@@ -206,7 +206,6 @@ while date < stoptime :
                 wavPeakDir=None, 
                 wavPeakPeriod=None)
             session.add(record)
-        
         session.commit()
     
     ################################
@@ -214,10 +213,10 @@ while date < stoptime :
     ################################
     session.close()
     session.bind.dispose()   
-    map(remove,files)    
+    map(remove,files)
     date = date+delta    
-        
-###TO DO###
-#date filter not working
-#modulize
-#add try/catch to system calls (skip date if wget failed)
+###        
+######TO DO###
+####date filter not working
+####modulize
+####add try/catch to system calls (skip date if wget failed)

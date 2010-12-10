@@ -64,8 +64,8 @@ from sqlalchemy import create_engine, MetaData
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, synonym
 
-from geoalchemy import GeometryColumn
-from geoalchemy import Point
+from geoalchemy import *
+from geoalchemy.postgis import PGComparator
 
 import warnings
 
@@ -165,7 +165,6 @@ def _tblWaveTmpl( tableName, BaseClass ):
     wavsourceid = synonym( 'sourceid', map_column = True )
     wavdatetime = synonym( 'datetime', map_column = True )
     wavlocation = synonym( 'location', map_column = True )
-
 
   return Wave
 

@@ -1,7 +1,7 @@
 {
-  "username" : "aUser",
-  "password" : "aPassword",
-  "database" : "aDB",
-  "server" : "localhost",
+  "username" : "wave",
+  "password" : "s3rcw@ve",
+  "database" : "wave",
+  "server" : "fe.sharpsteen.net:5432",
   "type" : "postgresql"  
 }
