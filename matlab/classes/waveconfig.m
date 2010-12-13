@@ -1,4 +1,4 @@
-classdef waveConfig
+classdef waveconfig
     %WAVECONFIG Class to organize configurations for the wave software
     %   Detailed explanation goes here
     
@@ -7,7 +7,7 @@ classdef waveConfig
     end
     
     methods
-        function config = waveConfig(configDir)
+        function config = waveconfig(configDir)
             fid = fopen(strcat(configDir,'/dbconfig.json'));
             s = fscanf(fid,'%c');
             st = parse_json(s);
