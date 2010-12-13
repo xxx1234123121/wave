@@ -41,7 +41,7 @@ classdef dataField
         
         function plotPointSpec(df,x,y,t,collapse)
             if strcmp(df.classOfZ,'spectra')==0
-                error(strcat('Cannot plot point spectra for data of class '
+                error(strcat('Cannot plot point spectra for data of class '...
                 ,df.classOfZ))
             end
              
