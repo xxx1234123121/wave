@@ -8,7 +8,7 @@ the database.
 
 
 **Development Status:**
-  **Last Modified:** July 24, 2010 by Charlie Sharpsteen
+  **Last Modified:** December 13, 2010 by Charlie Sharpsteen
 
 "Design Notes"/Ravings
 ----------------------
@@ -83,7 +83,7 @@ def _tblSourceTypeTmpl( tableName, BaseClass ):
       return "<SourceTypeRecord('{}')>".format(
         self.sourcetypename )
 
-    sourcetypeid = synonym( 'id', map_column = True )
+    id = synonym( 'sourcetypeid' )
 
 
   return SourceType
@@ -110,7 +110,7 @@ def _tblSourceTmpl( tableName, BaseClass ):
         self.srcname, self.srcconfig, self.srcbeginexecution,
         self.srcendexecution, self.srcsourcetypeid )
 
-    srcid = synonym( 'id', map_column = True )
+    id = synonym( 'srcid' )
 
 
   return Source
@@ -130,7 +130,7 @@ def _tblSpectraBinTmpl( tableName, BaseClass ):
       return "<SpectraBinRecord('{}','{}')>".format(
         self.spcfreq, self.spcdir )
 
-    spcid = synonym( 'id', map_column = True )
+    id = synonym( 'spcid' )
 
   return SpectraBin
 
@@ -157,14 +157,14 @@ def _tblWaveTmpl( tableName, BaseClass ):
 
     def __repr__(self):
       return "<SpectraRecord('{}','{}','{}','{}','{}','{}','{}','{}')>"\
-        .format( self.wavsourceid, self.wavspectrabinid, self.wavlocation,
+        .format( self.wavsourceid, self.wavspectrabinid, self.wavlocation.geom_wkb,
           self.wavdatetime, self.wavspectra, self.wavheight,
           self.wavpeakdir, self.wavpeakperiod )
 
-    wavid = synonym( 'id', map_column = True )
-    wavsourceid = synonym( 'sourceid', map_column = True )
-    wavdatetime = synonym( 'datetime', map_column = True )
-    wavlocation = synonym( 'location', map_column = True )
+    id = synonym( 'wavid' )
+    sourceid = synonym( 'wavsourceid' )
+    datetime = synonym( 'wavdatetime' )
+    location = synonym( 'wavlocation' )
 
 
   return Wave
@@ -188,13 +188,13 @@ def _tblWindTmpl( tableName, BaseClass ):
 
     def __repr__(self):
       return "<WindRecord('{}','{}','{}','{}','{}')>".format(
-        self.winsourceid, self.winlocation, self.windatetime,
+        self.winsourceid, self.winlocation.geom_wkb, self.windatetime,
         self.winspeed, self.windirection )
 
-    winid = synonym( 'id', map_column = True )
-    winsourceid = synonym( 'sourceid', map_column = True )
-    windatetime = synonym( 'datetime', map_column = True )
-    winlocation = synonym( 'location', map_column = True )
+    id = synonym( 'winid' )
+    sourceid = synonym( 'winsourceid' )
+    datetime = synonym( 'windatetime' )
+    location = synonym( 'winlocation' )
 
   return Wind
 
@@ -217,13 +217,13 @@ def _tblCurrentTmpl( tableName, BaseClass ):
 
     def __repr__(self):
       return "<CurrentRecord('{}','{}','{}','{}','{}')>".format(
-        self.cursourceid, self.curlocation, self.curdatetime,
+        self.cursourceid, self.curlocation.geom_wkb, self.curdatetime,
         self.curspeed, self.curdirection )
 
-    curid = synonym( 'id', map_column = True )
-    cursourceid = synonym( 'sourceid', map_column = True )
-    curdatetime = synonym( 'datetime', map_column = True )
-    curlocation = synonym( 'location', map_column = True )
+    id = synonym( 'curid' )
+    sourceid = synonym( 'cursourceid' )
+    datetime = synonym( 'curdatetime' )
+    location = synonym( 'curlocation' )
 
   return Current
 
@@ -244,12 +244,12 @@ def _tblBathyTmpl( tableName, BaseClass ):
 
     def __repr__(self):
       return "<BathyRecord('{}','{}','{}')>".format(
-        self.batsourceid, self.batlocation, self.batdepth )
+        self.batsourceid, self.batlocation.geom_wkb, self.batdepth )
 
-    batid = synonym( 'id', map_column = True )
-    batsourceid = synonym( 'sourceid', map_column = True )
-    batdatetime = synonym( 'datetime', map_column = True )
-    batlocation = synonym( 'location', map_column = True )
+    id = synonym( 'batid' )
+    sourceid = synonym( 'batsourceid' )
+    datetime = synonym( 'batdatetime' )
+    location = synonym( 'batlocation' )
 
   return Bathy
 
