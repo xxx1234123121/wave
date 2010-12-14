@@ -59,7 +59,15 @@ will not change.
   repetition of the code by a significant amount.
 
 """
+#------------------------------------------------------------------------------
+#  Imports from Python 2.7 standard library
+#------------------------------------------------------------------------------
+import warnings
 
+
+#------------------------------------------------------------------------------
+#  Imports from third party libraries
+#------------------------------------------------------------------------------
 from sqlalchemy import create_engine, MetaData
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, synonym
@@ -67,8 +75,24 @@ from sqlalchemy.orm import sessionmaker, synonym
 from geoalchemy import GeometryColumn
 from geoalchemy import Point
 
-import warnings
 
+#------------------------------------------------------------------------------
+#  Metadata, Object Classes and Other Constants
+#------------------------------------------------------------------------------
+from wavecon.config import DBconfig as DB_CONFIG
+def mkDbURL( DBconfig ):
+  url = "{type}://{username}:{password}@{server}/{database}"\
+    .format(**DBconfig)
+
+  return url
+
+DB_ENGINE = create_engine(mkDbURL(DB_CONFIG))
+# SQLAlchmey whines because it can't figure out what to do with
+# GIS columns in the database.  This shuts it up.
+DB_META = MetaData(bind=DB_ENGINE)
+with warnings.catch_warnings():
+  warnings.simplefilter('ignore')
+  DB_META.reflect()
 
 def _tblSourceTypeTmpl( tableName, BaseClass ):
 
@@ -290,7 +314,7 @@ def recordToDict( object ):
 #------------------------------------------------------------------
 #  Database Access Functions
 #------------------------------------------------------------------
-def accessTable( DBconfig, template, name = None ):
+def accessTable(DBconfig=None, template, name = None):
   """Returns a Class that can be used to spawn objects which are 
   suitable for serialization to a database table.
 
@@ -321,26 +345,17 @@ def accessTable( DBconfig, template, name = None ):
   if name is None:
     name = template
 
-  # SQLAlchmey whines because it can't figure out what to do with
-  # GIS columns in the database.  This shuts it up.
-  with warnings.catch_warnings():
-    warnings.simplefilter('ignore')
+  BaseClass = declarative_base(metadata = DB_META)
+  # Add helper methods that will filter to all classes and objects
+  # through inheritance.
+  BaseClass.recordToDict = recordToDict
 
-    engine = connectTo( DBconfig )
+  Class = _DATABASE_TEMPLATES[template]( name, BaseClass )
 
-    meta = MetaData( bind = engine )
-    meta.reflect()
+  return Class
 
-    BaseClass = declarative_base( metadata = meta )
-    # Add helper methods that will filter to all classes and objects
-    # through inheritance.
-    BaseClass.recordToDict = recordToDict
-  
-    Class = _DATABASE_TEMPLATES[template]( name, BaseClass )
 
-    return Class
-
-def startSession( DBconfig ):
+def startSession(DBconfig = None):
   """Returns an object representing a connection to the database.
   This object may be used in combination with a class returned
   by ``accessTable()`` to add objects to the database, run queries,
@@ -363,15 +378,6 @@ def startSession( DBconfig ):
          performing-spatial-queries
 
   """
-  engine = connectTo( DBconfig )
-  Session = sessionmaker( bind = engine )
+  session = sessionmaker(bind=DB_ENGINE)()
+  return session
 
-  return Session()
-
-
-def connectTo( DBconfig ):
-  url = "{type}://{username}:{password}@{server}/{database}"\
-    .format(**DBconfig)
-
-  engine = create_engine( url )
-  return engine
