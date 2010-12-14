@@ -62,8 +62,7 @@ will not change.
 #------------------------------------------------------------------------------
 #  Imports from Python 2.7 standard library
 #------------------------------------------------------------------------------
-import warnings
-
+from warnings import warn, catch_warnings, simplefilter
 
 #------------------------------------------------------------------------------
 #  Imports from third party libraries
@@ -90,8 +89,8 @@ DB_ENGINE = create_engine(mkDbURL(DB_CONFIG))
 # SQLAlchmey whines because it can't figure out what to do with
 # GIS columns in the database.  This shuts it up.
 DB_META = MetaData(bind=DB_ENGINE)
-with warnings.catch_warnings():
-  warnings.simplefilter('ignore')
+with catch_warnings():
+  simplefilter('ignore')
   DB_META.reflect()
 
 def _tblSourceTypeTmpl( tableName, BaseClass ):
@@ -314,7 +313,7 @@ def recordToDict( object ):
 #------------------------------------------------------------------
 #  Database Access Functions
 #------------------------------------------------------------------
-def accessTable(DBconfig=None, template, name = None):
+def accessTable(DBconfig, template, name = None):
   """Returns a Class that can be used to spawn objects which are 
   suitable for serialization to a database table.
 
@@ -341,6 +340,9 @@ def accessTable(DBconfig=None, template, name = None):
         blank it will default to the value passed for *template*
 
   """
+  if DBconfig is not None:
+    warn(FutureWarning('''The DBconfig argument to accessTable will be
+    removed soon.'''))
 
   if name is None:
     name = template
@@ -378,6 +380,10 @@ def startSession(DBconfig = None):
          performing-spatial-queries
 
   """
+  if DBconfig is not None:
+    warn(FutureWarning('''The DBconfig argument to startSession will be
+    removed soon.'''))
+
   session = sessionmaker(bind=DB_ENGINE)()
   return session
 
