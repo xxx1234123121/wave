@@ -36,32 +36,69 @@ classdef datafield
             end
             
             df.boundingBox = [ max(df.X), max(df.Y), max(df.T);
-                               min(df.X), min(df.Y), min(df.T) ]; 
+                min(df.X), min(df.Y), min(df.T) ];
         end
         
         function plotPointSpec(df,x,y,t,collapse)
             if strcmp(df.classOfZ,'spectra')==0
                 error(strcat('Cannot plot point spectra for data of class '...
-                ,df.classOfZ))
+                    ,df.classOfZ))
             end
-             
+            
             if(nargin<5)
                 collapse = false;
             end
             if(nargin<4)
                 t = df.T(1);
             end
+            if(nargin<3)
+                y = df.Y(1);
+            end
+            if(nargin<2)
+                x = df.X(1);
+            end
             
             % find the point closest to x,y,t in Euclidean space
             iNearby = knnsearch([x,y,t],[df.X df.Y,df.T]);
-
-            if(collapse & ndims(df.Z(1).spec)==2)
+            
+            if(collapse)
+                if(ndims(df.Z(iNearby).spec)==2)
+                    plot(df.Z(iNearby).freqBin,sum(df.Z(iNearby).spec));
+                else
+                    plot(df.Z(iNearby).freqBin,df.Z(iNearby).spec);
+                end
+                set(gcf(),'Color','White');
+                set(gca(),'Position',get(gca(),'Position')+[0,0,0,-.1]);
                 
+                title({'Spectral Density',strcat('[lat=',num2str(df.X(iNearby))...
+                    ,',lon=',num2str(df.Y(iNearby))...
+                    ,',time=',datestr(df.T(iNearby),'yyyy-mm-dd HH:MM:SS'),']')},...
+                    'FontWeight','bold','Units','normalized','Position',[0.5,1.2,0]...
+                    );
+            
+                xlabel('Frequency (Hz)');
+                ylabel('Density (m^2/Hz)');
+                addtxaxis(gca(),'1./x',1./get(gca(),'XTick'),'Period (s)'); 
+            else
+                
+                plot(df.Z(iNearby).freqBin,sum(df.Z(iNearby).spec));
+                set(gcf(),'Color','White');
+                set(gca(),'Position',get(gca(),'Position')+[0,0,0,-.1]);
+                
+                title({'Spectral Density',strcat('[lat=',num2str(df.X(iNearby))...
+                    ,',lon=',num2str(df.Y(iNearby))...
+                    ,',time=',datestr(df.T(iNearby),'yyyy-mm-dd HH:MM:SS'),']')},...
+                    'FontWeight','bold','Units','normalized','Position',[0.5,1.2,0]...
+                    );
+            
+                xlabel('Frequency (Hz)');
+                ylabel('Density (m^2/Hz)');
+                addtxaxis(gca(),'1./x',1./get(gca(),'XTick'),'Period (s)'); 
             end
-
             
             
-        
+            
+            
         end
         
     end
