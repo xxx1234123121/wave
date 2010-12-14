@@ -31,3 +31,5 @@ session.commit()
 
 for record in session.query(Wind).all():
   print record
+
+session.close()
