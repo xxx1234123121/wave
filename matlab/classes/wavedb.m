@@ -1,4 +1,4 @@
-classdef wavedb
+classdef waveDB
     %WAVEDB Database layer specifically for interacting with the wave
     %database
     %
@@ -10,7 +10,7 @@ classdef wavedb
     end
     
     methods
-        function db = wavedb(dbconfig)
+        function db = waveDB(dbconfig)
             db.con = database(dbconfig.database,dbconfig.username,...
                 dbconfig.password,dbconfig.jdbcDriver,dbconfig.driverURL);
             setdbprefs('DataReturnFormat','structure');

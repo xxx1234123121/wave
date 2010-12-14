@@ -1,4 +1,4 @@
-classdef datafield
+classdef dataField
     
     properties
         boundingBox;        % [x,y,t] where row 1 is UR and row 2 is LL
@@ -12,7 +12,7 @@ classdef datafield
         classOfZ;            % the class of the objects in Z
     end
     methods
-        function df = datafield(Z,X,Y,T)
+        function df = dataField(Z,X,Y,T)
             df.classOfZ = class(Z);
             if nargin==1
                 if strcmp(df.classOfZ,'spectra')==1
@@ -36,15 +36,15 @@ classdef datafield
             end
             
             df.boundingBox = [ max(df.X), max(df.Y), max(df.T);
-                min(df.X), min(df.Y), min(df.T) ];
+                               min(df.X), min(df.Y), min(df.T) ]; 
         end
         
         function plotPointSpec(df,x,y,t,collapse)
             if strcmp(df.classOfZ,'spectra')==0
                 error(strcat('Cannot plot point spectra for data of class '...
-                    ,df.classOfZ))
+                ,df.classOfZ))
             end
-            
+             
             if(nargin<5)
                 collapse = false;
             end
@@ -54,18 +54,14 @@ classdef datafield
             
             % find the point closest to x,y,t in Euclidean space
             iNearby = knnsearch([x,y,t],[df.X df.Y,df.T]);
-            
-            if(collapse)
-                if(ndims(df.Z(iNearby).spec)==2)
-                    toplot = 
-                end
-            else
+
+            if(collapse & ndims(df.Z(1).spec)==2)
                 
             end
+
             
             
-            
-            
+        
         end
         
     end
