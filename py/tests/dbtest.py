@@ -9,15 +9,14 @@ waveLibs = path.abspath(path.join( scriptLocation, '..', 'lib' ))
 sys.path.insert( 0, waveLibs )
 
 
-from wavecon.config import DBconfig
 from wavecon import DBman
 from wavecon.NDBC.DB import getBuoyID
 
 from datetime import datetime
 from geoalchemy import WKTSpatialElement
 
-Wind = DBman.accessTable( DBconfig, 'tblwind', 'tblwind' )
-session = DBman.startSession( DBconfig )
+Wind = DBman.accessTable(None, template = 'tblwind')
+session = DBman.startSession()
 
 buoyID = getBuoyID( 46022 )
 

@@ -2,62 +2,34 @@
 Overview
 --------
 
-This module abstracts the WaveConnect database into a set of
-Python classes that can be used by other scripts to interact with
-the database.
-
+This module abstracts the WaveConnect database into a set of Python classes that
+simplifies database interaction for scripts and other modules in this software
+collection.
 
 **Development Status:**
-  **Last Modified:** December 13, 2010 by Charlie Sharpsteen
+  **Last Modified:** December 14, 2010 by Charlie Sharpsteen
 
-"Design Notes"/Ravings
+
+Implementation Details
 ----------------------
+The DBman module implements an interface to a `PostGIS`_ database by leveraging
+the `SQLAlchemy`_ module and the `GeoAlchemy`_ extension to that module.
 
-Going to try this the "reflective" way- which means SQLAlchemy will
-infer the layout of the database tables by talking to the database.
-Some special columns, such as GIS Points, will have to be declared
-manually using GeoAlchemy extensions.
+SQLAlchemy implements an Object Relational Mapper (ORM) that allows Python classes
+to be bound to database records.  The data contained in these objects may be
+committed to the database as records and the results of database queries are
+automatically transformed into database objects.
 
-The advantage to this approach is that it is quick n' dirty to
-implement.
+Most of the code implemented in the module is database-agnostic.  However, there
+is a tiny bit of code that relies on the Postgresql implementation of an `ARRAY
+datatype`_.  Consequently, this module is only recommended for use with
+Postgresql and PostGIS.
 
-The drawbacks are that the database structure is very opaque to the
-Python programmer- most everything is happening by "magic".  Also,
-the Python classes which are bound to the database tables *must*
-have attributes whose names match the names of the columns.
 
-If it becomes a maintenance nightmare, the alternative is to switch
-to a "declarative" style as described in:
-
-  http://www.sqlalchemy.org/docs/ormtutorial.html#
-    creating-table-class-and-mapper-all-at-once-declaratively
-
-With the declarative style, the database Table schema is embedded
-inside the Python classes that are being mapped to those tables.
-
-The good news is that we can switch from "reflective" to 
-"declarative" without changing how use the Python objects that are
-being mapped to database tables. I.E. other scripts that depend
-on this module will not have to be re-written because the DBman API
-will not change.
-
-.. note:: Update
-
-  After implementing the reflective style, I feel it has one nice
-  advantage over the declarative style for our use case.  With the
-  reflective style, one does not have to worry about managing 
-  things such as Foreign Keys or Constraints or Indexes or...
-
-  So, as long as our Schema is defined in a SQL script, this is the
-  way to go.
-
-.. note:: Update to update:
-
-  I stumbled across an example in the GeoAlchemy source code that
-  shows how to combine the reflexive and declarative styles.  This
-  should give the best of both worlds and reduce the verbosity and
-  repetition of the code by a significant amount.
-
+.. _PostGIS: http://postgis.refractions.net/
+.. _SQLAlchemy: http://www.sqlalchemy.org/
+.. _GeoAlchemy: http://www.sqlalchemy.org/
+.. _ARRAY datatype: http://www.postgresql.org/docs/9.0/interactive/arrays.html
 """
 #------------------------------------------------------------------------------
 #  Imports from Python 2.7 standard library
@@ -93,6 +65,10 @@ with catch_warnings():
   simplefilter('ignore')
   DB_META.reflect()
 
+
+#------------------------------------------------------------------------------
+#  Database Schema
+#------------------------------------------------------------------------------
 def _tblSourceTypeTmpl( tableName, BaseClass ):
 
   class SourceType(BaseClass):
@@ -326,6 +302,11 @@ def recordToDict(self):
   return dictionary
 
 def recoverWKT(self):
+  """For records that contain a spatial component, this function will return the
+  coordinates of that component as a string of `Well Known Text`_ (WKT).
+
+  .. _Well Known Text: http://en.wikipedia.org/wiki/Well-known_text
+  """
   if isinstance(self.location, SpatialElement):
     session = startSession()
     WKT = session.scalar(self.location.wkt)
@@ -354,9 +335,13 @@ def accessTable(DBconfig, template, name = None):
   Argument Info:
 
     * *DBconfig*:
+        **This argument is depreciated and is slated for removal.**
+
         A python dictionary containing access credentials for the
         database server.  See :py:data:`wavecon.config.DBconfig`
         for the structure of this dictionary.
+
+        Currently ignored due to depreciated status.
 
     * *template*
         A string specifying the Schema that should be used to model
@@ -399,18 +384,17 @@ def startSession(DBconfig = None):
 
   The following websites explain how to use ``session`` objects:
 
-    * `SQLAlchemy`_ documentation.  Describes basic usage.
+    * `SQLAlchemy documentation`_.  Describes basic usage.
 
-    * `GeoAlchemy`_ documentation.  Describes how to run PostGIS
+    * `GeoAlchemy documentation`_.  Describes how to run PostGIS
       enabled queries.
 
-  See :py:data:`wavecon.config.DBconfig` for a description of the
-  *DBconfig* parameter.
+  **The DBconfig argument is depreciated and is slated for removal.**
 
-    .. _SQLAlchemy: http://www.sqlalchemy.org/docs/ormtutorial.html#
+    .. _SQLAlchemy documentation: http://www.sqlalchemy.org/docs/ormtutorial.html#
          creating-a-session
 
-    .. _GeoAlchemy: http://www.geoalchemy.org/tutorial.html#
+    .. _GeoAlchemy documentation: http://www.geoalchemy.org/tutorial.html#
          performing-spatial-queries
 
   """

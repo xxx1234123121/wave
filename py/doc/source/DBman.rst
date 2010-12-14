@@ -3,18 +3,11 @@ The ``DBman`` Module
 
 .. automodule:: wavecon.DBman
 
-.. todo::
-   Describe session usage- how it is best to create one global session
-   per module to avoid "Maximum Connections Exceeded" errors and the
-   overhead involved with opening/closing sessions in each function
-   call (can double execution time).
+Class Functions
+---------------
 
-Class Descriptions
-------------------
-
-.. todo::
-   Describe class attributes and synonyms.
-
+.. autofunction:: wavecon.DBman.recordToDict
+.. autofunction:: wavecon.DBman.recoverWKT
    
 Database Access Functions
 -------------------------
