@@ -71,7 +71,7 @@ from sqlalchemy import create_engine, MetaData
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, synonym
 
-from geoalchemy import GeometryColumn
+from geoalchemy import GeometryColumn, SpatialElement
 from geoalchemy import Point
 
 
@@ -160,6 +160,8 @@ def _tblSpectraBinTmpl( tableName, BaseClass ):
 
 def _tblWaveTmpl( tableName, BaseClass ):
 
+  BaseClass = spatiallyEnable(BaseClass)
+
   class Wave(BaseClass):
     __tablename__ = tableName
     __table_args__ = {'autoload' : True, 'useexisting' : True } 
@@ -180,7 +182,7 @@ def _tblWaveTmpl( tableName, BaseClass ):
 
     def __repr__(self):
       return "<SpectraRecord('{}','{}','{}','{}','{}','{}','{}','{}')>"\
-        .format( self.wavsourceid, self.wavspectrabinid, self.wavlocation.geom_wkb,
+        .format( self.wavsourceid, self.wavspectrabinid, self.recoverWKT(),
           self.wavdatetime, self.wavspectra, self.wavheight,
           self.wavpeakdir, self.wavpeakperiod )
 
@@ -194,6 +196,8 @@ def _tblWaveTmpl( tableName, BaseClass ):
 
 
 def _tblWindTmpl( tableName, BaseClass ):
+
+  BaseClass = spatiallyEnable(BaseClass)
 
   class Wind(BaseClass):
     __tablename__ = tableName
@@ -211,7 +215,7 @@ def _tblWindTmpl( tableName, BaseClass ):
 
     def __repr__(self):
       return "<WindRecord('{}','{}','{}','{}','{}')>".format(
-        self.winsourceid, self.winlocation.geom_wkb, self.windatetime,
+        self.winsourceid, self.recoverWKT(), self.windatetime,
         self.winspeed, self.windirection )
 
     id = synonym( 'winid' )
@@ -223,6 +227,8 @@ def _tblWindTmpl( tableName, BaseClass ):
 
 
 def _tblCurrentTmpl( tableName, BaseClass ):
+
+  BaseClass = spatiallyEnable(BaseClass)
 
   class Current(BaseClass):
     __tablename__ = tableName
@@ -240,7 +246,7 @@ def _tblCurrentTmpl( tableName, BaseClass ):
 
     def __repr__(self):
       return "<CurrentRecord('{}','{}','{}','{}','{}')>".format(
-        self.cursourceid, self.curlocation.geom_wkb, self.curdatetime,
+        self.cursourceid, self.recoverWKT(), self.curdatetime,
         self.curspeed, self.curdirection )
 
     id = synonym( 'curid' )
@@ -252,6 +258,8 @@ def _tblCurrentTmpl( tableName, BaseClass ):
 
 
 def _tblBathyTmpl( tableName, BaseClass ):
+
+  BaseClass = spatiallyEnable(BaseClass)
 
   class Bathy(BaseClass):
     __tablename__ = tableName
@@ -267,7 +275,7 @@ def _tblBathyTmpl( tableName, BaseClass ):
 
     def __repr__(self):
       return "<BathyRecord('{}','{}','{}')>".format(
-        self.batsourceid, self.batlocation.geom_wkb, self.batdepth )
+        self.batsourceid, self.recoverWKT(), self.batdepth )
 
     id = synonym( 'batid' )
     sourceid = synonym( 'batsourceid' )
@@ -293,7 +301,7 @@ _DATABASE_TEMPLATES = {
 #------------------------------------------------------------------
 #  Class Utility Methods
 #------------------------------------------------------------------
-def recordToDict( object ):
+def recordToDict(self):
   """Turns a record pulled from the database into a dictionary.
   In :py:func:`wavecon.DBman.accessTable` this method is attached to
   the Base object from which all classes representing databse objects
@@ -302,12 +310,38 @@ def recordToDict( object ):
 
   """
   dictionary = dict( (key, value) for
-    key, value in object.__dict__.iteritems()
+    key, value in self.__dict__.iteritems()
     if not callable( value ) and not key.startswith('__')
     and not key.startswith('_') 
   )
 
+  locationKeys = [ key
+    for key in dictionary.keys()
+    if key.endswith('location') ]
+
+  if len(locationKeys):
+    Key = locationKeys.pop()
+    dictionary[Key] = self.recoverWKT()
+
   return dictionary
+
+def recoverWKT(self):
+  if isinstance(self.location, SpatialElement):
+    session = startSession()
+    WKT = session.scalar(self.location.wkt)
+    session.close()
+  elif isinstance(self.location, str):
+    WKT = location
+  else:
+    raise(RuntimeError('''Could not figure out how to recover WKT from an object
+    of type {0}'''.format(type(self.location))))
+
+  return WKT
+
+def spatiallyEnable(BaseClass):
+  BaseClass.recoverWKT = recoverWKT
+
+  return BaseClass
 
 
 #------------------------------------------------------------------
