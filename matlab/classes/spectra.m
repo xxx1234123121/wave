@@ -4,6 +4,9 @@ classdef spectra
     %   Detailed explanation goes here
     
     properties
+        % SOURCE NAME
+        srcName;    % refers to the source name in the database
+        
         % TIME AND LOCATION
         datetime;   % datenum
         location;   % x,y Lon/Lat coordinates
@@ -20,13 +23,21 @@ classdef spectra
     end
     
     methods
-        function spec = spectra(datetime,location,sp,freqBin,dirBin)
+        function spec = spectra(sourceName,datetime,location,sp,...
+                freqBin,dirBin)
             if(nargin>0)
-                spec.datetime   = datenum(datetime,'yyyy-mm-dd HH:MM:SS');
+                if(length(char(datetime))==19)
+                    spec.datetime   = datenum(datetime,'yyyy-mm-dd HH:MM:SS');
+                elseif(length(char(datetime))==21)
+                    spec.datetime   = datenum(datetime,'yyyy-mm-dd HH:MM:SS.0');
+                end
                 spec.location   = location;
                 spec.spec       = sp;
                 spec.freqBin    = freqBin;
-                if nargin>4,spec.dirBin = dirBin; end
+                spec.srcName    = sourceName;
+                if nargin>5
+                    spec.dirBin = dirBin; 
+                end
             end
         end
         function x = getX(spec)
@@ -38,6 +49,9 @@ classdef spectra
         function d = getDatetime(spec)
             d = spec.datetime;
         end
-    end    
+        function src = getSourceName(spec)
+            src = spec.srcName;
+        end
+    end
 end
 

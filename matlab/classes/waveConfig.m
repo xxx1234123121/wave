@@ -7,8 +7,8 @@ classdef waveConfig
     end
     
     methods
-        function config = waveConfig(configDir)
-            fid = fopen(strcat(configDir,'/dbconfig.json'));
+        function config = waveConfig(configPath)
+            fid = fopen(configPath);
             s = fscanf(fid,'%c');
             st = parse_json(s);
             config.db = st{1};
