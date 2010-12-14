@@ -2,74 +2,73 @@
 Overview
 --------
 
-This module abstracts the WaveConnect database into a set of
-Python classes that can be used by other scripts to interact with
-the database.
-
+This module abstracts the WaveConnect database into a set of Python classes that
+simplifies database interaction for scripts and other modules in this software
+collection.
 
 **Development Status:**
-  **Last Modified:** July 24, 2010 by Charlie Sharpsteen
+  **Last Modified:** December 14, 2010 by Charlie Sharpsteen
 
-"Design Notes"/Ravings
+
+Implementation Details
 ----------------------
+The DBman module implements an interface to a `PostGIS`_ database by leveraging
+the `SQLAlchemy`_ module and the `GeoAlchemy`_ extension to that module.
 
-Going to try this the "reflective" way- which means SQLAlchemy will
-infer the layout of the database tables by talking to the database.
-Some special columns, such as GIS Points, will have to be declared
-manually using GeoAlchemy extensions.
+SQLAlchemy implements an Object Relational Mapper (ORM) that allows Python classes
+to be bound to database records.  The data contained in these objects may be
+committed to the database as records and the results of database queries are
+automatically transformed into database objects.
 
-The advantage to this approach is that it is quick n' dirty to
-implement.
+Most of the code implemented in the module is database-agnostic.  However, there
+is a tiny bit of code that relies on the Postgresql implementation of an `ARRAY
+datatype`_.  Consequently, this module is only recommended for use with
+Postgresql and PostGIS.
 
-The drawbacks are that the database structure is very opaque to the
-Python programmer- most everything is happening by "magic".  Also,
-the Python classes which are bound to the database tables *must*
-have attributes whose names match the names of the columns.
 
-If it becomes a maintenance nightmare, the alternative is to switch
-to a "declarative" style as described in:
-
-  http://www.sqlalchemy.org/docs/ormtutorial.html#
-    creating-table-class-and-mapper-all-at-once-declaratively
-
-With the declarative style, the database Table schema is embedded
-inside the Python classes that are being mapped to those tables.
-
-The good news is that we can switch from "reflective" to 
-"declarative" without changing how use the Python objects that are
-being mapped to database tables. I.E. other scripts that depend
-on this module will not have to be re-written because the DBman API
-will not change.
-
-.. note:: Update
-
-  After implementing the reflective style, I feel it has one nice
-  advantage over the declarative style for our use case.  With the
-  reflective style, one does not have to worry about managing 
-  things such as Foreign Keys or Constraints or Indexes or...
-
-  So, as long as our Schema is defined in a SQL script, this is the
-  way to go.
-
-.. note:: Update to update:
-
-  I stumbled across an example in the GeoAlchemy source code that
-  shows how to combine the reflexive and declarative styles.  This
-  should give the best of both worlds and reduce the verbosity and
-  repetition of the code by a significant amount.
-
+.. _PostGIS: http://postgis.refractions.net/
+.. _SQLAlchemy: http://www.sqlalchemy.org/
+.. _GeoAlchemy: http://www.sqlalchemy.org/
+.. _ARRAY datatype: http://www.postgresql.org/docs/9.0/interactive/arrays.html
 """
+#------------------------------------------------------------------------------
+#  Imports from Python 2.7 standard library
+#------------------------------------------------------------------------------
+from warnings import warn, catch_warnings, simplefilter
 
+#------------------------------------------------------------------------------
+#  Imports from third party libraries
+#------------------------------------------------------------------------------
 from sqlalchemy import create_engine, MetaData
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, synonym
 
-from geoalchemy import GeometryColumn
+from geoalchemy import GeometryColumn, SpatialElement
 from geoalchemy import Point
 
-import warnings
+
+#------------------------------------------------------------------------------
+#  Metadata, Object Classes and Other Constants
+#------------------------------------------------------------------------------
+from wavecon.config import DBconfig as DB_CONFIG
+def mkDbURL( DBconfig ):
+  url = "{type}://{username}:{password}@{server}/{database}"\
+    .format(**DBconfig)
+
+  return url
+
+DB_ENGINE = create_engine(mkDbURL(DB_CONFIG))
+# SQLAlchmey whines because it can't figure out what to do with
+# GIS columns in the database.  This shuts it up.
+DB_META = MetaData(bind=DB_ENGINE)
+with catch_warnings():
+  simplefilter('ignore')
+  DB_META.reflect()
 
 
+#------------------------------------------------------------------------------
+#  Database Schema
+#------------------------------------------------------------------------------
 def _tblSourceTypeTmpl( tableName, BaseClass ):
 
   class SourceType(BaseClass):
@@ -83,7 +82,7 @@ def _tblSourceTypeTmpl( tableName, BaseClass ):
       return "<SourceTypeRecord('{}')>".format(
         self.sourcetypename )
 
-    sourcetypeid = synonym( 'id', map_column = True )
+    id = synonym( 'sourcetypeid' )
 
 
   return SourceType
@@ -110,7 +109,7 @@ def _tblSourceTmpl( tableName, BaseClass ):
         self.srcname, self.srcconfig, self.srcbeginexecution,
         self.srcendexecution, self.srcsourcetypeid )
 
-    srcid = synonym( 'id', map_column = True )
+    id = synonym( 'srcid' )
 
 
   return Source
@@ -130,12 +129,14 @@ def _tblSpectraBinTmpl( tableName, BaseClass ):
       return "<SpectraBinRecord('{}','{}')>".format(
         self.spcfreq, self.spcdir )
 
-    spcid = synonym( 'id', map_column = True )
+    id = synonym( 'spcid' )
 
   return SpectraBin
 
 
 def _tblWaveTmpl( tableName, BaseClass ):
+
+  BaseClass = spatiallyEnable(BaseClass)
 
   class Wave(BaseClass):
     __tablename__ = tableName
@@ -157,20 +158,22 @@ def _tblWaveTmpl( tableName, BaseClass ):
 
     def __repr__(self):
       return "<SpectraRecord('{}','{}','{}','{}','{}','{}','{}','{}')>"\
-        .format( self.wavsourceid, self.wavspectrabinid, self.wavlocation,
+        .format( self.wavsourceid, self.wavspectrabinid, self.recoverWKT(),
           self.wavdatetime, self.wavspectra, self.wavheight,
           self.wavpeakdir, self.wavpeakperiod )
 
-    wavid = synonym( 'id', map_column = True )
-    wavsourceid = synonym( 'sourceid', map_column = True )
-    wavdatetime = synonym( 'datetime', map_column = True )
-    wavlocation = synonym( 'location', map_column = True )
+    id = synonym( 'wavid' )
+    sourceid = synonym( 'wavsourceid' )
+    datetime = synonym( 'wavdatetime' )
+    location = synonym( 'wavlocation' )
 
 
   return Wave
 
 
 def _tblWindTmpl( tableName, BaseClass ):
+
+  BaseClass = spatiallyEnable(BaseClass)
 
   class Wind(BaseClass):
     __tablename__ = tableName
@@ -188,18 +191,20 @@ def _tblWindTmpl( tableName, BaseClass ):
 
     def __repr__(self):
       return "<WindRecord('{}','{}','{}','{}','{}')>".format(
-        self.winsourceid, self.winlocation, self.windatetime,
+        self.winsourceid, self.recoverWKT(), self.windatetime,
         self.winspeed, self.windirection )
 
-    winid = synonym( 'id', map_column = True )
-    winsourceid = synonym( 'sourceid', map_column = True )
-    windatetime = synonym( 'datetime', map_column = True )
-    winlocation = synonym( 'location', map_column = True )
+    id = synonym( 'winid' )
+    sourceid = synonym( 'winsourceid' )
+    datetime = synonym( 'windatetime' )
+    location = synonym( 'winlocation' )
 
   return Wind
 
 
 def _tblCurrentTmpl( tableName, BaseClass ):
+
+  BaseClass = spatiallyEnable(BaseClass)
 
   class Current(BaseClass):
     __tablename__ = tableName
@@ -217,18 +222,20 @@ def _tblCurrentTmpl( tableName, BaseClass ):
 
     def __repr__(self):
       return "<CurrentRecord('{}','{}','{}','{}','{}')>".format(
-        self.cursourceid, self.curlocation, self.curdatetime,
+        self.cursourceid, self.recoverWKT(), self.curdatetime,
         self.curspeed, self.curdirection )
 
-    curid = synonym( 'id', map_column = True )
-    cursourceid = synonym( 'sourceid', map_column = True )
-    curdatetime = synonym( 'datetime', map_column = True )
-    curlocation = synonym( 'location', map_column = True )
+    id = synonym( 'curid' )
+    sourceid = synonym( 'cursourceid' )
+    datetime = synonym( 'curdatetime' )
+    location = synonym( 'curlocation' )
 
   return Current
 
 
 def _tblBathyTmpl( tableName, BaseClass ):
+
+  BaseClass = spatiallyEnable(BaseClass)
 
   class Bathy(BaseClass):
     __tablename__ = tableName
@@ -244,12 +251,12 @@ def _tblBathyTmpl( tableName, BaseClass ):
 
     def __repr__(self):
       return "<BathyRecord('{}','{}','{}')>".format(
-        self.batsourceid, self.batlocation, self.batdepth )
+        self.batsourceid, self.recoverWKT(), self.batdepth )
 
-    batid = synonym( 'id', map_column = True )
-    batsourceid = synonym( 'sourceid', map_column = True )
-    batdatetime = synonym( 'datetime', map_column = True )
-    batlocation = synonym( 'location', map_column = True )
+    id = synonym( 'batid' )
+    sourceid = synonym( 'batsourceid' )
+    datetime = synonym( 'batdatetime' )
+    location = synonym( 'batlocation' )
 
   return Bathy
 
@@ -270,7 +277,7 @@ _DATABASE_TEMPLATES = {
 #------------------------------------------------------------------
 #  Class Utility Methods
 #------------------------------------------------------------------
-def recordToDict( object ):
+def recordToDict(self):
   """Turns a record pulled from the database into a dictionary.
   In :py:func:`wavecon.DBman.accessTable` this method is attached to
   the Base object from which all classes representing databse objects
@@ -279,27 +286,62 @@ def recordToDict( object ):
 
   """
   dictionary = dict( (key, value) for
-    key, value in object.__dict__.iteritems()
+    key, value in self.__dict__.iteritems()
     if not callable( value ) and not key.startswith('__')
     and not key.startswith('_') 
   )
 
+  locationKeys = [ key
+    for key in dictionary.keys()
+    if key.endswith('location') ]
+
+  if len(locationKeys):
+    Key = locationKeys.pop()
+    dictionary[Key] = self.recoverWKT()
+
   return dictionary
+
+def recoverWKT(self):
+  """For records that contain a spatial component, this function will return the
+  coordinates of that component as a string of `Well Known Text`_ (WKT).
+
+  .. _Well Known Text: http://en.wikipedia.org/wiki/Well-known_text
+  """
+  if isinstance(self.location, SpatialElement):
+    session = startSession()
+    WKT = session.scalar(self.location.wkt)
+    session.close()
+  elif isinstance(self.location, str):
+    WKT = location
+  else:
+    raise(RuntimeError('''Could not figure out how to recover WKT from an object
+    of type {0}'''.format(type(self.location))))
+
+  return WKT
+
+def spatiallyEnable(BaseClass):
+  BaseClass.recoverWKT = recoverWKT
+
+  return BaseClass
 
 
 #------------------------------------------------------------------
 #  Database Access Functions
 #------------------------------------------------------------------
-def accessTable( DBconfig, template, name = None ):
+def accessTable(DBconfig, template, name = None):
   """Returns a Class that can be used to spawn objects which are 
   suitable for serialization to a database table.
 
   Argument Info:
 
     * *DBconfig*:
+        **This argument is depreciated and is slated for removal.**
+
         A python dictionary containing access credentials for the
         database server.  See :py:data:`wavecon.config.DBconfig`
         for the structure of this dictionary.
+
+        Currently ignored due to depreciated status.
 
     * *template*
         A string specifying the Schema that should be used to model
@@ -317,30 +359,24 @@ def accessTable( DBconfig, template, name = None ):
         blank it will default to the value passed for *template*
 
   """
+  if DBconfig is not None:
+    warn(FutureWarning('''The DBconfig argument to accessTable will be
+    removed soon.'''))
 
   if name is None:
     name = template
 
-  # SQLAlchmey whines because it can't figure out what to do with
-  # GIS columns in the database.  This shuts it up.
-  with warnings.catch_warnings():
-    warnings.simplefilter('ignore')
+  BaseClass = declarative_base(metadata = DB_META)
+  # Add helper methods that will filter to all classes and objects
+  # through inheritance.
+  BaseClass.recordToDict = recordToDict
 
-    engine = connectTo( DBconfig )
+  Class = _DATABASE_TEMPLATES[template]( name, BaseClass )
 
-    meta = MetaData( bind = engine )
-    meta.reflect()
+  return Class
 
-    BaseClass = declarative_base( metadata = meta )
-    # Add helper methods that will filter to all classes and objects
-    # through inheritance.
-    BaseClass.recordToDict = recordToDict
-  
-    Class = _DATABASE_TEMPLATES[template]( name, BaseClass )
 
-    return Class
-
-def startSession( DBconfig ):
+def startSession(DBconfig = None):
   """Returns an object representing a connection to the database.
   This object may be used in combination with a class returned
   by ``accessTable()`` to add objects to the database, run queries,
@@ -348,30 +384,24 @@ def startSession( DBconfig ):
 
   The following websites explain how to use ``session`` objects:
 
-    * `SQLAlchemy`_ documentation.  Describes basic usage.
+    * `SQLAlchemy documentation`_.  Describes basic usage.
 
-    * `GeoAlchemy`_ documentation.  Describes how to run PostGIS
+    * `GeoAlchemy documentation`_.  Describes how to run PostGIS
       enabled queries.
 
-  See :py:data:`wavecon.config.DBconfig` for a description of the
-  *DBconfig* parameter.
+  **The DBconfig argument is depreciated and is slated for removal.**
 
-    .. _SQLAlchemy: http://www.sqlalchemy.org/docs/ormtutorial.html#
+    .. _SQLAlchemy documentation: http://www.sqlalchemy.org/docs/ormtutorial.html#
          creating-a-session
 
-    .. _GeoAlchemy: http://www.geoalchemy.org/tutorial.html#
+    .. _GeoAlchemy documentation: http://www.geoalchemy.org/tutorial.html#
          performing-spatial-queries
 
   """
-  engine = connectTo( DBconfig )
-  Session = sessionmaker( bind = engine )
+  if DBconfig is not None:
+    warn(FutureWarning('''The DBconfig argument to startSession will be
+    removed soon.'''))
 
-  return Session()
+  session = sessionmaker(bind=DB_ENGINE)()
+  return session
 
-
-def connectTo( DBconfig ):
-  url = "{type}://{username}:{password}@{server}/{database}"\
-    .format(**DBconfig)
-
-  engine = create_engine( url )
-  return engine
