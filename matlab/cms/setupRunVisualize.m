@@ -1,6 +1,6 @@
 %% Connect to db
-config = waveconfig('../config')
-db = wavedb(config.db)
+config = waveConfig('../config/dbconfig.json')
+db = waveDB(config.db)
 
 %% Pull spectral data from Buoy 46022 for a 6 hour time period
 buoySrc = 'NDBC-46022';

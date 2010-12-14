@@ -3,5 +3,7 @@
   "password" : "aPassword",
   "database" : "aDB",
   "server" : "localhost",
-  "type" : "postgresql"  
+  "type" : "postgresql",
+  "jdbcDriver" : "org.postgresql.Driver",
+  "driverURL" : "jdbc:postgresql://localhost/wave"
 }

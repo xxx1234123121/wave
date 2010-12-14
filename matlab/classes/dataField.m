@@ -1,4 +1,4 @@
-classdef datafield
+classdef dataField
     
     properties
         boundingBox;        % [x,y,t] where row 1 is UR and row 2 is LL
@@ -12,7 +12,7 @@ classdef datafield
         classOfZ;            % the class of the objects in Z
     end
     methods
-        function df = datafield(Z,X,Y,T)
+        function df = dataField(Z,X,Y,T)
             df.classOfZ = class(Z);
             if nargin==1
                 if strcmp(df.classOfZ,'spectra')==1
