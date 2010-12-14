@@ -1,6 +1,17 @@
 #===============================================================================
 #  Programs and libraries
 #===============================================================================
+case node[:platform]
+when "debian", "ubuntu"
+  log "Refreshing package database."
+  execute "apt-get update -y"
+  execute "apt-get upgrade -y"
+end
+
+
+#===============================================================================
+#  Programs and libraries
+#===============================================================================
 
 log "Installing required software."
 
