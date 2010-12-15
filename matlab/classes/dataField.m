@@ -1,7 +1,7 @@
 classdef dataField
     
     properties
-        boundingBox;        % [x,y,t] where row 1 is UR and row 2 is LL
+        boundingBox;        % an object of class 'extent'
         % t(1) is beginning and t(2) is ending
         X;      % X,Y,T are arrays of coordinates, T is an array of datenum
         Y;
@@ -15,7 +15,9 @@ classdef dataField
         function df = dataField(Z,X,Y,T)
             df.classOfZ = class(Z);
             if nargin==1
-                if strcmp(df.classOfZ,'spectra')==1
+                if (strcmp(df.classOfZ,'spectra')==1 || ...
+                        strcmp(df.classOfZ,'wind')==1 || ...
+                        strcmp(df.classOfZ,'current')==1)
                     n = size(Z,2);
                     df.X = zeros(n,1);
                     df.Y = zeros(n,1);
@@ -27,7 +29,7 @@ classdef dataField
                     end
                     df.Z = Z;
                 end
-            else if nargin == 4
+            else if nargin == 5
                     df.X = X;
                     df.Y = Y;
                     df.T = T;
@@ -35,8 +37,9 @@ classdef dataField
                 end
             end
             
-            df.boundingBox = [ max(df.X), max(df.Y), max(df.T);
-                min(df.X), min(df.Y), min(df.T) ];
+            df.boundingBox = extent(min(df.T),max(df.T),...
+                [min(df.X),min(df.Y)],...
+                [max(df.X),max(df.Y)]);
         end
         
         function plotPointSpec(df,t,x,y,collapse)
@@ -70,8 +73,8 @@ classdef dataField
                 set(gcf(),'Color','White');
                 set(gca(),'Position',get(gca(),'Position')+[0,0,0,-.1]);
                 
-                title({'Spectral Density',strcat('[',...
-                    locationLabel(df.Y(iNearby),df.X(iNearby),...
+                title({['Spectral Density -- ',char(df.Z(iNearby).getSourceName)],...
+                    strcat('[',locationLabel(df.Y(iNearby),df.X(iNearby),...
                     df.T(iNearby)),']')},...
                     'FontWeight','bold','Units','normalized',...
                     'Position',[0.5,1.2,0]...
@@ -82,8 +85,8 @@ classdef dataField
                 addtxaxis(gca(),'1./x',1./get(gca(),'XTick'),'Period (s)');
             else
                 h = mypolar([0 2*pi], [0 max(df.Z(iNearby).freqBin)]);
-                title({'Directional Spectral Density',strcat('[',...
-                    locationLabel(df.Y(iNearby),df.X(iNearby),...
+                title({['Directional Spectral Density -- ',char(df.Z(iNearby).getSourceName)],...
+                    strcat('[',locationLabel(df.Y(iNearby),df.X(iNearby),...
                     df.T(iNearby)),']')},...
                     'FontWeight','bold','Units','normalized'...
                     );
@@ -99,5 +102,32 @@ classdef dataField
             
         end
         
+        function plotContour(df,fieldName,cropExtent)
+            if(nargin<2)
+                error('Must specify a fieldName (e.g. for a datafield with spectra objects you can specify ''Hs''');
+            end
+            if(nargin<3)
+                cropExtent = df.boundingBox;
+            end
+            inds = df.isInCropExtent(cropExtent,firstTimeStep);
+            toplot = zeros(size(inds),3);
+            for i=1:size(inds,1)
+                %                 toplot(i,:) = [df.X(inds(i)).df.Y(inds(i)).
+                
+                contour(df.Z(inds));
+            end
+        end
+        
+        function inds = isInCropExtent(df,cropExtent,firstTimeStep)
+            if(nargin<3)
+                firstTimeStep = false;
+            end
+            inds = ( df.T >= cropExtent.getTimeBegin() && ...
+                df.T <= cropExtent.getTimeEnd() && ...
+                df.X >= cropExtent.getXMin() && ...
+                df.X <= cropExtent.getXMas() && ...
+                df.Y >= cropExtent.getYMin() && ...
+                df.Y <= cropExtent.getYMax() );
+        end
     end
 end
