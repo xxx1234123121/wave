@@ -50,7 +50,7 @@ from geoalchemy import Point
 #------------------------------------------------------------------------------
 #  Metadata, Object Classes and Other Constants
 #------------------------------------------------------------------------------
-from wavecon.config import DBconfig as DB_CONFIG
+from config import DBconfig as DB_CONFIG
 def mkDbURL( DBconfig ):
   url = "{type}://{username}:{password}@{server}/{database}"\
     .format(**DBconfig)

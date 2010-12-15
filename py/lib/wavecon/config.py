@@ -93,3 +93,21 @@ Some functions which use this object are:
 
 """
 
+#------------------------------------------------------------------
+#  CMS Config section
+#------------------------------------------------------------------
+def loadCMSConfig( aPath ):
+  configFile = open( aPath, 'r')
+  cmsconfig = json.load( configFile )
+  configFile.close()
+  return cmsconfig
+
+CMSconfig = loadCMSConfig(path.join(CONFIG_DIR, 'cmsconfig.json'))
+"""Configuration information for setting up cms input files. Some 
+functions which use this object are:
+  
+  * :py:func:`wavecon.prepareCMSinput.spatialdomain`
+  * :py:func:`wavecon.prepareCMSinput.temporaldomain`
+  * :py:func:`wavecon.prepareCMSinput.getwavedata`
+  * :py:func:`wavecon.prepareCMSinput.getwinddata`
+""" 
