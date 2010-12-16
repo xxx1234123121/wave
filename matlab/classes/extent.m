@@ -35,6 +35,12 @@ classdef extent
         function ymin = getYMax(ext)
             ymin = ext.ur(2);
         end
+        function setTimeBegin(ext,tbIN)
+            ext.tb = tbIN;
+        end
+        function setTimeEnd(ext,teIN)
+            ext.te = teIN;
+        end
     end
     
 end

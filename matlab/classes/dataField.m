@@ -7,6 +7,9 @@ classdef dataField
         Y;
         T;
         Z;      % Z represents an array of objects which contain the state
+        
+        
+        
         % variable(s) being represented
         isStructuredGrid;    % boolean
         classOfZ;            % the class of the objects in Z
@@ -108,26 +111,26 @@ classdef dataField
             end
             if(nargin<3)
                 cropExtent = df.boundingBox;
+                %%% for now, just constraint it to the first time step
+                cropExtent.te = cropExtent.tb;
             end
-            inds = df.isInCropExtent(cropExtent,firstTimeStep);
-            toplot = zeros(size(inds),3);
+            inds = df.isInCropExtent(cropExtent);
+            toplot = zeros(size(inds,1),3);
             for i=1:size(inds,1)
-                %                 toplot(i,:) = [df.X(inds(i)).df.Y(inds(i)).
-                
-                contour(df.Z(inds));
+                toplot(i,:) = [df.X(inds(i)),df.Y(inds(i)),...
+                    getfield(df.Z(inds(i)),fieldName)];
             end
+            contour(toplot(:,1),toplot(:,2),tplot(:,3));
         end
         
-        function inds = isInCropExtent(df,cropExtent,firstTimeStep)
-            if(nargin<3)
-                firstTimeStep = false;
-            end
-            inds = ( df.T >= cropExtent.getTimeBegin() && ...
-                df.T <= cropExtent.getTimeEnd() && ...
-                df.X >= cropExtent.getXMin() && ...
-                df.X <= cropExtent.getXMas() && ...
-                df.Y >= cropExtent.getYMin() && ...
-                df.Y <= cropExtent.getYMax() );
+        function inds = isInCropExtent(df,cropExtent)
+            logicalSum = sum( [df.T >= cropExtent.getTimeBegin(), ...
+                df.T <= cropExtent.getTimeEnd(), ...
+                df.X >= cropExtent.getXMin(), ...
+                df.X <= cropExtent.getXMax(), ...
+                df.Y >= cropExtent.getYMin(), ...
+                df.Y <= cropExtent.getYMax()], 2 );
+            inds = find(logicalSum == 6);
         end
     end
 end
