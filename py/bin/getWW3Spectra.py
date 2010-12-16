@@ -12,10 +12,6 @@ import glob #file wildcard support
 import datetime #posix support
 from numpy import * #math support
 from geoalchemy import WKTSpatialElement
-
-################################
-# IMPORT UBIQUITOUS FUNCTIONS
-################################
 from os import path,system,remove
 strptime = datetime.datetime.strptime
 
@@ -165,7 +161,6 @@ while date < stoptime :
         spectra = spectra * (pi/180)
         spectra = spectra.reshape(len(filter),nfreqs,ndirs)
         spectra = spectra[filter,:,:]
-        # convert spectra from numpy array to list
         spectra = spectra.tolist()
         
         ################################
@@ -219,6 +214,5 @@ while date < stoptime :
     print 'done with: '+str(date)+'\n'   
 
 ######TO DO###
-####date filter not working
 ####modulize
 ####add try/catch to system calls (skip date if wget failed)

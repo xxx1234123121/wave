@@ -4,10 +4,12 @@
 # IMPORT MODULE FUNCTIONS
 ################################
 import sys
-from os import path
+from os import path,system
 libdir = path.abspath('.')+'/../lib/'
 sys.path.insert( 0, libdir )
 from wavecon import prepareCMSinput
+from wavecon.config import CMSconfig
+from wavecon.config import DBconfig
 from numpy import *
 
 ################################
@@ -28,7 +30,7 @@ def interpolatespectra(spec,dir):
     for f in range(len(spec[k])):
       sorted_spec = spec[k][f][sortorder]
       spec[k][f] = interp(mydirs,sorted_dirs,sorted_spec)
-    return [spec,mydirs]
+    return spec,mydirs
 
 ################################
 # FOR EACH SPECTRA, FIND PEAK FREQUENCY
@@ -40,13 +42,14 @@ def calculatepeakfreq(spec,freq):
   for index in peakfreqindex:
     peakfreq.append(freq[k][index])
     k=k+1
-  return [peakfreq[0]]
+  return peakfreq 
 
 
 ################################
 # ARRANGE SPEC BY LOCATION, THEN TIME
 ################################
-def gen_wavefiles(metafn,nestfn,wavtime,wavloc,wavx,wavy,freq,mydirs,steeringtimes,spec):
+def gen_wavefiles(metafn,nestfn,wavtime,wavloc,
+wavx,wavy,freq,mydirs,steeringtimes,spec,peakfreq):
   locset = [x for x in set(wavloc)]
   sortorder = argsort(locset)
   locset = array(locset)[sortorder]                 
@@ -55,6 +58,7 @@ def gen_wavefiles(metafn,nestfn,wavtime,wavloc,wavx,wavy,freq,mydirs,steeringtim
   metafile.write(nestfn+'\n')
   metafile.write(str(len(locset))+'\n0\n')
   counter=0
+  trydit=True
   for myloc in locset:
     #CHECK THAT ALL FREQUENCY BINS MATCH
     filter = (wavloc==myloc)
@@ -98,27 +102,23 @@ def gen_wavefiles(metafn,nestfn,wavtime,wavloc,wavx,wavy,freq,mydirs,steeringtim
           file.write('\t'+line+'\n')
     file.close()
   metafile.close()
-  # MERGE ENG FILES
-  system('./mergeENG.exe < '+metafn)
-  system('rm *.eng')
-  system('mv '+nestfn+' '+cmsdir)
 
 # EXECUTABLE SECTION
 if __name__ == '__main__':
   
   #define constants
-  cmsdir   = prepareCMSinput.cmsdir
-  simfile  = prepareCMSinput.simfile
-  depfile  = prepareCMSinput.depfile
-  cardfile = prepareCMSinput.cardfile
-  nestfn   = prepareCMSinput.nestfn
-  metafn   = prepareCMSinput.metafn
-  steeringinterval = prepareCMSinput.steeringinterval
-  DBconfig = prepareCMSinput.DBconfig  
+  cmsdir   = CMSconfig['cmsdir']
+  simfile  = CMSconfig['simfile']
+  depfile  = CMSconfig['depfile']
+  cardfile = CMSconfig['cardfile']
+  nestfile   = CMSconfig['nestfile']
+  metafile   = CMSconfig['metafile']
+  windfile = CMSconfig['windfile']
+  steeringinterval = CMSconfig['steeringinterval']
 
   #get spatial domain
   box,gridx,gridy = prepareCMSinput.spatialdomain(cmsdir,simfile,depfile)
-
+  
   #get temporal domain
   starttime,stoptime,steeringtimes = \
       prepareCMSinput.temporaldomain(cmsdir,cardfile,steeringinterval)
@@ -134,4 +134,9 @@ if __name__ == '__main__':
   peakfreq = calculatepeakfreq(spec,freq)
   
   #write data to cms input file
-  gen_wavefiles(metafn,nestfn,wavtime,wavloc,wavx,wavy,freq,mydirs,steeringtimes,spec) 
+  gen_wavefiles(metafile,nestfile,wavtime,wavloc,wavx,wavy,freq,mydirs,steeringtimes,spec,peakfreq) 
+  
+  #merge eng files and move nest file to cms directory
+  system('./mergeENG.exe < '+metafile)
+  system('rm *.eng '+metafile)
+  system('mv '+nestfile+' '+cmsdir)
