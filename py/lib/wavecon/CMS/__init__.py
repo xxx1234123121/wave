@@ -8,5 +8,5 @@ This module provides tools for interacting with the CMS model.
   **Last Modified:** December 16, 2010 by Charlie Sharpsteen
 
 """
-from .loadOutput import load_cms_data
+from .postprocessing import load_run_metadata
 from .cmcards import cmcards_parser

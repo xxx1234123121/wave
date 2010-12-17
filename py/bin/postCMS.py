@@ -21,7 +21,7 @@ scriptLocation = path.dirname(path.abspath( __file__ ))
 waveLibs = path.abspath(path.join( scriptLocation, '..', 'lib' ))
 sys.path.insert( 0, waveLibs )
 
-from wavecon.CMS import load_cms_data
+from wavecon.CMS import load_run_metadata
 
 #------------------------------------------------------------------
 #  Utility Functions
@@ -66,6 +66,20 @@ def processArgs():
                        help = '''Should postCMS spare no bytes in order to produce
                        as much output as possible?''' )
 
+  parser.add_argument( '--format', action = 'store', dest ='output_format',
+                       choices = ['database', 'json','matlab'],
+                       default = 'json',
+                       help = '''The format of output- may be 'database', 'json'
+                       or 'matlab'.  If database is selected, downloaded data
+                       will be serialized to a relational database.  If json
+                       output is selected, downloaded data will be serialized to
+                       JSON format and either dumped to the screen or written to
+                       a file depending on the values of windFile and
+                       waveFile.  When matlab is selected, the SciPy library
+                       will be used to create a mat file, again using the names
+                       passed by windFile and waveFile.'''
+                     )
+
   # Positional arguments- these are not identified by a flag.  Rather their
   # meaning is inferred from their position in the command line.
   parser.add_argument( 'cmcards', metavar = 'cmcards file', type = check_cmcards,
@@ -85,6 +99,18 @@ if __name__ == '__main__':
   
   args = processArgs()
 
-  cms_data = load_cms_data( args.cmcards ) 
+  cms_data = load_run_metadata( args.cmcards )
 
-  print cms_data
+  from pprint import pprint
+  pprint(cms_data)
+
+  if args.output_format == 'json':
+    print 'json\n'
+  elif args.output_format == "matlab":
+    print 'matlab\n'
+  elif args.output_format == "database":
+    print 'database\n'
+  else:
+    raise NotImplementedError('''The output format you specified, {0}, does not
+    exist.  In fact, you should not have been allowed to specify it.  In either
+    case, there is no implementation.'''.format( args.output_format ))
