@@ -80,10 +80,20 @@ def processArgs():
                        passed by windFile and waveFile.'''
                      )
 
+  parser.add_argument( '--output-file', action = 'store', dest="outFile", default = '',
+                       help = '''If --format was set to json (the default),
+                       specifies the name of the output file to which downloaded
+                       wind data should be dumped as JSON records.  If left
+                       blank, records will be written to the screen.  If
+                       --format was set to matlab, specifies the name of the
+                       output file (.mat will be automagically appended).  If
+                       left blank, a default filename of CMSoutput.mat will be
+                       used.''' )
+
   # Positional arguments- these are not identified by a flag.  Rather their
   # meaning is inferred from their position in the command line.
   parser.add_argument( 'cmcards', metavar = 'cmcards file', type = check_cmcards,
-                       help = '''The path to the cmcards file of the run you
+                       help = '''The path to the cmcards file of the CMS run you
                        wish to post-process.''' )
 
   args = parser.parse_args()
@@ -101,15 +111,24 @@ if __name__ == '__main__':
 
   cms_data = load_run_metadata( args.cmcards )
 
-  from pprint import pprint
-  pprint(cms_data)
-
   if args.output_format == 'json':
-    print 'json\n'
+    from wavecon.IO import writeJSON
+    if args.outFile:
+      file = open(args.outFile, 'w')
+      writeJSON(cms_data, file)
+      file.close()
+    else:
+      writeJSON(cms_data, sys.stdout)
+
   elif args.output_format == "matlab":
-    print 'matlab\n'
+    from wavecon.IO import writeMatFile
+    if not args.outFile:
+      args.outFile = 'CMSoutput'
+    writeMatFile(cms_data, args.outFile)
+
   elif args.output_format == "database":
     print 'database\n'
+
   else:
     raise NotImplementedError('''The output format you specified, {0}, does not
     exist.  In fact, you should not have been allowed to specify it.  In either
