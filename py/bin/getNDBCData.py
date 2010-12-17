@@ -118,7 +118,7 @@ if __name__ == '__main__':
   )
 
   if args.output_format == 'json':
-    from wavecon.NDBC.JSON import writeJSON
+    from wavecon.IO import writeJSON
 
     if args.windFile:
       file = open( args.windFile, 'w' )
@@ -137,7 +137,7 @@ if __name__ == '__main__':
       writeJSON( waveRecords, file )
 
   elif args.output_format == "matlab":
-    from wavecon.NDBC.matlab import writeMatFile
+    from wavecon.IO import writeMatFile
 
     if not args.windFile:
       args.windFile = "NDBCwindData.mat"
