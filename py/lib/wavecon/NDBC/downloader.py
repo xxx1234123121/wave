@@ -454,9 +454,6 @@ def collapseSpectra( record, num_dir_bins ):
     if key in record:
       del record[key]
 
-  # Transform frequency bins to an array.
-  record['frequencyBins'] = record['frequencyBins']
-
   return record
 
 
@@ -470,7 +467,7 @@ def make2Dspectra( parameters, dirBins ):
   return spectra
 
 
-def calc2Dspectra( density, Alpha1, Alpha2, R1, R2, A, ):
+def calc2Dspectra( density, Alpha1, Alpha2, R1, R2, A ):
   return density * (1/pi) * (
       0.5 +
       R1 * cos(radians( A - Alpha1 )) +

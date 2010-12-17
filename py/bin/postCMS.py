@@ -21,7 +21,7 @@ scriptLocation = path.dirname(path.abspath( __file__ ))
 waveLibs = path.abspath(path.join( scriptLocation, '..', 'lib' ))
 sys.path.insert( 0, waveLibs )
 
-from wavecon.CMS import load_cms_data
+from wavecon.CMS import load_run_metadata
 
 #------------------------------------------------------------------
 #  Utility Functions
@@ -66,10 +66,34 @@ def processArgs():
                        help = '''Should postCMS spare no bytes in order to produce
                        as much output as possible?''' )
 
+  parser.add_argument( '--format', action = 'store', dest ='output_format',
+                       choices = ['database', 'json','matlab'],
+                       default = 'json',
+                       help = '''The format of output- may be 'database', 'json'
+                       or 'matlab'.  If database is selected, downloaded data
+                       will be serialized to a relational database.  If json
+                       output is selected, downloaded data will be serialized to
+                       JSON format and either dumped to the screen or written to
+                       a file depending on the values of windFile and
+                       waveFile.  When matlab is selected, the SciPy library
+                       will be used to create a mat file, again using the names
+                       passed by windFile and waveFile.'''
+                     )
+
+  parser.add_argument( '--output-file', action = 'store', dest="outFile", default = '',
+                       help = '''If --format was set to json (the default),
+                       specifies the name of the output file to which downloaded
+                       wind data should be dumped as JSON records.  If left
+                       blank, records will be written to the screen.  If
+                       --format was set to matlab, specifies the name of the
+                       output file (.mat will be automagically appended).  If
+                       left blank, a default filename of CMSoutput.mat will be
+                       used.''' )
+
   # Positional arguments- these are not identified by a flag.  Rather their
   # meaning is inferred from their position in the command line.
   parser.add_argument( 'cmcards', metavar = 'cmcards file', type = check_cmcards,
-                       help = '''The path to the cmcards file of the run you
+                       help = '''The path to the cmcards file of the CMS run you
                        wish to post-process.''' )
 
   args = parser.parse_args()
@@ -85,6 +109,29 @@ if __name__ == '__main__':
   
   args = processArgs()
 
-  cms_data = load_cms_data( args.cmcards ) 
+  cms_data = load_run_metadata( args.cmcards )
 
-  print cms_data
+  if args.output_format == 'json':
+    from wavecon.IO import writeJSON
+    if args.outFile:
+      file = open(args.outFile, 'w')
+      writeJSON(cms_data, file)
+      file.close()
+    else:
+      writeJSON(cms_data, sys.stdout)
+
+  elif args.output_format == "matlab":
+    from wavecon.IO import writeMatFile
+    if not args.outFile:
+      args.outFile = 'CMSoutput'
+    writeMatFile(cms_data, args.outFile)
+
+  elif args.output_format == "database":
+    from wavecon.CMS.DB import getModelRunID
+    id = getModelRunID(cms_data['run_info'])
+    print id
+
+  else:
+    raise NotImplementedError('''The output format you specified, {0}, does not
+    exist.  In fact, you should not have been allowed to specify it.  In either
+    case, there is no implementation.'''.format( args.output_format ))
