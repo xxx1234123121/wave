@@ -41,9 +41,9 @@ def load_run_metadata(cmcardsPath):
   cmcards_file = path.splitext(path.basename(cmcardsPath))[0]
   # Brute force search for the wave sim file---probably a more elegant way to do
   # this.
-  sim_file = glob(path.join(sim_dir,'*.froo'))
+  sim_file = glob(path.join(sim_dir,'*.sim'))
   if len(sim_file) != 0:
-    sim_file = path.basename(sim_file[0])
+    sim_file = sim_file[0]
   else:
     raise IOError('''Could not find a CMS-wave *.sim file.  The directory:
         {0}
@@ -59,28 +59,35 @@ def load_run_metadata(cmcardsPath):
 
   stop_time = start_time + timedelta(hours = cmcards.DURATION_RUN[0])
 
-  run_meta = {
+  run_info = {
     'run_name': run_name,
-    'sim_dir': sim_dir,
     'start_time': start_time,
     'stop_time': stop_time,
+  }
+
+  grid_info = {
     'grid_origin': (cmcards.GRID_ORIGIN_X[0], cmcards.GRID_ORIGIN_Y[0]),
     'grid_angle': cmcards.GRID_ANGLE[0]
   }
 
-  run_meta['current_data'] = {
-    'data_file': cmcards.GLOBAL_VELOCITY_OUTPUT[0],
+  current_data = {
+    'data_file': path.join(sim_dir, cmcards.GLOBAL_VELOCITY_OUTPUT[0]),
     'output_timesteps': getDataOutputTimes('current', start_time, stop_time,
       cmcards)
   }
 
-  run_meta['wave_data'] = {
+  wave_data = {
     'data_file': sim_file,
     'output_timesteps': getDataOutputTimes('wave', start_time, stop_time,
       cmcards)
   }
 
-  return run_meta
+  return {
+    'run_info': run_info,
+    'grid_info': grid_info,
+    'current_data': current_data,
+    'wave_data': wave_data
+  }
 
 
 #---------------------------------------------------------------------
