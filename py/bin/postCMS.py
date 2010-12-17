@@ -127,7 +127,9 @@ if __name__ == '__main__':
     writeMatFile(cms_data, args.outFile)
 
   elif args.output_format == "database":
-    print 'database\n'
+    from wavecon.CMS.DB import getModelRunID
+    id = getModelRunID(cms_data['run_info'])
+    print id
 
   else:
     raise NotImplementedError('''The output format you specified, {0}, does not
