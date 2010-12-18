@@ -34,6 +34,10 @@ from pyproj import Proj, transform
 #  CMS-Flow .tel file parser
 #------------------------------------------------------------------------------
 def telfile_parser(file_path):
+  # NOTE: This routine is returning the locations of the Lower Left corner of
+  # each cell.  However, CMS computes values on a cell basis, not a nodal basis.
+  # So it would probably be better to extend this routine so that it returns the
+  # location of the middle of each cell.
   tel_file = open(file_path, 'r')
   tel_data = tel_file.read().splitlines()
 
@@ -45,7 +49,8 @@ def telfile_parser(file_path):
 
   grid_coords = array([ 
     [float(x), float(y)] for x, y in
-    [re.split('\s+', line)[1:3] for line in tel_data] ])
+    [re.split('\s+', line)[1:3] for line in tel_data]
+  ])
 
   return grid_coords
 
@@ -71,5 +76,5 @@ def georeference_grid(grid_coords, grid_info):
     grid_coords[0,:] + grid_origin[0],
     grid_coords[1,:] + grid_origin[1] )
 
-  return zip(lats, lons)
+  return zip(lons, lats)
 
