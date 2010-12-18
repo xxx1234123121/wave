@@ -21,7 +21,6 @@ scriptLocation = path.dirname(path.abspath( __file__ ))
 waveLibs = path.abspath(path.join( scriptLocation, '..', 'lib' ))
 sys.path.insert( 0, waveLibs )
 
-from wavecon.CMS import load_run_metadata
 
 #------------------------------------------------------------------
 #  Utility Functions
@@ -106,10 +105,15 @@ if __name__ == '__main__':
   be used as both a command line tool and a python library.  Then other Python
   scripts can import functions from this one without running the script.
   """
+  from wavecon.CMS import load_run_metadata, telfile_parser, georeference_grid
   
   args = processArgs()
 
   cms_data = load_run_metadata( args.cmcards )
+  cms_data['grid_info']['tel_grid'] = georeference_grid(
+    telfile_parser(cms_data['grid_info']['telgrid_file']),
+    cms_data['grid_info']
+  )
 
   if args.output_format == 'json':
     from wavecon.IO import writeJSON

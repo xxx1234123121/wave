@@ -67,8 +67,31 @@ def load_run_metadata(cmcardsPath):
 
   grid_info = {
     'grid_origin': (cmcards.GRID_ORIGIN_X[0], cmcards.GRID_ORIGIN_Y[0]),
-    'grid_angle': cmcards.GRID_ANGLE[0]
+    'grid_angle': cmcards.GRID_ANGLE[0],
+    'telgrid_file': path.join(sim_dir, cmcards_file) + '.tel' 
   }
+
+  if cmcards.GRID_EPSG_CODE:
+    grid_info['grid_epsg_code'] = 'EPSG:{0}'.format(cmcards.GRID_EPSG_CODE[0])
+  else:
+    raise LookupError('''
+    In order to properly georeference CMS output, this program needs to know the
+    spatial reference system (SRS) in which the following grid origin is
+    expressed:
+
+        {0}
+
+    This is done by adding a non-standard card, GRID_EPSG_CODE, to:
+
+        {1}
+
+    This card contains an integer specifying the EPSG code of the SRS.  EPSG
+    codes can be looked up at:
+
+        www.spatialreference.org
+    '''.format(
+      grid_info['grid_origin'], cmcardsPath)
+    )
 
   current_data = {
     'data_file': path.join(sim_dir, cmcards.GLOBAL_VELOCITY_OUTPUT[0]),
@@ -77,7 +100,7 @@ def load_run_metadata(cmcardsPath):
   }
 
   wave_data = {
-    'data_file': sim_file,
+    'data_file': path.splitext(sim_file)[0] + '_out.h5',
     'output_timesteps': getDataOutputTimes('wave', start_time, stop_time,
       cmcards)
   }
