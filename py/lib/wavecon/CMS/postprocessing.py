@@ -18,22 +18,42 @@ is readable using HDF tools.
 from datetime import datetime, timedelta
 from os import path
 from glob import glob
+from itertools import chain
+
+from math import sqrt, atan2, degrees
+
 
 #------------------------------------------------------------------------------
 #  Imports from third party libraries
 #------------------------------------------------------------------------------
 from numpy import array
+import h5py
 
 
 #------------------------------------------------------------------------------
 #  Imports from other CMS submodules
 #------------------------------------------------------------------------------
 from .cmcards import cmcards_parser
+from .gridfiles import telfile_parser, georeference_grid
 
 
 #------------------------------------------------------------------------------
 #  Data Retrieval
 #------------------------------------------------------------------------------
+def postprocess_CMS_run(cmcardsPath):
+  run_meta = load_run_metadata(cmcardsPath)
+
+  grid = georeference_grid(
+    telfile_parser(run_meta['grid_info']['telgrid_file']),
+    run_meta['grid_info']
+  )
+
+  return {
+    'run_info': run_meta['run_info'],
+    'current_records': load_current_data(grid, run_meta['current_data'])
+  }
+
+
 def load_run_metadata(cmcardsPath):
   cmcards = cmcards_parser.parseFile(cmcardsPath)
 
@@ -49,8 +69,6 @@ def load_run_metadata(cmcardsPath):
         {0}
     Was searched for files ending in .sim'''.format(sim_dir))
 
-  run_name = '{0}-{1}'.format(cmcards_file, cmcards.SIMULATION_LABEL[0])
-
   start_time = datetime.strptime(
     '{0} {1}'.format(
       cmcards.STARTING_JDATE[0],
@@ -59,8 +77,10 @@ def load_run_metadata(cmcardsPath):
 
   stop_time = start_time + timedelta(hours = cmcards.DURATION_RUN[0])
 
+  sim_label = cmcards.SIMULATION_LABEL[0]
+
   run_info = {
-    'run_name': run_name,
+    'run_name':  '{0}-{1}'.format(cmcards_file, sim_label),
     'start_time': start_time,
     'stop_time': stop_time,
   }
@@ -95,6 +115,7 @@ def load_run_metadata(cmcardsPath):
 
   current_data = {
     'data_file': path.join(sim_dir, cmcards.GLOBAL_VELOCITY_OUTPUT[0]),
+    'current_vector': '/' + sim_label + '/Current_Velocity/Values',
     'output_timesteps': getDataOutputTimes('current', start_time, stop_time,
       cmcards)
   }
@@ -113,9 +134,43 @@ def load_run_metadata(cmcardsPath):
   }
 
 
+def load_current_data(grid, current_info):
+  data_file = h5py.File(current_info['data_file'], 'r')
+  data_set = data_file[current_info['current_vector']]
+
+  current_records = list(chain.from_iterable([
+    [create_current_record(vector, location, timestep)
+      for (vector, location) in zip(row,grid) ]
+      for (row, timestep) in zip(data_set, current_info['output_timesteps'])
+  ]))
+
+  return current_records
+
+
 #---------------------------------------------------------------------
 #  Utility Functions
 #---------------------------------------------------------------------
+def compass_degrees(angle):
+  '''Angle is assumed to be in radians!'''
+  angle = 90 - degrees(angle)
+  if angle < 0:
+    return 360 + angle
+  else:
+    return angle
+
+
+def create_current_record(vector, location, time):
+  speed = sqrt(vector[0]**2 + vector[1]**2)
+  direction = compass_degrees(atan2(vector[0], vector[1]))
+
+  return {
+    'speed': speed,
+    'direction': direction,
+    'location': location,
+    'timestamp': time
+  }
+
+
 def getDataOutputTimes(data_type, start_time, stop_time, cmcards):
   if data_type == 'current':
     timestep_list = 'TIME_LIST_{0}'.format(cmcards.VEL_OUT_TIMES_LIST[0])
