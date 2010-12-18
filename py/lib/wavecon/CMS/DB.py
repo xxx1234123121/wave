@@ -9,8 +9,6 @@ with PostgreSQL databases.)
 
 **Development Status:**
   **Last Modified:** December, 17 2010 by Charlie Sharpsteen
-
-
 """
 
 
@@ -37,6 +35,7 @@ from wavecon import DBman
 #------------------------------------------------------------------------------
 SourceTypeRecord = DBman.accessTable(None, 'tblsourcetype')
 Source = DBman.accessTable(None, 'tblsource')
+CurrentRecord = DBman.accessTable(None, 'tblcurrent')
 WaveRecord = DBman.accessTable(None, 'tblwave')
 SpectraRecord = DBman.accessTable(None, 'tblspectrabin' )
 
@@ -46,6 +45,17 @@ _session = DBman.startSession()
 #------------------------------------------------------------------------------
 #  Forming and Committing Database Records
 #------------------------------------------------------------------------------
+def current_database_record(current_data, model_run_id):
+  current_record = CurrentRecord(
+    curSourceID = model_run_id,
+    curLocation = WKTSpatialElement('POINT({0} {1})'.\
+      format(*current_data['location'])),
+    curSpeed = current_data['speed'],
+    curDirection = current_data['direction'],
+    curDateTime = current_data['timestamp']
+  )
+
+  return current_record
 
 
 #------------------------------------------------------------------------------
