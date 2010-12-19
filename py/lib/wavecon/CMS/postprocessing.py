@@ -18,7 +18,7 @@ is readable using HDF tools.
 from datetime import datetime, timedelta
 from os import path
 from glob import glob
-from itertools import chain
+from itertools import chain, izip
 
 from math import sqrt, atan2, degrees
 
@@ -136,13 +136,19 @@ def load_run_metadata(cmcardsPath):
 
 def load_current_data(grid, current_info):
   data_file = h5py.File(current_info['data_file'], 'r')
-  data_set = data_file[current_info['current_vector']]
+  data_set = data_file[current_info['current_vector']].value
+  data_file.close()
 
-  current_records = list(chain.from_iterable([
-    [create_current_record(vector, location, timestep)
-      for (vector, location) in zip(row,grid) ]
-      for (row, timestep) in zip(data_set, current_info['output_timesteps'])
-  ]))
+  # Because these datasets have a tendency to be HUGE, we return a generator
+  # that is capable of producing the whole set rather than the set it's self.
+  # The payoff is that the object is never explicitly created in memory (unless
+  # expanded using list()).  The downside is that you can only iterate over the
+  # generator once---after that it is "exhausted".
+  current_records = chain.from_iterable((
+    (create_current_record(vector, location, timestep)
+      for (vector, location) in izip(row,grid) )
+      for (row, timestep) in izip(data_set, current_info['output_timesteps'])
+  ))
 
   return current_records
 
