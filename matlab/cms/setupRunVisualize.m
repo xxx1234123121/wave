@@ -33,3 +33,9 @@ cur = db.selectCurrent(hfradarSrc,tBegin,tEnd);
 %cur.plotContour('speed');
 cur.plotSurf('speed',extent(cur.T(1),cur.T(1),[39,-125],[39.5,-124.5]));
 
+%% Pull spectra data from WWIII output
+
+www3Src = 'WWIII_20101215_00';
+tBegin  = datenum('2010-12-15 00:00:00','yyyy-mm-dd HH:MM:SS');
+tEnd    = datenum('2010-12-15 23:59:59','yyyy-mm-dd HH:MM:SS');
+w3 = db.selectSpectra(www3Src,tBegin,tEnd); % spec is a dataField object

@@ -30,7 +30,7 @@ from wavecon.config import DBconfig
 ################################
 srctype = DBman.accessTable( DBconfig, 'tblsourcetype' )
 src = DBman.accessTable( DBconfig, 'tblsource')
-spec = DBman.accessTable( DBconfig, 'tblspectra' )
+spec = DBman.accessTable( DBconfig, 'tblspectrabin' )
 wave = DBman.accessTable( DBconfig, 'tblwave')
 
 ################################

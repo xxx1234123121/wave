@@ -144,7 +144,7 @@ classdef waveDB
             
             rawspec = fetch(db.con,sql);
             if(size(rawspec,1)==0)
-                error('Empty result set found')
+                error(['Empty result set found with query: ',sql]);
             end
             n = size(rawspec.st_x,1);
             spec(n) = spectra;
