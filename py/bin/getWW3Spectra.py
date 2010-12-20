@@ -1,4 +1,6 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
+#SEE BELOW FOR COMMAND LINE ARGUMENTS
+#EXAMPLE CALL: python getWW3Spectra.py 50 35 -120 -130 2010/12/10 2010/12/15 ~/Desktop/tmp
 
 ################################
 # IMPORT MODULES
@@ -10,10 +12,6 @@ import glob #file wildcard support
 import datetime #posix support
 from numpy import * #math support
 from geoalchemy import WKTSpatialElement
-
-################################
-# IMPORT UBIQUITOUS FUNCTIONS
-################################
 from os import path,system,remove
 strptime = datetime.datetime.strptime
 
@@ -93,7 +91,7 @@ while date < stoptime :
     filename = 'enp.' + locale + '*'
     command = '{0} {1} {2}/{3}'.format('wget -A.gz -qP',tmpdir,url,filename)
     system(command)
-    command = 'gunzip ' + tmpdir + '/' + filename
+    command = 'gunzip -f ' + tmpdir + '/' + filename  
     system(command)
     
     ################################
@@ -136,7 +134,7 @@ while date < stoptime :
         # parse lat/lon
         lat = latlon_match[0][0:5]
         lon = latlon_match[0][5:]
-        loc = WKTSpatialElement('POINT('+lat+' '+lon+')')
+        loc = WKTSpatialElement('POINT('+lon+' '+lat+')')
         
         # parse freq/dir bins
         # NOTE DIRS = DIRECTION OF TRAVEL
@@ -163,7 +161,6 @@ while date < stoptime :
         spectra = spectra * (pi/180)
         spectra = spectra.reshape(len(filter),nfreqs,ndirs)
         spectra = spectra[filter,:,:]
-        # convert spectra from numpy array to list
         spectra = spectra.tolist()
         
         ################################
@@ -173,8 +170,8 @@ while date < stoptime :
         # determine whether bins exist in db 
         exists = False
         for rec in session.query(spec) :
-            if (all((array(rec.spectradir) - array(dirs)) < .01) &
-            all((array(rec.spectradir) - array(dirs)) < .01)):
+            if (all((array(rec.spcdir) - array(dirs)) < .01) &
+                all((array(rec.spcfreq) - array(freqs)) < .01)):
                 exists = True
         
         # if bins don't exist in db, add them
@@ -185,8 +182,8 @@ while date < stoptime :
         
         # get spectra id for use in tblwave
         for rec in session.query(spec) :
-            if (all((array(rec.spectradir) - array(dirs)) < .01) &
-            all((array(rec.spectradir) - array(dirs)) < .01)):         
+            if (all((array(rec.spcdir) - array(dirs)) < .01) &
+            all((array(rec.spcfreq) - array(freqs)) < .01)):         
                 specid = rec.id
          
         ################################
@@ -196,7 +193,7 @@ while date < stoptime :
             myspec = spectra[i]
             record = wave(
                 wavSourceID=srcid, 
-                wavSpectraID=specid, 
+                wavSpectraBinID=specid, 
                 wavLocation=loc, 
                 wavDateTime=timestamps[i],  
                 wavSpectra=myspec, 
@@ -204,7 +201,6 @@ while date < stoptime :
                 wavPeakDir=None, 
                 wavPeakPeriod=None)
             session.add(record)
-        
         session.commit()
     
     ################################
@@ -212,10 +208,11 @@ while date < stoptime :
     ################################
     session.close()
     session.bind.dispose()   
-    map(remove,files)    
-    date = date+delta    
-        
-###TO DO###
-#date filter not working
-#modulize
-#add try/catch to system calls (skip date if wget failed)
+    command = 'rm -f '+' '.join(files)
+    system(command)
+    date = date+delta
+    print 'done with: '+str(date)+'\n'   
+
+######TO DO###
+####modulize
+####add try/catch to system calls (skip date if wget failed)

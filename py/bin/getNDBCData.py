@@ -82,7 +82,11 @@ def processArgs():
                        help = '''If --format was set to json (the default),
                        specifies the name of the output file to which downloaded
                        wind data should be dumped as JSON records.  If left
-                       blank, records will be written to the screen.''' )
+                       blank, records will be written to the screen.  If
+                       --format was set to matlab, specifies the name of the
+                       output file (.mat will be automagically appended).  If
+                       left blank, a default filename of NDBCwindData.mat will
+                       be used.''' )
 
   parser.add_argument( '--wave-file', action = 'store', dest='waveFile', default = '',
                        help = '''Controls output of downloaded wave data.  See
@@ -118,7 +122,7 @@ if __name__ == '__main__':
   )
 
   if args.output_format == 'json':
-    from wavecon.NDBC.JSON import writeJSON
+    from wavecon.IO import writeJSON
 
     if args.windFile:
       file = open( args.windFile, 'w' )
@@ -137,15 +141,15 @@ if __name__ == '__main__':
       writeJSON( waveRecords, file )
 
   elif args.output_format == "matlab":
-    from wavecon.NDBC.matlab import writeMatFile
+    from wavecon.IO import writeMatFile
 
     if not args.windFile:
-      args.windFile = "NDBCwindData.mat"
-    writeMatFile( windRecords, 'NDBCwind', args.windFile )
+      args.windFile = "NDBCwindData"
+    writeMatFile({'NDBCwind': windRecords}, args.windFile )
 
     if not args.waveFile:
-      args.waveFile = "NDBCwaveData.mat"
-    writeMatFile( waveRecords, 'NDBCwave', args.waveFile )
+      args.waveFile = "NDBCwaveData"
+    writeMatFile({'NDBCwave': waveRecords}, args.waveFile )
     
   elif args.output_format == "database":
     from wavecon.NDBC.DB import formDatabaseRecords, commitToDB

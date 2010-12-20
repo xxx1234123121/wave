@@ -1,0 +1,21 @@
+{
+  "tmpdir" : "/Users/naftali/Desktop/tmp",
+  "cmsdir" : "/Users/naftali/Desktop/CMS/bin",
+  "simfile" : "WAVE.sim",
+  "depfile" : "WAVE.dep",
+  "cardfile" : "FLOW.cmcards",
+  "nestfile" : "nest.dat",
+  "metafile" : "nest.meta",
+  "windfile" : "wind.dat",
+  "steeringinterval" : "6",
+  "starttime" : "2010121600",
+  "simduration" : "6",
+  "rampduration" : ".25",
+  "lon_ll" : "-130",
+  "lat_ll" : "35",
+  "lon_ur" : "-120",
+  "lat_ur" : "50",
+  "nx" : "156",
+  "ny" : "191",
+  "projection" : "32610"
+}

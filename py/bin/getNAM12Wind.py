@@ -1,6 +1,6 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
 #SEE BELOW FOR COMMAND LINE ARGUMENTS
-#EXAMPLE CALL: python getNAM12Wind.py 50 35 -120 -130 2005/01/01 2005/01/02 /tmp
+#EXAMPLE CALL: python getNAM12Wind.py 50 35 -120 -130 2010/12/10 2011/12/11 /tmp
 
 ################################
 # IMPORT MODULES 
@@ -38,6 +38,8 @@ tmpdir =     sys.argv[7]       #/Users/naftali/Desktop/tmp
 starttime = datetime.datetime.strptime( starttime, '%Y/%m/%d' )
 stoptime = datetime.datetime.strptime( stoptime, '%Y/%m/%d' )
 delta = datetime.timedelta(.25) # 6 hour increment
+if (stoptime==starttime):
+  stoptime=starttime+datetime.timedelta(1)
 
 ################################
 # FILENAME PARAMETERS
@@ -55,7 +57,7 @@ srctype = DBman.accessTable( DBconfig, 'tblsourcetype' )
 srcname = 'NAM12'
 existing = session.query(srctype)\
     .filter( srctype.sourcetypename == srcname )
-if (existing.first().sourcetypename != srcname):
+if ( existing.first() == None ):
     record = srctype(srcname)                              
     session.add(record)
     session.commit()
@@ -69,13 +71,15 @@ session.bind.dispose()
 # GET DATA FOR EACH TIMESTAMP
 ################################
 date = starttime
-while date < stoptime :
+while date <= stoptime :
 
     # build url string and download file, re-open as niofile
     url1 = date.strftime("%Y%m/%Y%m%d/")
     url2 = filename1 + date.strftime("%Y%m%d_%H00") + filename2
     url3 = baseurl + url1 + url2 
+    print '\n... (NAM12) downloading date: ' + str(date) + ' ...'
     urllib.urlretrieve(url=url3,filename=tmpfile)
+    print 'done\n'
     niofile = Nio.open_file(tmpfile) 
     
     # extract latitudes/longitudes
@@ -98,11 +102,14 @@ while date < stoptime :
     vgrid = vgrid[filter]    
     
     # convert from u/v to speed/direction
-    spd = (ugrid**2 + vgrid**2)**(1/2)
+    # dir = cartesian coordinates, radians
+    # (0 = traveling east, 90 = traveling north)     
+    spd = (ugrid**2.0 + vgrid**2.0)**(1.0/2.0)
     dir = arctan2(vgrid,ugrid)    
     
     # prepare record for tblSource
     src = DBman.accessTable( DBconfig, 'tblsource')
+    srcname = 'NAM12'
     srcname = srcname+'_'+date.strftime("%Y%m%d_%H")
     record = src(
         srcName=srcname, 
@@ -117,19 +124,19 @@ while date < stoptime :
     srcid = session.query(src)\
         .filter( src.srcname == srcname )\
         .first().id
-    
+
     # add records to tblwind
     wind = DBman.accessTable( DBconfig, 'tblwind' ) 
     for i in range(len(lats)) : 
-        loc = WKTSpatialElement('POINT('+str(lats[i])+' '+str(lons[i])+')')
+        loc = WKTSpatialElement('POINT('+str(lons[i])+' '+str(lats[i])+')')
         record = wind(
             winSourceID=srcid, 
             winLocation=loc, 
             winDateTime=date, 
-            winSpeed=spd[i], 
-            winDirection=dir[i])
+            winSpeed=float(spd[i]), 
+            winDirection=float(dir[i]))
         session.add(record)    
-           
+    
     # close session
     session.commit()
     session.close() 
@@ -140,10 +147,9 @@ while date < stoptime :
     system('rm ' + tmpfile) 
     
     # go to next timestamp
+    print 'done with: '+str(date)
     date = date + delta
-
-
+    
 ### TO DO ###
 #modulize
 #parallelize loops
-#setup que to handle simultaneous downloads
