@@ -28,7 +28,7 @@ from wavecon.config import DBconfig
 ################################
 srctype = DBman.accessTable( DBconfig, 'tblsourcetype' )
 src = DBman.accessTable( DBconfig, 'tblsource')
-spec = DBman.accessTable( DBconfig, 'tblspectra' )
+spec = DBman.accessTable( DBconfig, 'tblspectrabin' )
 wave = DBman.accessTable( DBconfig, 'tblwave')
 
 ################################
@@ -170,8 +170,8 @@ while date < stoptime :
         # determine whether bins exist in db 
         exists = False
         for rec in session.query(spec) :
-            if (all((array(rec.spectradir) - array(dirs)) < .01) &
-            all((array(rec.spectradir) - array(dirs)) < .01)):
+            if (all((array(rec.spcdir) - array(dirs)) < .01) &
+                all((array(rec.spcfreq) - array(freqs)) < .01)):
                 exists = True
         
         # if bins don't exist in db, add them
@@ -182,8 +182,8 @@ while date < stoptime :
         
         # get spectra id for use in tblwave
         for rec in session.query(spec) :
-            if (all((array(rec.spectradir) - array(dirs)) < .01) &
-            all((array(rec.spectradir) - array(dirs)) < .01)):         
+            if (all((array(rec.spcdir) - array(dirs)) < .01) &
+            all((array(rec.spcfreq) - array(freqs)) < .01)):         
                 specid = rec.id
          
         ################################
@@ -193,7 +193,7 @@ while date < stoptime :
             myspec = spectra[i]
             record = wave(
                 wavSourceID=srcid, 
-                wavSpectraID=specid, 
+                wavSpectraBinID=specid, 
                 wavLocation=loc, 
                 wavDateTime=timestamps[i],  
                 wavSpectra=myspec, 

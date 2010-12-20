@@ -55,7 +55,7 @@ srctype = DBman.accessTable( DBconfig, 'tblsourcetype' )
 srcname = 'NAM12'
 existing = session.query(srctype)\
     .filter( srctype.sourcetypename == srcname )
-if (existing.first().sourcetypename != srcname):
+if ( existing.first() == None ):
     record = srctype(srcname)                              
     session.add(record)
     session.commit()
@@ -75,7 +75,9 @@ while date < stoptime :
     url1 = date.strftime("%Y%m/%Y%m%d/")
     url2 = filename1 + date.strftime("%Y%m%d_%H00") + filename2
     url3 = baseurl + url1 + url2 
+    print '\n... (NAM12) downloading date: ' + str(date) + ' ...'
     urllib.urlretrieve(url=url3,filename=tmpfile)
+    print 'done\n'
     niofile = Nio.open_file(tmpfile) 
     
     # extract latitudes/longitudes
@@ -102,7 +104,7 @@ while date < stoptime :
     # (0 = traveling east, 90 = traveling north)     
     spd = (ugrid**2 + vgrid**2)**(1/2)
     dir = arctan2(vgrid,ugrid)    
-
+    break
     # prepare record for tblSource
     src = DBman.accessTable( DBconfig, 'tblsource')
     srcname = 'NAM12'
@@ -143,9 +145,9 @@ while date < stoptime :
     system('rm ' + tmpfile) 
     
     # go to next timestamp
+    print 'done with: '+str(date)
     date = date + delta
-
+    
 ### TO DO ###
 #modulize
 #parallelize loops
-#setup que to handle simultaneous downloads
