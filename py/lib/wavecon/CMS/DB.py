@@ -15,6 +15,7 @@ with PostgreSQL databases.)
 #------------------------------------------------------------------------------
 #  Imports from Python 2.7 standard library
 #------------------------------------------------------------------------------
+from uuid import uuid4
 
 #------------------------------------------------------------------------------
 #  Imports from third party libraries
@@ -45,17 +46,21 @@ _session = DBman.startSession()
 #------------------------------------------------------------------------------
 #  Forming and Committing Database Records
 #------------------------------------------------------------------------------
-def current_database_record(current_data, model_run_id):
-  current_record = CurrentRecord(
-    curSourceID = model_run_id,
-    curLocation = WKTSpatialElement('POINT({0} {1})'.\
-      format(*current_data['location'])),
-    curSpeed = current_data['speed'],
-    curDirection = current_data['direction'],
-    curDateTime = current_data['timestamp']
+def CurrentDBrecordGenerator(current_data, model_run_id):
+
+  records = (
+    {
+      'curid': uuid4(),
+      'cursourceid': model_run_id,
+      'curdatetime': record['timestamp'],
+      'curspeed': record['speed'],
+      'curdirection': record['direction'],
+      'curlocation': 'SRID=4326;POINT({0} {1})'.format(*record['location'])
+    }
+    for record in current_data
   )
 
-  return current_record
+  return records
 
 
 #------------------------------------------------------------------------------
