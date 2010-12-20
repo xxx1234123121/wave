@@ -38,6 +38,8 @@ tmpdir =     sys.argv[7]       #/Users/naftali/Desktop/tmp
 starttime = datetime.datetime.strptime( starttime, '%Y/%m/%d' )
 stoptime = datetime.datetime.strptime( stoptime, '%Y/%m/%d' )
 delta = datetime.timedelta(.25) # 6 hour increment
+if (stoptime==starttime):
+  stoptime=starttime+datetime.timedelta(1)
 
 ################################
 # FILENAME PARAMETERS
@@ -69,7 +71,7 @@ session.bind.dispose()
 # GET DATA FOR EACH TIMESTAMP
 ################################
 date = starttime
-while date < stoptime :
+while date <= stoptime :
 
     # build url string and download file, re-open as niofile
     url1 = date.strftime("%Y%m/%Y%m%d/")
@@ -102,9 +104,9 @@ while date < stoptime :
     # convert from u/v to speed/direction
     # dir = cartesian coordinates, radians
     # (0 = traveling east, 90 = traveling north)     
-    spd = (ugrid**2 + vgrid**2)**(1/2)
+    spd = (ugrid**2.0 + vgrid**2.0)**(1.0/2.0)
     dir = arctan2(vgrid,ugrid)    
-    break
+    
     # prepare record for tblSource
     src = DBman.accessTable( DBconfig, 'tblsource')
     srcname = 'NAM12'

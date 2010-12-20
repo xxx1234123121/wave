@@ -115,7 +115,9 @@ def getwavedata(box,steeringtimes):
   #execute query
   session = DBman.startSession()
   result = session.execute(query).fetchall()
-
+  if (len(result)==0):
+    return None
+    
   #parse result of query
   spec,specid,wavtime = [[],[],[]]
   wavloc,wavx,wavy = [[],[],[]]
@@ -184,6 +186,8 @@ def getwinddata(box,steeringtimes):
   #execute query
   session = DBman.startSession()
   result = session.execute(query).fetchall()
+  if (len(result)==0):  
+    return None
 
   #parse results
   wintime, winx, winy = [[],[],[]]

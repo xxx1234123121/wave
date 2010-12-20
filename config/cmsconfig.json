@@ -8,7 +8,7 @@
   "metafile" : "nest.meta",
   "windfile" : "wind.dat",
   "steeringinterval" : "6",
-  "starttime" : "2010122000",
+  "starttime" : "2010121600",
   "simduration" : "6",
   "rampduration" : ".25",
   "lon_ll" : "-130",
