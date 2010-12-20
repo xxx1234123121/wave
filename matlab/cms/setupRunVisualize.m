@@ -29,3 +29,7 @@ tEnd    = datenum('2010-12-12 06:59:59','yyyy-mm-dd HH:MM:SS');
 
 cur = db.selectCurrent(hfradarSrc,tBegin,tEnd);
 
+%%
+%cur.plotContour('speed');
+cur.plotSurf('speed',extent(cur.T(1),cur.T(1),[39,-125],[39.5,-124.5]));
+

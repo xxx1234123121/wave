@@ -101,7 +101,7 @@ classdef waveDB
                     'm/s',...
                     'deg');
             end
-            dField = dataField(cur);
+            dField = dataField(cur,{'speed','dir'});
         end
         
         function dField = selectSpectra(db,source,tBegin,tEnd,location)
@@ -156,7 +156,7 @@ classdef waveDB
                     double(rawspec.spcfreq{i}.getArray()),...
                     double(rawspec.spcdir{i}.getArray()));
             end
-            dField = dataField(spec);
+            dField = dataField(spec,{'hs','tp','te'});
         end
         function names = showSources(db)
             sql = ['SELECT  ',...

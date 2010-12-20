@@ -17,6 +17,7 @@ classdef current
         % UNITS
         speedUnits;     % choices: 'm/s','mph','kt'
         dirUnits;       % choices: 'deg','rad'
+        
     end
     
     methods
@@ -46,6 +47,12 @@ classdef current
         end
         function src = getSourceName(cur)
             src = cur.srcName;
+        end
+        function sp = get.speed(cur)
+            sp  = cur.speed;
+        end
+        function dir = get.dir(cur)
+            dir = cur.dir;
         end
     end
 end
