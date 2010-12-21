@@ -19,7 +19,7 @@ from datetime import datetime, timedelta
 from os import path
 from glob import glob
 
-from math import sqrt, atan2, degrees
+from math import sqrt, atan2
 
 
 #------------------------------------------------------------------------------
@@ -34,6 +34,7 @@ import h5py
 #------------------------------------------------------------------------------
 from .cmcards import cmcards_parser
 from .gridfiles import telfile_parser, georeference_grid
+from wavecon.util import compass_degrees
 
 
 #------------------------------------------------------------------------------
@@ -156,15 +157,6 @@ def load_current_data(grid, current_info):
 #---------------------------------------------------------------------
 #  Utility Functions
 #---------------------------------------------------------------------
-def compass_degrees(angle):
-  '''Angle is assumed to be in radians!'''
-  angle = 90 - degrees(angle)
-  if angle < 0:
-    return 360 + angle
-  else:
-    return angle
-
-
 def getDataOutputTimes(data_type, start_time, stop_time, cmcards):
   if data_type == 'current':
     timestep_list = 'TIME_LIST_{0}'.format(cmcards.VEL_OUT_TIMES_LIST[0])

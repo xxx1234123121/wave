@@ -60,9 +60,13 @@ def telfile_parser(file_path):
 #---------------------------------------------------------------------
 def georeference_grid(grid_coords, grid_info):
   angle = grid_info['grid_angle']
+
+  # Angles are negative because CMS works with 'compass degrees' which are
+  # positive in the clockwise direction while mathematical degrees are positive
+  # in the counterclockwise direction.
   rot_matrix = array([
-    [cos(radians(angle)), -sin(radians(angle))],
-    [sin(radians(angle)), cos(radians(angle))]
+    [cos(radians(-angle)), -sin(radians(-angle))],
+    [sin(radians(-angle)), cos(radians(-angle))]
   ])
 
   grid_coords = dot(rot_matrix, transpose(grid_coords))
