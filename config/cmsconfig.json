@@ -1,6 +1,6 @@
 {
-  "tmpdir" : "/Users/sheppardc/Desktop/tmp",
-  "cmsdir" : "/Users/sheppardc/Desktop/CMS/bin",
+  "tmpdir" : "/Users/naftali/Desktop/tmp",
+  "cmsdir" : "/Users/naftali/Desktop/CMS/bin",
   "simfile" : "WAVE.sim",
   "depfile" : "WAVE.dep",
   "cardfile" : "FLOW.cmcards",
@@ -8,7 +8,7 @@
   "metafile" : "nest.meta",
   "windfile" : "wind.dat",
   "steeringinterval" : "6",
-  "starttime" : "2010121600",
+  "starttime" : "2010122000",
   "simduration" : "6",
   "rampduration" : ".25",
   "lon_ll" : "-130",

@@ -8,6 +8,7 @@ libdir = os.path.abspath('.')+'/../lib/'
 sys.path.insert( 0, libdir )
 from wavecon import CMSman
 from wavecon.config import CMSconfig
+from datetime import timedelta
 
 lon_ll = CMSconfig['lon_ll']
 lat_ll = CMSconfig['lat_ll']
@@ -28,6 +29,9 @@ if __name__ == '__main__':
   steeringtimes = CMSman.maketimes()  
   starttime = steeringtimes[0].strftime('%Y/%m/%d')
   stoptime = steeringtimes[len(steeringtimes)-1].strftime('%Y/%m/%d')
+  if (starttime == stoptime):
+    stoptime = steeringtimes[0] + timedelta(1.0)
+    stoptime = stoptime.strftime('%Y/%m/%d') 
 
   #RETRIEVE WAVE DATA FROM DATABASE
   wavdata = CMSman.getwavedata(box,steeringtimes)
@@ -36,7 +40,7 @@ if __name__ == '__main__':
     command = ' '.join(['./getWW3Spectra.py',lat_ur,lat_ll,
     lon_ur,lon_ll,starttime,stoptime,tmpdir])
     os.system(command)
-    wavdata = CMSman.getwavedata(None,steeringtimes)
+    wavdata = CMSman.getwavedata(box,steeringtimes)
 
   #RETRIEVE WIND DATA FROM DATABASE
   windata = CMSman.getwinddata(None,steeringtimes)
