@@ -33,7 +33,7 @@ import h5py
 #  Imports from other CMS submodules
 #------------------------------------------------------------------------------
 from .cmcards import cmcards_parser
-from .gridfiles import telfile_parser, georeference_grid
+from .gridfiles import telfile_parser, depfile_parser, georeference_grid
 from wavecon.util import compass_degrees
 
 
@@ -43,14 +43,19 @@ from wavecon.util import compass_degrees
 def postprocess_CMS_run(cmcardsPath):
   run_meta = load_run_metadata(cmcardsPath)
 
-  grid = georeference_grid(
+  tel_grid = georeference_grid(
     telfile_parser(run_meta['grid_info']['telgrid_file']),
+    run_meta['grid_info']
+  )
+
+  dep_grid = georeference_grid(
+    depfile_parser(run_meta['grid_info']['depgrid_file']),
     run_meta['grid_info']
   )
 
   return {
     'run_info': run_meta['run_info'],
-    'current_records': load_current_data(grid, run_meta['current_data'])
+    'current_records': load_current_data(tel_grid, run_meta['current_data']),
   }
 
 
@@ -88,7 +93,8 @@ def load_run_metadata(cmcardsPath):
   grid_info = {
     'grid_origin': (cmcards.GRID_ORIGIN_X[0], cmcards.GRID_ORIGIN_Y[0]),
     'grid_angle': cmcards.GRID_ANGLE[0],
-    'telgrid_file': path.join(sim_dir, cmcards_file) + '.tel' 
+    'telgrid_file': path.join(sim_dir, cmcards_file) + '.tel',
+    'depgrid_file': path.join(sim_dir, path.splitext(sim_file)[0]) + '.dep'
   }
 
   if cmcards.GRID_EPSG_CODE:
