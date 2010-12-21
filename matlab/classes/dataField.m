@@ -75,25 +75,42 @@ classdef dataField
                 [max(df.X),max(df.Y)]);
         end
         
-        function plotPointSpec(df,t,x,y,collapse)
+        function M = plotPointSpec(df,tb,te,x,y,collapse)
             if strcmp(df.classOfZ,'spectra')==0
                 error(strcat('Cannot plot point spectra for data of class '...
                     ,df.classOfZ))
             end
-            
-            if(nargin<5)
+            if(nargin<6)
                 collapse = false;
             end
-            if(nargin<4)
+            if(nargin<5)
                 y = df.Y(1);
             end
-            if(nargin<3)
+            if(nargin<4)
                 x = df.X(1);
             end
+            if(nargin<3)
+                te = df.T(1);
+            end
             if(nargin<2)
-                t = df.T(1);
+                tb = df.T(1);
             end
             
+            if(tb~=te)
+                tbetween = sort(df.T(df.T >= tb & df.T <= te));
+                for i=1:length(tbetween)
+                    makePointSpecPlot(df,tbetween(i),x,y,collapse);
+                    %axis equal;
+                    M(i) = getframe;
+                end
+            else
+                makePointSpecPlot(df,tb,x,y,collapse);
+                M = getframe;
+            end
+        end
+        
+        function makePointSpecPlot(df,t,x,y,collapse)
+            clf;
             % find the point closest to x,y,t in Euclidean space
             iNearby = knnsearch([x,y,t],[df.X df.Y,df.T]);
             
@@ -132,7 +149,6 @@ classdef dataField
                 hold off;
                 
             end
-            
         end
         
         function plotContour(df,fieldName,cropExtent)
