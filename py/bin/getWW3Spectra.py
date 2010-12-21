@@ -170,7 +170,9 @@ while date <= stoptime :
         # determine whether bins exist in db 
         exists = False
         for rec in session.query(spec) :
-            if (all((array(rec.spcdir) - array(dirs)) < .01) &
+            if (array(rec.spcdir).size==array(dirs).size &
+                array(rec.spcfreq).size==array(freqs).size &
+                all((array(rec.spcdir) - array(dirs)) < .01) &
                 all((array(rec.spcfreq) - array(freqs)) < .01)):
                 exists = True
         
