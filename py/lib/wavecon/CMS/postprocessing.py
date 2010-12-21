@@ -18,7 +18,6 @@ is readable using HDF tools.
 from datetime import datetime, timedelta
 from os import path
 from glob import glob
-from itertools import chain, izip
 
 from math import sqrt, atan2, degrees
 
@@ -144,13 +143,14 @@ def load_current_data(grid, current_info):
   # The payoff is that the object is never explicitly created in memory (unless
   # expanded using list()).  The downside is that you can only iterate over the
   # generator once---after that it is "exhausted".
-  current_records = chain.from_iterable((
-    (create_current_record(vector, location, timestep)
-      for (vector, location) in izip(row,grid) )
-      for (row, timestep) in izip(data_set, current_info['output_timesteps'])
-  ))
-
-  return current_records
+  for i in xrange(data_set.shape[0]):
+    for j in xrange(data_set.shape[1]):
+      yield {
+        'speed': sqrt(data_set[i,j,0]**2 + data_set[i,j,1]**2),
+        'direction': compass_degrees(atan2(data_set[i,j,0], data_set[i,j,1])),
+        'timestamp': current_info['output_timesteps'][i], 
+        'location': grid[j]
+      }
 
 
 #---------------------------------------------------------------------
@@ -163,18 +163,6 @@ def compass_degrees(angle):
     return 360 + angle
   else:
     return angle
-
-
-def create_current_record(vector, location, time):
-  speed = sqrt(vector[0]**2 + vector[1]**2)
-  direction = compass_degrees(atan2(vector[0], vector[1]))
-
-  return {
-    'speed': speed,
-    'direction': direction,
-    'location': location,
-    'timestamp': time
-  }
 
 
 def getDataOutputTimes(data_type, start_time, stop_time, cmcards):
