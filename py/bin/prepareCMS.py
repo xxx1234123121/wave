@@ -29,9 +29,6 @@ if __name__ == '__main__':
   steeringtimes = CMSman.maketimes()  
   starttime = steeringtimes[0].strftime('%Y/%m/%d')
   stoptime = steeringtimes[len(steeringtimes)-1].strftime('%Y/%m/%d')
-  if (starttime == stoptime):
-    stoptime = steeringtimes[0] + timedelta(1.0)
-    stoptime = stoptime.strftime('%Y/%m/%d') 
 
   #RETRIEVE WAVE DATA FROM DATABASE
   wavdata = CMSman.getwavedata(box,steeringtimes)
