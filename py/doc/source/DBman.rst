@@ -14,6 +14,7 @@ Database Access Functions
 
 .. autofunction:: wavecon.DBman.accessTable
 .. autofunction:: wavecon.DBman.startSession
+.. autofunction:: wavecon.DBman.bulk_import
 
 Example
 -------

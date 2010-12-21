@@ -21,7 +21,6 @@ scriptLocation = path.dirname(path.abspath( __file__ ))
 waveLibs = path.abspath(path.join( scriptLocation, '..', 'lib' ))
 sys.path.insert( 0, waveLibs )
 
-from wavecon.CMS import load_run_metadata
 
 #------------------------------------------------------------------
 #  Utility Functions
@@ -106,10 +105,11 @@ if __name__ == '__main__':
   be used as both a command line tool and a python library.  Then other Python
   scripts can import functions from this one without running the script.
   """
+  from wavecon.CMS import postprocess_CMS_run
   
   args = processArgs()
 
-  cms_data = load_run_metadata( args.cmcards )
+  cms_data = postprocess_CMS_run(args.cmcards)
 
   if args.output_format == 'json':
     from wavecon.IO import writeJSON
@@ -127,9 +127,14 @@ if __name__ == '__main__':
     writeMatFile(cms_data, args.outFile)
 
   elif args.output_format == "database":
-    from wavecon.CMS.DB import getModelRunID
-    id = getModelRunID(cms_data['run_info'])
-    print id
+    from wavecon.CMS.DB import getModelRunID, CurrentDBrecordGenerator 
+    from wavecon.DBman import bulk_import
+
+    run_id = getModelRunID(cms_data['run_info'])
+
+    current_records = CurrentDBrecordGenerator(cms_data['current_records'], run_id)
+
+    bulk_import(current_records, 'tblcurrent')
 
   else:
     raise NotImplementedError('''The output format you specified, {0}, does not

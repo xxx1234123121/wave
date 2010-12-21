@@ -7,7 +7,7 @@ simplifies database interaction for scripts and other modules in this software
 collection.
 
 **Development Status:**
-  **Last Modified:** December 14, 2010 by Charlie Sharpsteen
+  **Last Modified:** December 20, 2010 by Charlie Sharpsteen
 
 
 Implementation Details
@@ -35,6 +35,11 @@ Postgresql and PostGIS.
 #  Imports from Python 2.7 standard library
 #------------------------------------------------------------------------------
 from warnings import warn, catch_warnings, simplefilter
+import random
+from string import ascii_lowercase
+import csv
+import tempfile
+import os
 
 #------------------------------------------------------------------------------
 #  Imports from third party libraries
@@ -404,4 +409,122 @@ def startSession(DBconfig = None):
 
   session = sessionmaker(bind=DB_ENGINE)()
   return session
+
+
+def RawPostgresConnection(config = DB_CONFIG):
+  # Isolated imports so DBman does not crash when imported to connect to a
+  # non-Postgres database.  Currently not ever done or supported, but hey, who
+  # knows what the future will hold?
+  from psycopg2 import connect
+
+  return connect('dbname={database} user={username} password={password}'.\
+    format(**config))
+
+
+def bulk_import(records, table_template, table_name = None):
+  """Efficient loading of large datasets into PostgreSQL
+  
+  **This function will only work with PostgreSQL databases**
+
+  Argument Info:
+
+    * *records*:
+        A list of python dictionaries whose key/value pairs correspond to the
+        names and datatypes of the PostgreSQL table that is to receive the data.
+
+        For large datasets, a generator that can produce the list one element at
+        a time should be used so that Python does not allocate large amounts of
+        RAM to store a temporary variable.  This saves resources for Postgres.
+
+    * *table_template*
+        A string specifying the Schema that should be used to model the database
+        into which data is to be loaded.  I.E. if trying to load data into a
+        table that is defined like ``tblWave`` in ``DB.psql`` then pass the
+        string ``'tblwave'``
+
+    * *table_name*
+        An optional name for the database table. I.E. if loading data into a
+        table that has the same schema as ``tblWave`` but is called
+        ``tblWaveModeled``, pass ``'tblwave'`` for the *table_template*
+        parameter and ``'tblwavemodeled'`` for the *table_name* parameter.  If
+        left blank this will default to the value passed for *table_template*
+
+    .. todo:
+       
+       Currently this function dumps the records to a temporary CSV file and
+       then uses the Postgresql ``COPY`` to load the data from CSV .The time it
+       takes this function to execute can be cut by approximately 33% if the
+       temporary CSV file could be eliminated.
+  """
+
+  if table_name is None:
+    table_name = table_template
+
+  # Dump records to temporary CSV file
+  #========================================================================
+  # Retrieve order of table column names
+  table = accessTable(None, table_template, table_name)
+  table_columns = table.__table__._columns.keys()
+
+  temp_file = tempfile.mkstemp()
+  os.close(temp_file[0]) # Just wanted the path, thank you
+  temp_file = temp_file[1]
+
+  # Open file in binary mode because the table columns are returned as UTF-8
+  # strings and writing UTF-8 to non-binary files results in bad output for some
+  # reason.
+  csv_file = open(temp_file, 'wb')
+  csv_writer = csv.DictWriter(csv_file, fieldnames = table_columns)
+
+  # Loop over each record and commit individually with `writerow()` rather than
+  # all at once with `writerows()` as records should be a generator and this
+  # prevents the entire dataset from being expanded in memory.
+  #
+  # TODO: Add an isinstance() check for generators or lists and use the most
+  # efficient method for each.
+  for record in records:
+    csv_writer.writerow(record)
+
+  csv_file.close()
+
+  # Import records into database
+  #========================================================================
+  # Create a name for the temporary table padded with some random ASCII
+  # characters in case multiple bulk imports are running at the same time.
+  temp_table = 'bulk_import_' + \
+    ''.join((random.choice(ascii_lowercase) for i in xrange(4)))
+
+  # Open a raw database connection using psycopg2.  Stand by for some low-level
+  # voodoo.
+  connection = RawPostgresConnection()
+  cursor = connection.cursor()
+
+  cursor.execute('''
+    CREATE TEMP TABLE {temp_table} ( LIKE {target_table} );
+    '''.format(
+      temp_table = temp_table,
+      target_table = table_name,
+    )
+  )
+
+  csv_file = open(temp_file,'r')
+  cursor.copy_from(csv_file, temp_table, sep = ',', null = '')
+  csv_file.close()
+
+  cursor.execute('''
+    INSERT INTO {target_table} SELECT * FROM {temp_table};
+    DROP TABLE {temp_table};
+    '''.format(
+      temp_table = temp_table,
+      target_table = table_name,
+    )
+  )
+
+  connection.commit()
+
+  cursor.close()
+  connection.close()
+  os.unlink(temp_file)
+
+  return None
 

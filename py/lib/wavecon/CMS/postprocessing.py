@@ -19,21 +19,41 @@ from datetime import datetime, timedelta
 from os import path
 from glob import glob
 
+from math import sqrt, atan2
+
+
 #------------------------------------------------------------------------------
 #  Imports from third party libraries
 #------------------------------------------------------------------------------
 from numpy import array
+import h5py
 
 
 #------------------------------------------------------------------------------
 #  Imports from other CMS submodules
 #------------------------------------------------------------------------------
 from .cmcards import cmcards_parser
+from .gridfiles import telfile_parser, georeference_grid
+from wavecon.util import compass_degrees
 
 
 #------------------------------------------------------------------------------
 #  Data Retrieval
 #------------------------------------------------------------------------------
+def postprocess_CMS_run(cmcardsPath):
+  run_meta = load_run_metadata(cmcardsPath)
+
+  grid = georeference_grid(
+    telfile_parser(run_meta['grid_info']['telgrid_file']),
+    run_meta['grid_info']
+  )
+
+  return {
+    'run_info': run_meta['run_info'],
+    'current_records': load_current_data(grid, run_meta['current_data'])
+  }
+
+
 def load_run_metadata(cmcardsPath):
   cmcards = cmcards_parser.parseFile(cmcardsPath)
 
@@ -49,8 +69,6 @@ def load_run_metadata(cmcardsPath):
         {0}
     Was searched for files ending in .sim'''.format(sim_dir))
 
-  run_name = '{0}-{1}'.format(cmcards_file, cmcards.SIMULATION_LABEL[0])
-
   start_time = datetime.strptime(
     '{0} {1}'.format(
       cmcards.STARTING_JDATE[0],
@@ -59,25 +77,51 @@ def load_run_metadata(cmcardsPath):
 
   stop_time = start_time + timedelta(hours = cmcards.DURATION_RUN[0])
 
+  sim_label = cmcards.SIMULATION_LABEL[0]
+
   run_info = {
-    'run_name': run_name,
+    'run_name':  '{0}-{1}'.format(cmcards_file, sim_label),
     'start_time': start_time,
     'stop_time': stop_time,
   }
 
   grid_info = {
     'grid_origin': (cmcards.GRID_ORIGIN_X[0], cmcards.GRID_ORIGIN_Y[0]),
-    'grid_angle': cmcards.GRID_ANGLE[0]
+    'grid_angle': cmcards.GRID_ANGLE[0],
+    'telgrid_file': path.join(sim_dir, cmcards_file) + '.tel' 
   }
+
+  if cmcards.GRID_EPSG_CODE:
+    grid_info['grid_epsg_code'] = 'EPSG:{0}'.format(cmcards.GRID_EPSG_CODE[0])
+  else:
+    raise LookupError('''
+    In order to properly georeference CMS output, this program needs to know the
+    spatial reference system (SRS) in which the following grid origin is
+    expressed:
+
+        {0}
+
+    This is done by adding a non-standard card, GRID_EPSG_CODE, to:
+
+        {1}
+
+    This card contains an integer specifying the EPSG code of the SRS.  EPSG
+    codes can be looked up at:
+
+        www.spatialreference.org
+    '''.format(
+      grid_info['grid_origin'], cmcardsPath)
+    )
 
   current_data = {
     'data_file': path.join(sim_dir, cmcards.GLOBAL_VELOCITY_OUTPUT[0]),
+    'current_vector': '/' + sim_label + '/Current_Velocity/Values',
     'output_timesteps': getDataOutputTimes('current', start_time, stop_time,
       cmcards)
   }
 
   wave_data = {
-    'data_file': sim_file,
+    'data_file': path.splitext(sim_file)[0] + '_out.h5',
     'output_timesteps': getDataOutputTimes('wave', start_time, stop_time,
       cmcards)
   }
@@ -88,6 +132,26 @@ def load_run_metadata(cmcardsPath):
     'current_data': current_data,
     'wave_data': wave_data
   }
+
+
+def load_current_data(grid, current_info):
+  data_file = h5py.File(current_info['data_file'], 'r')
+  data_set = data_file[current_info['current_vector']].value
+  data_file.close()
+
+  # Because these datasets have a tendency to be HUGE, we return a generator
+  # that is capable of producing the whole set rather than the set it's self.
+  # The payoff is that the object is never explicitly created in memory (unless
+  # expanded using list()).  The downside is that you can only iterate over the
+  # generator once---after that it is "exhausted".
+  for i in xrange(data_set.shape[0]):
+    for j in xrange(data_set.shape[1]):
+      yield {
+        'speed': sqrt(data_set[i,j,0]**2 + data_set[i,j,1]**2),
+        'direction': compass_degrees(atan2(data_set[i,j,0], data_set[i,j,1])),
+        'timestamp': current_info['output_timesteps'][i], 
+        'location': grid[j]
+      }
 
 
 #---------------------------------------------------------------------
