@@ -47,6 +47,12 @@ classdef wind
         function src = getSourceName(win)
             src = win.srcName;
         end
+        function sp = get.speed(win)
+            sp = win.speed;
+        end
+        function dr = get.dir(win)
+            dr = win.dri;
+        end
     end
 end
 

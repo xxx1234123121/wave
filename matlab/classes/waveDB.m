@@ -30,6 +30,10 @@ classdef waveDB
                 dbconfig.password,dbconfig.jdbcDriver,dbconfig.driverURL);
             setdbprefs('DataReturnFormat','structure');
         end
+        %SELECTWIND(source,tBegin,tEnd,location)
+        %Returns a data field object containing records of wind
+        %observations from 'source' between 'tBegin' and 'tEnd' inside
+        %'location'
         function dField = selectWind(db,source,tBegin,tEnd,location)
             if(nargin<2)
                 error(['Must provide a source name, use wavedb.showSources'...
@@ -64,7 +68,7 @@ classdef waveDB
                     'm/s',...
                     'deg');
             end
-            dField = dataField(win);
+            dField = dataField(win,{'speed','dir'});
         end
         
         function dField = selectCurrent(db,source,tBegin,tEnd,location)

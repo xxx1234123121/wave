@@ -35,7 +35,7 @@ if __name__ == '__main__':
     print '\n... downloading new data from WWIII ... \n'
     command = ' '.join(['./getWW3Spectra.py',lat_ur,lat_ll,
     lon_ur,lon_ll,starttime,stoptime,tmpdir])
-    system(command)
+    os.system(command)
     wavdata = CMSman.getwavedata(None,steeringtimes)
 
   #RETRIEVE WIND DATA FROM DATABASE
@@ -44,7 +44,7 @@ if __name__ == '__main__':
     print '\n... downloading new data from NAM12 ... \n'
     command = ' '.join(['./getNAM12Wind.py',lat_ur,lat_ll,
     lon_ur,lon_ll,starttime,stoptime,tmpdir])
-    system(command)
+    os.system(command)
     windata = CMSman.getwinddata(None,steeringtimes)
   
   #INTERPOLATE SPECTRA TO HALF_PLANE (NEW DIRECTIONAL BINS)

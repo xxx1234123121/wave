@@ -83,7 +83,7 @@ latlon_pat = re.compile("\d+.\d+-\d+.\d+")
 # GET DATA FOR EACH DAY, PARSE, THEN ADD TO DB 
 ################################
 date = starttime
-while date < stoptime :
+while date <= stoptime :
 
     # build url string, download/gunzip files
     datestr = date.strftime("%Y%m%d") + '.t00z'
