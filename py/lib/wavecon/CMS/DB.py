@@ -74,7 +74,7 @@ def getSourceTypeID(sourceName):
   if sourceType:
     return sourceType.id
   else:
-    # A record for this buoy does not exist in the DB. Create it.
+    # A record for this source type does not exist in the DB. Create it.
     sourceType = SourceTypeRecord(sourceTypeName = sourceName)
 
     _session.add(sourceType)
@@ -90,13 +90,13 @@ def getModelRunID(run_info):
   model_run = _session.query(Source).filter(and_(
     Source.srcname == run_info['run_name'],
     Source.srcbeginexecution == run_info['start_time'],
-    Source.srcbeginexecution == run_info['stop_time'] 
+    Source.srcendexecution == run_info['stop_time'] 
   )).first()
 
   if model_run:
     return model_run.id
   else:
-    # Create a record for the spectra.
+    # Create a record for the model run.
     model_run = Source(srcName = run_info['run_name'],
       srcBeginExecution = run_info['start_time'],
       srcEndExecution = run_info['stop_time'],
