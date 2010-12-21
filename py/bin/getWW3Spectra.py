@@ -175,18 +175,14 @@ while date <= stoptime :
                 all((array(rec.spcdir) - array(dirs)) < .01) &
                 all((array(rec.spcfreq) - array(freqs)) < .01)):
                 exists = True
+                specid = rec.id
         
         # if bins don't exist in db, add them
         if (exists == False):
             record = spec(freqs,dirs)
             session.add(record)
             session.commit()
-        
-        # get spectra id for use in tblwave
-        for rec in session.query(spec) :
-            if (all((array(rec.spcdir) - array(dirs)) < .01) &
-            all((array(rec.spcfreq) - array(freqs)) < .01)):         
-                specid = rec.id
+            specid = record.id
          
         ################################
         # ADD DATA TO tblWave
