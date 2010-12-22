@@ -47,7 +47,6 @@ _session = DBman.startSession()
 #  Forming and Committing Database Records
 #------------------------------------------------------------------------------
 def CurrentDBrecordGenerator(current_data, model_run_id):
-
   records = (
     {
       'curid': uuid4(),
@@ -58,6 +57,25 @@ def CurrentDBrecordGenerator(current_data, model_run_id):
       'curlocation': 'SRID=4326;POINT({0} {1})'.format(*record['location'])
     }
     for record in current_data
+  )
+
+  return records
+
+
+def WaveDBrecordGenerator(wave_data, model_run_id):
+  records = (
+    {
+      'wavid': uuid4(),
+      'wavsourceid': model_run_id,
+      'wavspectrabinid': u'3390c410-47c6-44dc-b9c7-9f2c07011aed',
+      'wavdatetime': record['timestamp'],
+      'wavspectra': None,
+      'wavheight': record['height'],
+      'wavpeakdir': record['direction'],
+      'wavpeakperiod': record['period'],
+      'wavlocation': 'SRID=4326;POINT({0} {1})'.format(*record['location'])
+    }
+    for record in wave_data
   )
 
   return records
