@@ -1,0 +1,4 @@
+{{ iprp }} {{ icur }} {{ ibrk }} {{ irs }} {{ kout }} {{ ibnd }} {{ iwet }} {{ ibf }} {{ iark }} {{ iarkr }} {{ akap }} {{ bf }} {{ ark }} {{ arkr }} {{ iwvbk }}
+{%- for cell in observation_cells -%}
+  {{ cell[0] }} {{ cell[1] }}
+{% endfor %}
