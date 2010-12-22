@@ -55,7 +55,7 @@ def postprocess_CMS_run(cmcardsPath):
 
   return {
     'run_info': run_meta['run_info'],
-    'current_records': load_current_data(tel_grid, run_meta['current_data']),
+    'current_records': load_current_data(dep_grid, run_meta['current_data']),
   }
 
 
@@ -120,10 +120,10 @@ def load_run_metadata(cmcardsPath):
     )
 
   current_data = {
-    'data_file': path.join(sim_dir, cmcards.GLOBAL_VELOCITY_OUTPUT[0]),
-    'current_vector': '/' + sim_label + '/Current_Velocity/Values',
-    'output_timesteps': getDataOutputTimes('current', start_time, stop_time,
-      cmcards)
+    'data_file': path.splitext(sim_file)[0] + '_out.h5',
+    'current_vector': '/Dataset/Currents/Values',
+    'output_timesteps': getDataOutputTimes('current', 
+      start_time, stop_time, cmcards)
   }
 
   wave_data = {
