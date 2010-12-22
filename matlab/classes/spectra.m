@@ -61,7 +61,7 @@ classdef spectra
         function tp = get.tp(spec)
             if(size(spec.tp,1)==0)
                 if(size(spec.dirBin,1)>0)
-                    spec.tp = 1/spec.freqBin(find(sum(spec.spec)==max(sum(spec.spec))));
+                    spec.tp = 1/spec.freqBin(find(sum(spec.spec,2)==max(sum(spec.spec,2))));
                 else
                     spec.tp = 1/spec.freqBin(find(spec.spec==max(spec.spec)));
                 end
@@ -76,10 +76,10 @@ classdef spectra
         end
         function m = nthMoment(spec,n)
             if(nargin==1)n=0;end
-            if(size(spec.dirBin,1)>0)
-                m = simprule((spec.freqBin.^n).*sum(spec.spec)',NaN,spec.freqBin);
+            if(size(spec.dirBin,2)>0)
+                m = simprule((spec.freqBin.^n).*sum(spec.spec,2),NaN,spec.freqBin);
             else
-                m = simprule((spec.freqBin.^n).*spec.spec',NaN,spec.freqBin);
+                m = simprule((spec.freqBin.^n).*spec.spec,NaN,spec.freqBin);
             end
         end
     end

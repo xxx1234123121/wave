@@ -75,25 +75,42 @@ classdef dataField
                 [max(df.X),max(df.Y)]);
         end
         
-        function plotPointSpec(df,t,x,y,collapse)
+        function M = plotPointSpec(df,tb,te,x,y,collapse)
             if strcmp(df.classOfZ,'spectra')==0
                 error(strcat('Cannot plot point spectra for data of class '...
                     ,df.classOfZ))
             end
-            
-            if(nargin<5)
+            if(nargin<6)
                 collapse = false;
             end
-            if(nargin<4)
+            if(nargin<5)
                 y = df.Y(1);
             end
-            if(nargin<3)
+            if(nargin<4)
                 x = df.X(1);
             end
+            if(nargin<3)
+                te = df.T(1);
+            end
             if(nargin<2)
-                t = df.T(1);
+                tb = df.T(1);
             end
             
+            if(tb~=te)
+                tbetween = sort(df.T(df.T >= tb & df.T <= te));
+                for i=1:length(tbetween)
+                    makePointSpecPlot(df,tbetween(i),x,y,collapse);
+                    %axis equal;
+                    M(i) = getframe;
+                end
+            else
+                makePointSpecPlot(df,tb,x,y,collapse);
+                M = getframe;
+            end
+        end
+        
+        function makePointSpecPlot(df,t,x,y,collapse)
+            clf;
             % find the point closest to x,y,t in Euclidean space
             iNearby = knnsearch([x,y,t],[df.X df.Y,df.T]);
             
@@ -106,7 +123,7 @@ classdef dataField
                 set(gcf(),'Color','White');
                 set(gca(),'Position',get(gca(),'Position')+[0,0,0,-.1]);
                 
-                title({['Spectral Density -- ',char(df.Z(iNearby).getSourceName)],...
+                title({['Spectral Density -- ',regexprep(char(df.Z(iNearby).getSourceName),'\_','\\_')],...
                     strcat('[',locationLabel(df.Y(iNearby),df.X(iNearby),...
                     df.T(iNearby)),']')},...
                     'FontWeight','bold','Units','normalized',...
@@ -118,7 +135,7 @@ classdef dataField
                 addtxaxis(gca(),'1./x',1./get(gca(),'XTick'),'Period (s)');
             else
                 h = mypolar([0 2*pi], [0 max(df.Z(iNearby).freqBin)]);
-                title({['Directional Spectral Density -- ',char(df.Z(iNearby).getSourceName)],...
+                title({['Directional Spectral Density -- ',regexprep(char(df.Z(iNearby).getSourceName),'\_','\\_')],...
                     strcat('[',locationLabel(df.Y(iNearby),df.X(iNearby),...
                     df.T(iNearby)),']')},...
                     'FontWeight','bold','Units','normalized'...
@@ -132,51 +149,105 @@ classdef dataField
                 hold off;
                 
             end
-            
         end
         
-        function plotContour(df,fieldName,cropExtent)
-            if(nargin<2)
-                error('Must specify a fieldName (e.g. for a datafield with spectra objects you can specify ''Hs''');
-            end
+        function M = plotField(df,plotType,fieldName,cropExtent)
             if(nargin<3)
+                error('Must specify plotType and fieldName (e.g. "scatter" for a datafield with spectra objects you can specify ''Hs''');
+            end
+            if(nargin<4)
                 cropExtent = df.boundingBox;
             end
-            %%% for now, constrain time dimension to the first time step,
-            %%% later will make animation
-            cropExtent.te = cropExtent.tb;
-            inds = df.isInCropExtent(cropExtent);
             
-            [X,Y,T] = meshgrid(df.X(inds),df.Y(inds),cropExtent.te);
-            fieldInd = find(strcmp(df.scalarFields,fieldName));
-            Z = df.interpFuns{fieldInd}(X,Y,T);
-            Z(isnan(Z)) = 0;
-            
-            contour(X,Y,Z);
-            colorbar();
+            if(cropExtent.tb~=cropExtent.te)
+                uniqueT = unique(df.T);
+                tbetween = sort(uniqueT(uniqueT >= cropExtent.tb & uniqueT <= cropExtent.te));
+                for i=1:length(tbetween)
+                    if(strcmp(plotType,'quiver'))
+                        df.makeVectorPlot(cropExtent,tbetween(i));
+                    else
+                        df.makeFieldPlot(plotType,fieldName,cropExtent,tbetween(i));
+                    end
+                    %axis equal;
+                    M(i) = getframe;
+                end
+            else
+                if(strcmp(plotType,'quiver'))
+                    df.makeVectorPlot(cropExtent,cropExtent.tb);
+                else
+                    df.makeFieldPlot(plotType,fieldName,cropExtent,cropExtent.tb);
+                end
+                M = getframe;
+            end
         end
         
-        function plotSurf(df,fieldName,cropExtent)
-            if(nargin<2)
-                error('Must specify a fieldName (e.g. for a datafield with spectra objects you can specify ''Hs''');
-            end
-            if(nargin<3)
-                cropExtent = df.boundingBox;
-            end
-            %%% for now, constrain time dimension to the first time step,
-            %%% later will make animation
-            cropExtent.te = cropExtent.tb;
+        function makeFieldPlot(df,plotType,fieldName,cropExtent,t)
+            clf;
+            cropExtent.tb = t;
+            cropExtent.te = t;
             inds = df.isInCropExtent(cropExtent);
-            
-            [X,Y,T] = meshgrid(df.X(inds),df.Y(inds),cropExtent.te);
             fieldInd = find(strcmp(df.scalarFields,fieldName));
-            Z = df.interpFuns{fieldInd}(X,Y,T);
-            Z(isnan(Z)) = 0;
             
-            surf(X,Y,Z);
-            shading('interp');
+            if(strcmp(plotType,'scatter'))
+                Z = df.interpFuns{fieldInd}(df.X(inds),df.Y(inds),df.T(inds));
+            else
+                sortedXY = sortrows([df.X(inds),df.Y(inds)],[1,2]);
+                [X,Y,T] = meshgrid(sortedXY(:,1),sortedXY(:,2),t);
+                Z = df.interpFuns{fieldInd}(X,Y,T);
+                Z(isnan(Z)) = -1;
+            end
+            
+            if(strcmp(plotType,'surf'))
+                surf(X,Y,Z);
+                shading('interp');
+            elseif(strcmp(plotType,'contour'))
+                contour(X,Y,Z);
+            elseif(strcmp(plotType,'scatter'))
+                scatter(df.X(inds),df.Y(inds),Z.^2,Z,'filled');
+            end
             colorbar();
             view(2);
+            set(gcf(),'Color','White');
+            set(gca(),'Position',get(gca(),'Position')+[0,0,0,-.1]);
+            
+            title({[fieldName,' -- ',regexprep(char(df.Z(inds(1)).getSourceName),'\_','\\_')],...
+                strcat('[',dateLabel(df.T(inds(1))),']')},...
+                'FontWeight','bold','Units','normalized'...
+                );
+            xlabel('Longitude (\circE)');
+            ylabel('Latitude (\circN)');
+        end
+        
+        
+        function makeVectorPlot(df,cropExtent,t)
+            clf;
+            cropExtent.tb = t;
+            cropExtent.te = t;
+            inds = df.isInCropExtent(cropExtent);
+            speedInd = find(strcmp(df.scalarFields,'speed'));
+            dirInd = find(strcmp(df.scalarFields,'dir'));
+            
+            sortedXY = sortrows([df.X(inds),df.Y(inds)],[1,2]);
+            [X,Y,T] = meshgrid(sortedXY(:,1),sortedXY(:,2),t);
+            Zspeed = df.interpFuns{speedInd}(X,Y,T);
+            Zdir = df.interpFuns{dirInd}(X,Y,T);
+            
+            U = Zspeed.*cos(metToMathAngle(Zdir));
+            V = Zspeed.*sin(metToMathAngle(Zdir));
+            U(isnan(V)) = 0;
+            V(isnan(V)) = 0;
+            
+            quiver(X,Y,U,V);
+            view(2);
+            set(gcf(),'Color','White');
+            set(gca(),'Position',get(gca(),'Position')+[0,0,0,-.1]);
+            
+            title({['Velocity -- ',regexprep(char(df.Z(inds(1)).getSourceName),'\_','\\_')],...
+                strcat('[',dateLabel(df.T(inds(1))),']')},...
+                'FontWeight','bold','Units','normalized'...
+                );
+            xlabel('Longitude (\circE)');
+            ylabel('Latitude (\circN)');
         end
         
         function inds = isInCropExtent(df,cropExtent)
