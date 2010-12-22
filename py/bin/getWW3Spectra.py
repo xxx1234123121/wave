@@ -100,6 +100,7 @@ while date < stoptime :
     ################################
     
     # choose srcname
+    session = DBman.startSession()
     for i in range(1000):
       srcname = srctypename+'_'+date.strftime("%Y%m%d_%H")+'_'+str(i)
       existing = session.query(src).filter( src.srcname == srcname )
@@ -115,7 +116,6 @@ while date < stoptime :
         srcSourceTypeID=srctypeid)
     
     # add record to tblSource
-    session = DBman.startSession()
     session.add(record)
     session.commit()
     

@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 #SEE BELOW FOR COMMAND LINE ARGUMENTS
-#EXAMPLE CALL: python getNAM12Wind.py 50 35 -120 -130 2010/12/10 2011/12/11 /tmp
+#EXAMPLE CALL: python getNAM12Wind.py 50 35 -120 -130 2010/12/22 2011/12/23 ~/Desktop/tmp
+
+#next update: use this server instead...can specify spatial bounding box to reduce download time
+#http://nomads.ncdc.noaa.gov/thredds/ncss/grid/nam218/201012/20101220/
+#nam_218_20101220_0000_000.grb/dataset.html?spatial=bb&
+#north=50&west=-130&east=-120&south=35&temporal=all&addLatLon=true&var=u_wind_height_above_ground
 
 ################################
 # IMPORT MODULES 
@@ -11,6 +16,7 @@ import Nio #grib support
 import sys #argument parsing
 from geoalchemy import WKTSpatialElement
 from numpy import * #math support
+from math import * #pi constant
 
 ################################
 # IMPORT DATABASE FUNCTIONS
@@ -19,7 +25,6 @@ from os import path,system
 DBman_path = path.abspath('.')+'/../lib/'
 sys.path.insert( 0, DBman_path )
 from wavecon import DBman
-from wavecon.config import DBconfig
 
 ################################
 # PARSE COMMAND LINE ARGUMENTS
@@ -50,19 +55,25 @@ filename1 = 'namanl_218_'
 filename2 = '_000.grb'
 
 ################################
+# CREATE DATABASE OBJECTS
+################################
+srctype = DBman.accessTable( None, 'tblsourcetype' )
+src = DBman.accessTable( None, 'tblsource')
+wind = DBman.accessTable( None, 'tblwind' ) 
+
+################################
 # ADD NAM12 TO tblSourceType
 ################################
-session = DBman.startSession( DBconfig )     
-srctype = DBman.accessTable( DBconfig, 'tblsourcetype' )
-srcname = 'NAM12'
+session = DBman.startSession()     
+srctypename = 'NAM12'
 existing = session.query(srctype)\
-    .filter( srctype.sourcetypename == srcname )
+    .filter( srctype.sourcetypename == srctypename )
 if ( existing.first() == None ):
-    record = srctype(srcname)                              
+    record = srctype(srctypename)                              
     session.add(record)
     session.commit()
 srctypeid = session.query(srctype)\
-    .filter( srctype.sourcetypename == srcname )\
+    .filter( srctype.sourcetypename == srctypename )\
     .first().id
 session.close()
 session.bind.dispose()
@@ -71,7 +82,7 @@ session.bind.dispose()
 # GET DATA FOR EACH TIMESTAMP
 ################################
 date = starttime
-while date <= stoptime :
+while date < stoptime :
 
     # build url string and download file, re-open as niofile
     url1 = date.strftime("%Y%m/%Y%m%d/")
@@ -105,12 +116,17 @@ while date <= stoptime :
     # dir = cartesian coordinates, radians
     # (0 = traveling east, 90 = traveling north)     
     spd = (ugrid**2.0 + vgrid**2.0)**(1.0/2.0)
-    dir = arctan2(vgrid,ugrid)    
+    dir = arctan2(vgrid,ugrid)   
+    dir = dir*180./pi 
     
+    # choose srcname
+    for i in range(1000):
+      srcname = srctypename+'_'+date.strftime("%Y%m%d_%H")+'_'+str(i)
+      existing = session.query(src).filter( src.srcname == srcname )
+      if (existing.first() == None):
+          break
+
     # prepare record for tblSource
-    src = DBman.accessTable( DBconfig, 'tblsource')
-    srcname = 'NAM12'
-    srcname = srcname+'_'+date.strftime("%Y%m%d_%H")
     record = src(
         srcName=srcname, 
         srcConfig='', 
@@ -119,14 +135,14 @@ while date <= stoptime :
         srcSourceTypeID=srctypeid)
     
     # add record to tblSource
-    session = DBman.startSession( DBconfig )     
+    session = DBman.startSession()     
     session.add(record)    
+    session.commit()
     srcid = session.query(src)\
         .filter( src.srcname == srcname )\
         .first().id
 
     # add records to tblwind
-    wind = DBman.accessTable( DBconfig, 'tblwind' ) 
     for i in range(len(lats)) : 
         loc = WKTSpatialElement('POINT('+str(lons[i])+' '+str(lats[i])+')')
         record = wind(
