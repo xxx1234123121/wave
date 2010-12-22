@@ -6,13 +6,11 @@ Common functions that don't really have any other place to be.
 
 
 **Development Status:**
-  **Last Modified:** December 20, 2010 by Charlie Sharpsteen
+  **Last Modified:** December 22, 2010 by Charlie Sharpsteen
 """
-
-
-#------------------------------------------------------------------
+#------------------------------------------------------------------------------
 #  Conversion of compass directions
-#------------------------------------------------------------------
+#------------------------------------------------------------------------------
 from math import degrees, radians
 def degrees_to_compass(deg_angle):
   angle = 90 - deg_angle
