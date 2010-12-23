@@ -37,8 +37,9 @@ require File.join(pipRoot, "resources", "pip_package")
 
 pip_package "sphinx"
 pip_package "flask"
-pip_package "numpy"
+pip_package "pyparsing"
 
+pip_package "numpy"
 pip_package "scipy" do
   # SciPy has a problem compiling agianst Python 2.7 due to a missing C++ header
   # file.  The issue is documented at:
@@ -56,7 +57,7 @@ pip_package "scipy" do
 end
 
 pip_package "h5py" do
-  # pyH5 has a tiny bug that prevents it from compiling agains Python 2.7.  The
+  # pyH5 has a tiny bug that prevents it from compiling against Python 2.7.  The
   # following archive has been fixed, but should be removed once the official
   # version goes higher than 1.3.0.
   version "1.3.0"
@@ -66,6 +67,7 @@ end
 pip_package "psycopg2"
 pip_package "sqlalchemy"
 pip_package "geoalchemy"
+pip_package "pyproj"
 
 
 #===============================================================================
