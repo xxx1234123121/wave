@@ -34,6 +34,7 @@ import h5py
 #------------------------------------------------------------------------------
 from .cmcards import cmcards_parser
 from .gridfiles import telfile_parser, depfile_parser, georeference_grid
+from .engfiles import parse_eng_spectra
 from wavecon.util import compass_degrees
 
 
@@ -53,10 +54,18 @@ def postprocess_CMS_run(cmcardsPath):
     run_meta['grid_info']
   )
 
+  spectra_info = parse_eng_spectra(run_meta['wave_data']['spectra_file'])
+
   return {
     'run_info': run_meta['run_info'],
     'current_records': load_current_data(dep_grid, run_meta['current_data']),
-    'wave_records': load_wave_data(dep_grid, run_meta['wave_data'])
+    'wave_records': {
+      'spectra_bins': {
+        'freq_bins': spectra_info['freq_bins'],
+        'dir_bins': spectra_info['dir_bins']
+      },
+      'records': load_wave_data(dep_grid, run_meta['wave_data'])
+    }
   }
 
 
@@ -129,6 +138,7 @@ def load_run_metadata(cmcardsPath):
 
   wave_data = {
     'data_file': path.splitext(sim_file)[0] + '_out.h5',
+    'spectra_file': path.join(sim_dir, 'spec.out'),
     'wave_height': '/Dataset/Height/Values',
     'wave_period': '/Dataset/Period/Values',
     'wave_direction': '/Dataset/Direction/Values',
@@ -171,6 +181,8 @@ def load_wave_data(grid, wave_info):
   direction_data = data_file[wave_info['wave_direction']].value
   data_file.close()
 
+  spectra_data = parse_eng_spectra(wave_info['spectra_file'])
+
   # See notes for load_current_data
   for i in xrange(height_data.shape[0]):
     for j in xrange(height_data.shape[1]):
@@ -180,6 +192,7 @@ def load_wave_data(grid, wave_info):
         'period': float(period_data[i,j]),
         'direction': float(direction_data[i,j]),
         'timestamp': wave_info['output_timesteps'][i], 
+        'spectra': spectra_data['spectra'].next(),
         'location': grid[j]
       }
 

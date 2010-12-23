@@ -62,12 +62,12 @@ def CurrentDBrecordGenerator(current_data, model_run_id):
   return records
 
 
-def WaveDBrecordGenerator(wave_data, model_run_id):
+def WaveDBrecordGenerator(wave_data, model_run_id, spectra_bin_id):
   records = (
     {
       'wavid': uuid4(),
       'wavsourceid': model_run_id,
-      'wavspectrabinid': u'3390c410-47c6-44dc-b9c7-9f2c07011aed',
+      'wavspectrabinid': spectra_bin_id,
       'wavdatetime': record['timestamp'],
       'wavspectra': None,
       'wavheight': record['height'],
@@ -125,6 +125,24 @@ def getModelRunID(run_info):
     _session.commit()
 
     return model_run.id
+
+
+def getSpectraBinID(freq_bins = None, dir_bins = None):
+  spectra = _session.query(SpectraRecord).filter(and_(
+    SpectraRecord.spcfreq == cast(freq_bins, ARRAY(DOUBLE_PRECISION)),
+    SpectraRecord.spcdir == cast(dir_bins, ARRAY(DOUBLE_PRECISION))
+  )).first()
+
+  if spectra:
+    return spectra.id
+  else:
+    # Create a record for the spectra.
+    spectra = SpectraRecord(spcFreq = freq_bins, spcDir = dir_bins)
+
+    _session.add(spectra)
+    _session.commit()
+
+    return spectra.id
 
 
 #---------------------------------------------------------------------
