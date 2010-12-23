@@ -16,3 +16,4 @@ Currently, support for the following output is provided:
 """
 from .JSON import writeJSON, clobber
 from .matlab import writeMatFile
+from .text_files import FileScanner

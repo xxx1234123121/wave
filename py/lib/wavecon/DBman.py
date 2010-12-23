@@ -340,13 +340,14 @@ def accessTable(DBconfig, template, name = None):
   Argument Info:
 
     * *DBconfig*:
-        **This argument is depreciated and is slated for removal.**
+        .. deprecated:: 12-2010
+           This argument is depreciated and is slated for removal
 
-        A python dictionary containing access credentials for the
-        database server.  See :py:data:`wavecon.config.DBconfig`
-        for the structure of this dictionary.
+           A python dictionary containing access credentials for the database
+           server.  See :py:data:`wavecon.config.DBconfig` for the structure of
+           this dictionary.
 
-        Currently ignored due to depreciated status.
+           Currently ignored due to depreciated status.
 
     * *template*
         A string specifying the Schema that should be used to model
@@ -394,14 +395,14 @@ def startSession(DBconfig = None):
     * `GeoAlchemy documentation`_.  Describes how to run PostGIS
       enabled queries.
 
-  **The DBconfig argument is depreciated and is slated for removal.**
+  .. deprecated:: 12-2010
+     The DBconfig argument is depreciated and is slated for removal
 
-    .. _SQLAlchemy documentation: http://www.sqlalchemy.org/docs/ormtutorial.html#
-         creating-a-session
 
-    .. _GeoAlchemy documentation: http://www.geoalchemy.org/tutorial.html#
-         performing-spatial-queries
-
+  .. _SQLAlchemy documentation: http://www.sqlalchemy.org/docs/ormtutorial.html#
+       creating-a-session
+  .. _GeoAlchemy documentation: http://www.geoalchemy.org/tutorial.html#
+       performing-spatial-queries
   """
   if DBconfig is not None:
     warn(FutureWarning('''The DBconfig argument to startSession will be
@@ -424,7 +425,7 @@ def RawPostgresConnection(config = DB_CONFIG):
 def bulk_import(records, table_template, table_name = None):
   """Efficient loading of large datasets into PostgreSQL
   
-  **This function will only work with PostgreSQL databases**
+  .. note:: This function will only work with PostgreSQL databases
 
   Argument Info:
 
@@ -449,12 +450,11 @@ def bulk_import(records, table_template, table_name = None):
         parameter and ``'tblwavemodeled'`` for the *table_name* parameter.  If
         left blank this will default to the value passed for *table_template*
 
-    .. todo:
-       
-       Currently this function dumps the records to a temporary CSV file and
-       then uses the Postgresql ``COPY`` to load the data from CSV .The time it
-       takes this function to execute can be cut by approximately 33% if the
-       temporary CSV file could be eliminated.
+  .. todo::
+     Currently this function dumps the records to a temporary CSV file and
+     then uses the Postgresql ``COPY`` to load the data from CSV.  The time it
+     takes this function to execute can be cut by approximately 33% if the
+     temporary CSV file could be eliminated.
   """
 
   if table_name is None:
@@ -474,7 +474,8 @@ def bulk_import(records, table_template, table_name = None):
   # strings and writing UTF-8 to non-binary files results in bad output for some
   # reason.
   csv_file = open(temp_file, 'wb')
-  csv_writer = csv.DictWriter(csv_file, fieldnames = table_columns)
+  csv_writer = csv.DictWriter(csv_file, fieldnames = table_columns,
+    delimiter='|') # Need to use a different delimiter due to array notation
 
   # Loop over each record and commit individually with `writerow()` rather than
   # all at once with `writerows()` as records should be a generator and this
@@ -508,7 +509,7 @@ def bulk_import(records, table_template, table_name = None):
   )
 
   csv_file = open(temp_file,'r')
-  cursor.copy_from(csv_file, temp_table, sep = ',', null = '')
+  cursor.copy_from(csv_file, temp_table, sep = '|', null = '')
   csv_file.close()
 
   cursor.execute('''

@@ -19,7 +19,7 @@ from datetime import datetime, timedelta
 from os import path
 from glob import glob
 
-from math import sqrt, atan2
+from math import sqrt, atan2, degrees
 
 
 #------------------------------------------------------------------------------
@@ -33,8 +33,8 @@ import h5py
 #  Imports from other CMS submodules
 #------------------------------------------------------------------------------
 from .cmcards import cmcards_parser
-from .gridfiles import telfile_parser, georeference_grid
-from wavecon.util import compass_degrees
+from .gridfiles import telfile_parser, depfile_parser, georeference_grid
+from .engfiles import parse_eng_spectra
 
 
 #------------------------------------------------------------------------------
@@ -43,14 +43,28 @@ from wavecon.util import compass_degrees
 def postprocess_CMS_run(cmcardsPath):
   run_meta = load_run_metadata(cmcardsPath)
 
-  grid = georeference_grid(
+  tel_grid = georeference_grid(
     telfile_parser(run_meta['grid_info']['telgrid_file']),
     run_meta['grid_info']
   )
 
+  dep_grid = georeference_grid(
+    depfile_parser(run_meta['grid_info']['depgrid_file']),
+    run_meta['grid_info']
+  )
+
+  spectra_info = parse_eng_spectra(run_meta['wave_data']['spectra_file'])
+
   return {
     'run_info': run_meta['run_info'],
-    'current_records': load_current_data(grid, run_meta['current_data'])
+    'current_records': load_current_data(dep_grid, run_meta['current_data']),
+    'wave_records': {
+      'spectra_bins': {
+        'freq_bins': spectra_info['freq_bins'],
+        'dir_bins': spectra_info['dir_bins']
+      },
+      'records': load_wave_data(dep_grid, run_meta['wave_data'])
+    }
   }
 
 
@@ -88,7 +102,8 @@ def load_run_metadata(cmcardsPath):
   grid_info = {
     'grid_origin': (cmcards.GRID_ORIGIN_X[0], cmcards.GRID_ORIGIN_Y[0]),
     'grid_angle': cmcards.GRID_ANGLE[0],
-    'telgrid_file': path.join(sim_dir, cmcards_file) + '.tel' 
+    'telgrid_file': path.join(sim_dir, cmcards_file) + '.tel',
+    'depgrid_file': path.join(sim_dir, path.splitext(sim_file)[0]) + '.dep'
   }
 
   if cmcards.GRID_EPSG_CODE:
@@ -114,16 +129,20 @@ def load_run_metadata(cmcardsPath):
     )
 
   current_data = {
-    'data_file': path.join(sim_dir, cmcards.GLOBAL_VELOCITY_OUTPUT[0]),
-    'current_vector': '/' + sim_label + '/Current_Velocity/Values',
-    'output_timesteps': getDataOutputTimes('current', start_time, stop_time,
-      cmcards)
+    'data_file': path.splitext(sim_file)[0] + '_sol.h5',
+    'current_vector': '/Dataset/Currents/Values',
+    'output_timesteps': getDataOutputTimes(path.splitext(sim_file)[0] +\
+      '_sol.h5', '/Dataset/Currents', start_time)
   }
 
   wave_data = {
-    'data_file': path.splitext(sim_file)[0] + '_out.h5',
-    'output_timesteps': getDataOutputTimes('wave', start_time, stop_time,
-      cmcards)
+    'data_file': path.splitext(sim_file)[0] + '_sol.h5',
+    'spectra_file': path.join(sim_dir, 'spec.out'),
+    'wave_height': '/Dataset/Height/Values',
+    'wave_period': '/Dataset/Period/Values',
+    'wave_direction': '/Dataset/Direction/Values',
+    'output_timesteps': getDataOutputTimes(path.splitext(sim_file)[0] +\
+      '_sol.h5', '/Dataset/Currents', start_time)
   }
 
   return {
@@ -148,39 +167,45 @@ def load_current_data(grid, current_info):
     for j in xrange(data_set.shape[1]):
       yield {
         'speed': sqrt(data_set[i,j,0]**2 + data_set[i,j,1]**2),
-        'direction': compass_degrees(atan2(data_set[i,j,0], data_set[i,j,1])),
-        'timestamp': current_info['output_timesteps'][i], 
+        'direction': degrees(atan2(data_set[i,j,0], data_set[i,j,1])),
+        'timestamp': current_info['output_timesteps'][i],
         'location': grid[j]
       }
 
 
+def load_wave_data(grid, wave_info):
+  data_file = h5py.File(wave_info['data_file'], 'r')
+  height_data = data_file[wave_info['wave_height']].value
+  period_data = data_file[wave_info['wave_period']].value
+  direction_data = data_file[wave_info['wave_direction']].value
+  data_file.close()
+
+  spectra_data = parse_eng_spectra(wave_info['spectra_file'])
+
+  # See notes for load_current_data
+  for i in xrange(height_data.shape[0]):
+    for j in xrange(height_data.shape[1]):
+      # Find a way to avoid recasting numpy values.
+      yield {
+        'height': float(height_data[i,j]),
+        'period': float(period_data[i,j]),
+        'direction': float(direction_data[i,j]),
+        'timestamp': wave_info['output_timesteps'][i], 
+        'spectra': spectra_data['spectra'].next(),
+        'location': grid[j]
+      }
+
 #---------------------------------------------------------------------
 #  Utility Functions
 #---------------------------------------------------------------------
-def getDataOutputTimes(data_type, start_time, stop_time, cmcards):
-  if data_type == 'current':
-    timestep_list = 'TIME_LIST_{0}'.format(cmcards.VEL_OUT_TIMES_LIST[0])
-  elif data_type == 'wave':
-    timestep_list = 'TIME_LIST_{0}'.format(cmcards.WAVES_OUT_TIMES_LIST[0])
-  else:
-    raise NotImplementedError('''Support for CMS output of type {0} has not been
-    implemented yet.'''.format(data_type))
+def getDataOutputTimes(data_file, dataset_path, start_time):
+  data_file = h5py.File(data_file, 'r')
+  timesteps = data_file[dataset_path + '/Times'].value
+  data_file.close()
 
-  output_timesteps = cmcards[timestep_list].asList()
-  num_timesteps = output_timesteps.pop(0)
-
-  # CMS accepts output timesteps as a list of three-tuples of the form:
-  #
-  # - Beginning time of new interval
-  # - Length of interval
-  # - Ending time of new interval
-  #
-  # For now we are going to assume that the important number is the beginning
-  # time.  ***THIS IS A BIG ASSUMPTION***
   output_timesteps = [
     start_time + timedelta(hours = x)
-    for x in array(output_timesteps)[range(0, num_timesteps, 3)]
-    if timedelta(hours = x) <= (stop_time - start_time)
+    for x in timesteps
   ]
 
   return output_timesteps

@@ -6,7 +6,7 @@ This module provides functions for interacting with CMS grid files.
 Currently, it contains a parser for reading CMS-Flow telescoping grids.
 
 **Development Status:**
-  **Last Modified:** December 17, 2010 by Charlie Sharpsteen
+  **Last Modified:** December 21, 2010 by Charlie Sharpsteen
 
 """
 
@@ -15,13 +15,15 @@ Currently, it contains a parser for reading CMS-Flow telescoping grids.
 #  Imports from Python 2.7 standard library
 #------------------------------------------------------------------------------
 import re
+from string import lstrip
+from itertools import chain
 from math import cos, sin, radians
 
 
 #------------------------------------------------------------------------------
 #  Imports from third party libraries
 #------------------------------------------------------------------------------
-from numpy import array, dot, transpose
+from numpy import array, dot, transpose, cumsum, meshgrid
 from pyproj import Proj, transform
 
 
@@ -35,9 +37,9 @@ from pyproj import Proj, transform
 #------------------------------------------------------------------------------
 def telfile_parser(file_path):
   # NOTE: This routine is returning the locations of the Lower Left corner of
-  # each cell.  However, CMS computes values on a cell basis, not a nodal basis.
-  # So it would probably be better to extend this routine so that it returns the
-  # location of the middle of each cell.
+  # each cell.  However, CMS computes values on a cell-centered basis, not a
+  # grid-centered basis.  So, this routine needs to be extended that it returns
+  # the location of the middle of each cell.
   tel_file = open(file_path, 'r')
   tel_data = tel_file.read().splitlines()
 
@@ -53,6 +55,59 @@ def telfile_parser(file_path):
   ])
 
   return grid_coords
+
+
+#------------------------------------------------------------------------------
+#  CMS-Wave .dep file parser
+#------------------------------------------------------------------------------
+def depfile_parser(file_path):
+  dep_file = open(file_path, 'r')
+  dep_data = dep_file.read().splitlines()
+
+  dep_file.close()
+
+  # Remove first line and process it.
+  dep_header = dep_data.pop(0)
+  ni, nj, dx, dindex = [
+    (int(ni), int(nj), float(dx), float(dindex))
+    for ni,nj,dx,dindex in [re.split('\s+', dep_header)]
+  ][0]
+
+  # Process the rest of the file.
+  dep_data = array(list(chain.from_iterable(
+    (
+      (float(z) for z in re.split('\s+', lstrip(row)))
+      for row in dep_data
+    )
+  )))
+
+  # Determine grid layout based on the value of dindex:
+  if dindex == 0:
+    # Constant width grid, dy = dx
+    dx_vals = [dx] * ni
+    dy_vals = [dx] * nj
+  elif dindex != 999:
+    # Constant width grid with dx = dx and dy = dindex
+    dx_vals = [dx] * ni
+    dy_vals = [dindex] * nj
+  else:
+    # Variable width grid, last ni+nj values in dep_data hold the dx and dy
+    # values for each cell.
+    dx_vals = dep_data[(ni*nj):(ni*nj+ni)]
+    dy_vals = dep_data[(ni*nj+ni):]
+    dep_data = dep_data[0:(ni*nj)]
+
+
+  # Create coordinates from the dx and dy values via a cumulative summation.
+  # There may be a problem with this (feels too easy) but it is a rough first
+  # cut.  Also, need to determine what the dx and dy values are relative to --
+  # the CMS grids are cell centered and the resulting grid needs to reflect
+  # this.
+  grid = meshgrid(cumsum(dx_vals), cumsum(dy_vals))
+
+  # Return list of lat, lon tuples.  Grid is flattend using 'F' for Fortran
+  # ordering.
+  return zip(grid[0].flatten('F'), grid[1].flatten('F'))
 
 
 #---------------------------------------------------------------------

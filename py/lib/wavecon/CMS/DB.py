@@ -47,7 +47,6 @@ _session = DBman.startSession()
 #  Forming and Committing Database Records
 #------------------------------------------------------------------------------
 def CurrentDBrecordGenerator(current_data, model_run_id):
-
   records = (
     {
       'curid': uuid4(),
@@ -58,6 +57,25 @@ def CurrentDBrecordGenerator(current_data, model_run_id):
       'curlocation': 'SRID=4326;POINT({0} {1})'.format(*record['location'])
     }
     for record in current_data
+  )
+
+  return records
+
+
+def WaveDBrecordGenerator(wave_data, model_run_id, spectra_bin_id):
+  records = (
+    {
+      'wavid': uuid4(),
+      'wavsourceid': model_run_id,
+      'wavspectrabinid': spectra_bin_id,
+      'wavdatetime': record['timestamp'],
+      'wavspectra': postgres_csv_array(record['spectra']),
+      'wavheight': record['height'],
+      'wavpeakdir': record['direction'],
+      'wavpeakperiod': record['period'],
+      'wavlocation': 'SRID=4326;POINT({0} {1})'.format(*record['location'])
+    }
+    for record in wave_data
   )
 
   return records
@@ -109,6 +127,24 @@ def getModelRunID(run_info):
     return model_run.id
 
 
+def getSpectraBinID(freq_bins = None, dir_bins = None):
+  spectra = _session.query(SpectraRecord).filter(and_(
+    SpectraRecord.spcfreq == cast(freq_bins, ARRAY(DOUBLE_PRECISION)),
+    SpectraRecord.spcdir == cast(dir_bins, ARRAY(DOUBLE_PRECISION))
+  )).first()
+
+  if spectra:
+    return spectra.id
+  else:
+    # Create a record for the spectra.
+    spectra = SpectraRecord(spcFreq = freq_bins, spcDir = dir_bins)
+
+    _session.add(spectra)
+    _session.commit()
+
+    return spectra.id
+
+
 #---------------------------------------------------------------------
 #  Database Interaction
 #---------------------------------------------------------------------
@@ -117,4 +153,14 @@ def commitToDB(records):
   _session.commit()
 
   return None
+
+
+#------------------------------------------------------------------------------
+#  Utility Routines
+#------------------------------------------------------------------------------
+def postgres_csv_array(anArray):
+  # Formats an array to a string compatible with Postgres CSV format.
+  return '{' +\
+    ','.join(( '{' + ','.join(map(str,row)) + '}' for row in anArray )) +\
+    '}'
 
