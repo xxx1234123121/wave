@@ -5,6 +5,9 @@ Overview
 This module provides routines for serializing data obtained by the downloader.py
 module to a SQL database.
 
+(Currently, use of the ARRAY and DOUBLE_PRECISION functions limits this to use
+with PostgreSQL databases.)
+
 **Development Status:**
   **Last Modified:** November, 6 2010 by Charlie Sharpsteen
 
@@ -33,16 +36,13 @@ from wavecon import DBman
 #------------------------------------------------------------------------------
 #  Metadata, Object Classes and Other Constants
 #------------------------------------------------------------------------------
-# Database setup
-from wavecon.config import DBconfig as _DBconfig
+BuoySource = DBman.accessTable(None, 'tblsource')
+SourceTypeRecord = DBman.accessTable(None, 'tblsourcetype')
+WindRecord = DBman.accessTable(None, 'tblwind')
+WaveRecord = DBman.accessTable(None, 'tblwave')
+SpectraRecord = DBman.accessTable(None, 'tblspectrabin')
 
-BuoySource = DBman.accessTable( _DBconfig, 'tblsource' )
-SourceTypeRecord = DBman.accessTable( _DBconfig, 'tblsourcetype' )
-WindRecord = DBman.accessTable( _DBconfig, 'tblwind' )
-WaveRecord = DBman.accessTable( _DBconfig, 'tblwave' )
-SpectraRecord = DBman.accessTable( _DBconfig, 'tblspectrabin' )
-
-_session = DBman.startSession( _DBconfig )
+_session = DBman.startSession()
 
 # Import NDBC global variables
 from .globals import BUOY_META
@@ -252,12 +252,4 @@ def commitToDB( records ):
   _session.commit()
 
   return None
-
-
-def formWaveRecord( waveRecord, spectra, buoyNum ):
-  waveRecord = associateWithBuoy( waveRecord, buoyNum )
-  waveRecord.wavspectra = spectra
-  waveRecord.wavspectrabinid = '1'
-
-  return waveRecord
 

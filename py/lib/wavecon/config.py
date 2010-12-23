@@ -7,7 +7,7 @@ $PROJECT_ROOT/config
 
 
 **Development Status:**
-  **Last Modified:** July 23, 2010 by Charlie Sharpsteen
+  **Last Modified:** December 22, 2010 by Charlie Sharpsteen
 
 Layout
 ------
@@ -48,8 +48,18 @@ info or the results of parsing particular files in the top-level
   # More preloaded objects go here.
 
 """
+#------------------------------------------------------------------------------
+#  Imports from Python 2.7 standard library
+#------------------------------------------------------------------------------
 from os import path
 import json
+
+
+#------------------------------------------------------------------------------
+#  Imports from third party libraries
+#------------------------------------------------------------------------------
+from jinja2 import Environment, FileSystemLoader
+
 
 # Find the top-level config directory
 _scriptLocation = path.dirname(path.abspath( __file__ ))
@@ -57,6 +67,11 @@ CONFIG_DIR = path.abspath(path.join( _scriptLocation, '..', '..', '..',
   'config' ))
 """``CONFIG_DIR`` holds the path to the top-level ``config`` directory."""
 
+CMS_TEMPLATE_DIR = path.abspath(path.join(_scriptLocation, '..', '..', '..',
+  'cms', 'templates'))
+"""``CMS_TEMPLATE_DIR`` holds the path to a top-level directory containing
+templates for the input files of the CMS model.
+"""
 
 #------------------------------------------------------------------
 #  Configuration File Parsing Functions
@@ -92,4 +107,25 @@ Some functions which use this object are:
   * :py:func:`wavecon.DBman.accessTable`
 
 """
+
+#------------------------------------------------------------------
+#  CMS Config section
+#------------------------------------------------------------------
+def loadCMSConfig( aPath ):
+  configFile = open( aPath, 'r')
+  cmsconfig = json.load( configFile )
+  configFile.close()
+  return cmsconfig
+
+CMSconfig = loadCMSConfig(path.join(CONFIG_DIR, 'cmsconfig.json'))
+"""Configuration information for setting up cms input files. Some 
+functions which use this object are:
+  
+  * :py:func:`wavecon.prepareCMSinput.spatialdomain`
+  * :py:func:`wavecon.prepareCMSinput.temporaldomain`
+  * :py:func:`wavecon.prepareCMSinput.getwavedata`
+  * :py:func:`wavecon.prepareCMSinput.getwinddata`
+""" 
+
+CMS_TEMPLATES = Environment(loader=FileSystemLoader(CMS_TEMPLATE_DIR))
 

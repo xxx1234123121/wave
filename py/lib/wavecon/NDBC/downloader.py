@@ -454,9 +454,6 @@ def collapseSpectra( record, num_dir_bins ):
     if key in record:
       del record[key]
 
-  # Transform frequency bins to an array.
-  record['frequencyBins'] = record['frequencyBins']
-
   return record
 
 
@@ -464,13 +461,13 @@ def make2Dspectra( parameters, dirBins ):
   # NDBC reports R1 and R2 scaled by 100
   spectra = [
       [ calc2Dspectra( density, alpha1, alpha2, r1 / 100, r2 / 100, angle )
-      for density, alpha1, alpha2, r1, r2 in parameters ]
-    for angle in dirBins ]
+      for angle in dirBins ]
+    for density, alpha1, alpha2, r1, r2 in parameters ]
 
   return spectra
 
 
-def calc2Dspectra( density, Alpha1, Alpha2, R1, R2, A, ):
+def calc2Dspectra( density, Alpha1, Alpha2, R1, R2, A ):
   return density * (1/pi) * (
       0.5 +
       R1 * cos(radians( A - Alpha1 )) +
@@ -480,6 +477,7 @@ def calc2Dspectra( density, Alpha1, Alpha2, R1, R2, A, ):
 
 def linspace_list( ll, ul, n ):
   return [ ll + pos * (ul - ll)/(n-1) for pos in range(0,n)]
+
 
 def dateFromRaw( line ):
   # Ugly hack #2: This one is truly hideous- not all hourly

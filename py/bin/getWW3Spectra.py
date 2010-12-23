@@ -1,4 +1,6 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
+#SEE BELOW FOR COMMAND LINE ARGUMENTS
+#EXAMPLE CALL: python getWW3Spectra.py 50 35 -120 -130 2010/12/10 2010/12/15 ~/Desktop/tmp
 
 ################################
 # IMPORT MODULES
@@ -10,10 +12,6 @@ import glob #file wildcard support
 import datetime #posix support
 from numpy import * #math support
 from geoalchemy import WKTSpatialElement
-
-################################
-# IMPORT UBIQUITOUS FUNCTIONS
-################################
 from os import path,system,remove
 strptime = datetime.datetime.strptime
 
@@ -23,15 +21,14 @@ strptime = datetime.datetime.strptime
 DBman_path = path.abspath('.')+'/../lib/'
 sys.path.insert( 0, DBman_path )
 from wavecon import DBman
-from wavecon.config import DBconfig
 
 ################################
 # CREATE DATABASE OBJECTS
 ################################
-srctype = DBman.accessTable( DBconfig, 'tblsourcetype' )
-src = DBman.accessTable( DBconfig, 'tblsource')
-spec = DBman.accessTable( DBconfig, 'tblspectra' )
-wave = DBman.accessTable( DBconfig, 'tblwave')
+srctype = DBman.accessTable( None, 'tblsourcetype' )
+src = DBman.accessTable( None, 'tblsource')
+spec = DBman.accessTable( None, 'tblspectrabin' )
+wave = DBman.accessTable( None, 'tblwave')
 
 ################################
 # PARSE COMMAND LINE ARGUMENTS
@@ -48,7 +45,7 @@ locale = 'EKA'
 ################################
 # ADD WWIII TO tblSource
 ################################
-session = DBman.startSession( DBconfig )
+session = DBman.startSession()
 srctypename = 'WWIII'
 existing = session.query(srctype)\
     .filter( srctype.sourcetypename == srctypename )
@@ -72,6 +69,8 @@ session.bind.dispose()
 starttime = strptime( starttime, '%Y/%m/%d' )
 stoptime = strptime( stoptime, '%Y/%m/%d' )
 delta = datetime.timedelta(1) # 24 hour increment
+if (starttime==stoptime):
+    stoptime = starttime + delta
 
 ################################
 # COMPILE REGEX PATTERNS
@@ -93,13 +92,22 @@ while date < stoptime :
     filename = 'enp.' + locale + '*'
     command = '{0} {1} {2}/{3}'.format('wget -A.gz -qP',tmpdir,url,filename)
     system(command)
-    command = 'gunzip ' + tmpdir + '/' + filename
+    command = 'gunzip -qf ' + tmpdir + '/' + filename  
     system(command)
     
     ################################
     # OPEN SESSION, ADD SOURCE TO tblSource
     ################################
-    srcname = srctypename+'_'+date.strftime("%Y%m%d_%H")
+    
+    # choose srcname
+    session = DBman.startSession()
+    for i in range(1000):
+      srcname = srctypename+'_'+date.strftime("%Y%m%d_%H")+'_'+str(i)
+      existing = session.query(src).filter( src.srcname == srcname )
+      if (existing.first() == None):
+          break
+    
+    #create record for tblsource
     record = src(
         srcName=srcname,
         srcConfig='',
@@ -108,7 +116,6 @@ while date < stoptime :
         srcSourceTypeID=srctypeid)
     
     # add record to tblSource
-    session = DBman.startSession( DBconfig )
     session.add(record)
     session.commit()
     
@@ -116,10 +123,11 @@ while date < stoptime :
     srcid = session.query(src)\
         .filter( src.srcname == srcname )\
         .first().id
-    
+
     ################################
     # LOOP THROUGH DOWNLOADED FILES
     ################################
+
     files = glob.glob(tmpdir + '/' + filename)
     for file in files:
         
@@ -136,7 +144,7 @@ while date < stoptime :
         # parse lat/lon
         lat = latlon_match[0][0:5]
         lon = latlon_match[0][5:]
-        loc = WKTSpatialElement('POINT('+lat+' '+lon+')')
+        loc = WKTSpatialElement('POINT('+lon+' '+lat+')')
         
         # parse freq/dir bins
         # NOTE DIRS = DIRECTION OF TRAVEL
@@ -154,16 +162,16 @@ while date < stoptime :
         timestamps = [strptime( ts, '%Y%m%d %H0000' ) for ts in timestamp_match]
         timestamps = array(timestamps)
         filter = (timestamps >= date) & (timestamps < (date+delta))
+        if (all(filter==False)):
+          quit('error: cannot find valid timesteps in WW3 datafile: '+file)
         timestamps = timestamps[filter]
               
         # parse spectra, select only 24hrs of data
         spectra = num_match[(nfreqs+ndirs):]
         spectra = array(spectra)
-        # convert from m^2/Hz/rad to m^2/Hz/degree         
-        spectra = spectra * (pi/180)
+        spectra = spectra * (pi/180) #m^2/Hz/rad to m^2/Hz/degree         
         spectra = spectra.reshape(len(filter),nfreqs,ndirs)
         spectra = spectra[filter,:,:]
-        # convert spectra from numpy array to list
         spectra = spectra.tolist()
         
         ################################
@@ -172,22 +180,22 @@ while date < stoptime :
         
         # determine whether bins exist in db 
         exists = False
-        for rec in session.query(spec) :
-            if (all((array(rec.spectradir) - array(dirs)) < .01) &
-            all((array(rec.spectradir) - array(dirs)) < .01)):
+        for rec in session.query(spec):
+            dirshape = array(rec.spcdir).size==array(dirs).size
+            freqshape = array(rec.spcfreq).size==array(freqs).size
+            dirval = all((array(rec.spcdir) - array(dirs)) < .01)
+            freqval = all((array(rec.spcfreq) - array(freqs)) < .01)
+            if (dirshape and freqshape and dirval and freqval):
                 exists = True
-        
+                specid = rec.id  
+                break         
+ 
         # if bins don't exist in db, add them
         if (exists == False):
             record = spec(freqs,dirs)
             session.add(record)
             session.commit()
-        
-        # get spectra id for use in tblwave
-        for rec in session.query(spec) :
-            if (all((array(rec.spectradir) - array(dirs)) < .01) &
-            all((array(rec.spectradir) - array(dirs)) < .01)):         
-                specid = rec.id
+            specid = record.id
          
         ################################
         # ADD DATA TO tblWave
@@ -196,7 +204,7 @@ while date < stoptime :
             myspec = spectra[i]
             record = wave(
                 wavSourceID=srcid, 
-                wavSpectraID=specid, 
+                wavSpectraBinID=specid, 
                 wavLocation=loc, 
                 wavDateTime=timestamps[i],  
                 wavSpectra=myspec, 
@@ -204,7 +212,6 @@ while date < stoptime :
                 wavPeakDir=None, 
                 wavPeakPeriod=None)
             session.add(record)
-        
         session.commit()
     
     ################################
@@ -212,10 +219,10 @@ while date < stoptime :
     ################################
     session.close()
     session.bind.dispose()   
-    map(remove,files)    
-    date = date+delta    
-        
-###TO DO###
-#date filter not working
-#modulize
-#add try/catch to system calls (skip date if wget failed)
+    command = 'rm -f '+' '.join(files)
+    system(command)
+    date = date+delta
+    
+######TO DO###
+####modulize
+####add try/catch to system calls (skip date if wget failed)
