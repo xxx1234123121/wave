@@ -32,3 +32,18 @@ def compass_to_degrees(comp_angle):
 
 def compass_to_angle(comp_angle):
   return radians(compass_to_degrees(comp_angle))
+
+
+#------------------------------------------------------------------------------
+#  Specialized Coercion Functions
+#------------------------------------------------------------------------------
+def maybe_float(x):
+  # Tries to coerce x to a float, if it fails, it returns NaN instead of raising
+  # an exception.
+  try:
+    value = float(x)
+  except:
+    value = float('nan')
+
+  return value
+

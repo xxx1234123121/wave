@@ -129,20 +129,20 @@ def load_run_metadata(cmcardsPath):
     )
 
   current_data = {
-    'data_file': path.splitext(sim_file)[0] + '_out.h5',
+    'data_file': path.splitext(sim_file)[0] + '_sol.h5',
     'current_vector': '/Dataset/Currents/Values',
     'output_timesteps': getDataOutputTimes(path.splitext(sim_file)[0] +\
-      '_out.h5', '/Dataset/Currents', start_time)
+      '_sol.h5', '/Dataset/Currents', start_time)
   }
 
   wave_data = {
-    'data_file': path.splitext(sim_file)[0] + '_out.h5',
+    'data_file': path.splitext(sim_file)[0] + '_sol.h5',
     'spectra_file': path.join(sim_dir, 'spec.out'),
     'wave_height': '/Dataset/Height/Values',
     'wave_period': '/Dataset/Period/Values',
     'wave_direction': '/Dataset/Direction/Values',
     'output_timesteps': getDataOutputTimes(path.splitext(sim_file)[0] +\
-      '_out.h5', '/Dataset/Currents', start_time)
+      '_sol.h5', '/Dataset/Currents', start_time)
   }
 
   return {

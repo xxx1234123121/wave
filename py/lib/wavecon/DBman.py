@@ -468,7 +468,7 @@ def bulk_import(records, table_template, table_name = None):
 
   temp_file = tempfile.mkstemp()
   os.close(temp_file[0]) # Just wanted the path, thank you
-  temp_file = '/Users/sharpie/code/testbed/CMS/postgres_import.csv'
+  temp_file = temp_file[1]
 
   # Open file in binary mode because the table columns are returned as UTF-8
   # strings and writing UTF-8 to non-binary files results in bad output for some
