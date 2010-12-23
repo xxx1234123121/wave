@@ -19,7 +19,7 @@ from datetime import datetime, timedelta
 from os import path
 from glob import glob
 
-from math import sqrt, atan2
+from math import sqrt, atan2, degrees
 
 
 #------------------------------------------------------------------------------
@@ -35,7 +35,6 @@ import h5py
 from .cmcards import cmcards_parser
 from .gridfiles import telfile_parser, depfile_parser, georeference_grid
 from .engfiles import parse_eng_spectra
-from wavecon.util import compass_degrees
 
 
 #------------------------------------------------------------------------------
@@ -168,7 +167,7 @@ def load_current_data(grid, current_info):
     for j in xrange(data_set.shape[1]):
       yield {
         'speed': sqrt(data_set[i,j,0]**2 + data_set[i,j,1]**2),
-        'direction': compass_degrees(atan2(data_set[i,j,0], data_set[i,j,1])),
+        'direction': degrees(atan2(data_set[i,j,0], data_set[i,j,1])),
         'timestamp': current_info['output_timesteps'][i],
         'location': grid[j]
       }
