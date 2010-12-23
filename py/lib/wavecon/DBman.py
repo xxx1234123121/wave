@@ -468,13 +468,14 @@ def bulk_import(records, table_template, table_name = None):
 
   temp_file = tempfile.mkstemp()
   os.close(temp_file[0]) # Just wanted the path, thank you
-  temp_file = temp_file[1]
+  temp_file = '/Users/sharpie/code/testbed/CMS/postgres_import.csv'
 
   # Open file in binary mode because the table columns are returned as UTF-8
   # strings and writing UTF-8 to non-binary files results in bad output for some
   # reason.
   csv_file = open(temp_file, 'wb')
-  csv_writer = csv.DictWriter(csv_file, fieldnames = table_columns)
+  csv_writer = csv.DictWriter(csv_file, fieldnames = table_columns,
+    delimiter='|') # Need to use a different delimiter due to array notation
 
   # Loop over each record and commit individually with `writerow()` rather than
   # all at once with `writerows()` as records should be a generator and this
@@ -508,7 +509,7 @@ def bulk_import(records, table_template, table_name = None):
   )
 
   csv_file = open(temp_file,'r')
-  cursor.copy_from(csv_file, temp_table, sep = ',', null = '')
+  cursor.copy_from(csv_file, temp_table, sep = '|', null = '')
   csv_file.close()
 
   cursor.execute('''

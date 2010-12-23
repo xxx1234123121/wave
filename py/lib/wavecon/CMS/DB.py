@@ -69,7 +69,7 @@ def WaveDBrecordGenerator(wave_data, model_run_id, spectra_bin_id):
       'wavsourceid': model_run_id,
       'wavspectrabinid': spectra_bin_id,
       'wavdatetime': record['timestamp'],
-      'wavspectra': None,
+      'wavspectra': postgres_csv_array(record['spectra']),
       'wavheight': record['height'],
       'wavpeakdir': record['direction'],
       'wavpeakperiod': record['period'],
@@ -153,4 +153,14 @@ def commitToDB(records):
   _session.commit()
 
   return None
+
+
+#------------------------------------------------------------------------------
+#  Utility Routines
+#------------------------------------------------------------------------------
+def postgres_csv_array(anArray):
+  # Formats an array to a string compatible with Postgres CSV format.
+  return '{' +\
+    ','.join(( '{' + ','.join(map(str,row)) + '}' for row in anArray )) +\
+    '}'
 
