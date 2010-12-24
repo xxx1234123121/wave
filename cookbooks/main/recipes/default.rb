@@ -24,6 +24,23 @@ include_recipe "postgresql::server"
 include_recipe "python"
 include_recipe "pip"
 
+case node[:platform]
+when "debian", "ubuntu"
+  # This whole section is a pretty ugly hack. It will download the *.deb file
+  # every time Chef is run regardless of wheither CMS needs to be upgraded.  A
+  # better solution would be to set up a Debian mirror and seed it with the
+  # software we need.
+  remote_file "/tmp/cms.deb" do
+    source "http://dl.dropbox.com/u/72178/dist/CMS-4.0.0-Linux.deb"
+  end
+
+  package "cms" do
+    version "4.0.0"
+    source "/tmp/cms.deb"
+    provider Chef::Provider::Package::Dpkg # Needed because apt only looks at repos
+  end
+end
+
 
 #===============================================================================
 #  Python modules
