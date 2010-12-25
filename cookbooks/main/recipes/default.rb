@@ -16,20 +16,16 @@ end
 log "Installing required software."
 
 include_recipe "buildtools"
-include_recipe "libraries"
 include_recipe "git"
-
-include_recipe "postgresql::server"
-
 include_recipe "python"
 include_recipe "pip"
 
-case node[:platform]
-when "debian", "ubuntu"
-  # This whole section is a pretty ugly hack. It will download the *.deb file
-  # every time Chef is run regardless of wheither CMS needs to be upgraded.  A
-  # better solution would be to set up a Debian mirror and seed it with the
-  # software we need.
+include_recipe "libraries"
+
+include_recipe "postgresql::server"
+
+
+unless `which cms`.chomp.size > 0
   remote_file "/tmp/cms.deb" do
     source "http://dl.dropbox.com/u/72178/dist/CMS-4.0.0-Linux.deb"
   end
@@ -45,7 +41,6 @@ end
 #===============================================================================
 #  Python modules
 #===============================================================================
-
 log "Installing Python packages."
 
 pipRoot = File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "pip"))
@@ -85,6 +80,12 @@ pip_package "psycopg2"
 pip_package "sqlalchemy"
 pip_package "geoalchemy"
 pip_package "pyproj"
+
+
+#===============================================================================
+#  NCAR, which does not play nice with the other kids.
+#===============================================================================
+include_recipe "NCAR"
 
 
 #===============================================================================
