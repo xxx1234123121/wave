@@ -76,10 +76,14 @@ pip_package "h5py" do
   file "http://dl.dropbox.com/u/72178/dist/h5py-1.3.0.tar.gz"
 end
 
+pip_package "pydap"
+
 pip_package "psycopg2"
 pip_package "sqlalchemy"
 pip_package "geoalchemy"
 pip_package "pyproj"
+
+pip_package "ipython"
 
 
 #===============================================================================
