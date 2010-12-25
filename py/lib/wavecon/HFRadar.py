@@ -43,7 +43,7 @@ sys.path.insert( 0, waveLibs )
 from wavecon import DBman
 from wavecon.config import DBconfig as _DBconfig
 
-from dap.client import open
+from pydap.client import open_url
 
 
 #---------------------------------------------------------------------
@@ -76,7 +76,7 @@ def fetchRecords( north, south, west, east, startTime, stopTime, resolution,
 
 def getData( north, south, west, east, startTime, stopTime, resolution ):
   url = HF_CURRENT_META[ resolution ]['url']
-  dataset = open(url)
+  dataset = open_url(url)
 
   allLons = dataset.lon[:]
   allLats = dataset.lat[:]
