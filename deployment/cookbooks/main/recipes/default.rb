@@ -132,7 +132,7 @@ script "Create postgres user" do
   user node[:postgres_config][:admin_user]
   code <<-RUBY
     user_check = `psql -t -c "SELECT usename FROM pg_user WHERE usename = '#{node[:user]}';"`
-    `psql -c "CREATE USER #{node[:user]} WITH PASSWORD '#{node[:postgrespass]}';"` unless user_check.chomp.size > 0
+    `psql -c "CREATE USER #{node[:user]} WITH PASSWORD '#{node[:postgres_password]}';"` unless user_check.chomp.size > 0
   RUBY
 end
 
