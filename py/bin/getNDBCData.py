@@ -5,17 +5,12 @@
 # 
 # Version:       0.1.0
 # Author:        Charlie Sharpsteen <source@sharpsteen.net>
-# Last Modified: August 17, 2010 by Charlie Sharpsteen
+# Last Modified: December 24, 2010 by Charlie Sharpsteen
 #------------------------------------------------------------------
-
-import sys
-if sys.version_info < (2, 7):
-  import warnings
-  warnings.warn( '''This script was develped on python 2.7, 
-                    there may be bugs with earlier versions!''' )
 
 # Make sure the WaveConnect py/lib folder is on the search path so
 # modules can be retrieved.
+import sys
 from os import path
 scriptLocation = path.dirname(path.abspath( __file__ ))
 waveLibs = path.abspath(path.join( scriptLocation, '..', 'lib' ))
