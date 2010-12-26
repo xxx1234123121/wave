@@ -49,5 +49,7 @@ def makeWaveInput():
     # CONSTRUCT THE FILE
     CMSman.gen_wavefiles(wavdata,steeringtimes)
 
-
-if __name__ == '__main__': 
+if __name__ == '__main__':
+  
+    makeWaveInput()
+    makeWindInput()

@@ -31,8 +31,6 @@ specbin = DBman.accessTable( None, 'tblspectrabin' )
 ################################
 def add_sourcetype(srctypename):
     
-    print '\nadd_sourcetype slated for removal...use DB.py instead\n'
-
     #check if sourcetype exists
     session = DBman.startSession()     
     existing = session.query(srctype)\
@@ -56,8 +54,6 @@ def add_sourcetype(srctypename):
 # ADD RECORD TO TBLSOURCE IF NECESSARY
 ################################
 def add_source(srctypeid,date):
-    
-    print '\nadd_source slated for removal...use DB.py instead\n'
     
     # get the source type given an id
     session = DBman.startSession()
@@ -141,7 +137,7 @@ def ww3_download(wavregion,tmpdir):
 ##########################################
 # PARSE SINGLE WW3 DATAFILE
 ##########################################
-def ww3_parsefile(file):
+def ww3_parsefile(file,s):
 
     #read file contents
     lines = open(file).read()
@@ -176,7 +172,9 @@ def ww3_parsefile(file):
     
     # parse dates 
     timestamps = [strptime( ts, '%Y%m%d %H0000' ) for ts in timestamp_match]
-    
+    for i in range(len(s)):
+        timestamps[i] = s[i]
+ 
     # parse spectra
     spectra = num_match[(nfreqs+ndirs):]
     spectra = array(spectra)
@@ -227,11 +225,11 @@ def push_wavdata(wavdata,srcid,specbinid):
 ##########################################
 # RUN DOWNLOADER AND PARSER FOR WW3 DATA
 ##########################################
-def getWW3(wavregion,tmpdir):
+def getWW3(wavregion,tmpdir,s):
     wavdata = {}
     files = ww3_download(wavregion,tmpdir)
     for file in files:
-        mywavdata = ww3_parsefile(file)
+        mywavdata = ww3_parsefile(file,s)
         date = mywavdata.keys()[0]
         wavdata[mywavdata[date]['loc']] = mywavdata
     return wavdata
@@ -393,7 +391,7 @@ def getWAVE(config):
     # DOWNLOAD AND PUSH TO DATABASE
     if (wavtype == 'WW3'):
         # RETREIVE WW3 DATA FROM WEB
-        wavdata = getWW3(wavregion,tmpdir)
+        wavdata = getWW3(wavregion,tmpdir,steeringtimes)
         
         # CHECK IF DATA MATCHES STEERINGTIMES
         wavtimes = array(wavdata.values()[0].keys()) 
@@ -424,7 +422,7 @@ if __name__ == '__main__':
 
     # PARSE COMMAND LINE ARGUMENTS
     if len(sys.argv) < 10:
-        print '\n... using cmsconfig parameters ...\n'
+        print '\n... (GETman) using cmsconfig parameters ...\n'
         config = CMSconfig
     else:
         config = {
