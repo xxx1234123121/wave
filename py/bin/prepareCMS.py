@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
 
 ################################
 # IMPORT MODULE FUNCTIONS
@@ -6,61 +6,48 @@
 import sys,os
 libdir = os.path.abspath('.')+'/../lib/'
 sys.path.insert( 0, libdir )
-from wavecon import CMSman
+from wavecon import CMSman,GETman
 from wavecon.config import CMSconfig
 from datetime import timedelta
 
-lon_ll = CMSconfig['lon_ll']
-lat_ll = CMSconfig['lat_ll']
-lon_ur = CMSconfig['lon_ur']
-lat_ur = CMSconfig['lat_ur']
-tmpdir = CMSconfig['tmpdir']
-
 ################################
-# EXECUTABLE SECTION
+# CREATE WIND INPUT
 ################################
-if __name__ == '__main__':
+def makeWindInput():
   
-  #DEFINE SPATIAL DOMAIN
-  box = CMSman.makebox()
+  #DEFINE SPATIAL/TEMPORAL DOMAIN
   grid = CMSman.makegrid()
-
-  #DEFINE TEMPORAL DOMAIN
-  steeringtimes = CMSman.maketimes()  
-  starttime = steeringtimes[0].strftime('%Y/%m/%d')
-  stoptime = steeringtimes[len(steeringtimes)-1].strftime('%Y/%m/%d')
-
-  #RETRIEVE WAVE DATA FROM DATABASE
-  wavdata = CMSman.getwavedata(box,steeringtimes)
-  if (wavdata==None):
-    print '\n... downloading new data from WWIII ... \n'
-    command = ' '.join(['./getWW3Spectra.py',lat_ur,lat_ll,
-    lon_ur,lon_ll,starttime,stoptime,tmpdir])
-    os.system(command)
-    wavdata = CMSman.getwavedata(box,steeringtimes)
-
-  #RETRIEVE WIND DATA FROM DATABASE
-  windata = CMSman.getwinddata(None,steeringtimes)
-  if (windata==None):
-    print '\n... downloading new data from NAM12 ... \n'
-    command = ' '.join(['./getNAM12Wind.py',lat_ur,lat_ll,
-    lon_ur,lon_ll,starttime,stoptime,tmpdir])
-    os.system(command)
-    windata = CMSman.getwinddata(None,steeringtimes)
+  steeringtimes = CMSman.maketimes(None,None,None)  
   
-  #INTERPOLATE SPECTRA TO HALF_PLANE (NEW DIRECTIONAL BINS)
-  wavdata = CMSman.interpolatespectra(wavdata)
-
-  #FIND PEAK FREQUENCIES FOR EACH SPECTRA
-  wavdata = CMSman.calculatepeakfreq(wavdata)
-
-  #CREATE WAVE INPUT FILE AND MOVE TO CMS DIRECTORY
-  if (wavdata==None):
-    quit('\n WW3 ERROR: MISSING DATA \n')
-  CMSman.gen_wavefiles(wavdata,steeringtimes)     
-   
-  #CREATE WIND INPUT FILE AND MOVE TO CMS DIRECTORY
+  #RETRIEVE WIND DATA FROM DATABASE
+  windata = CMSman.getwinddata(None,steeringtimes) #add wintype
   if (windata==None):
-    quit('\n NAM12 ERROR: MISSING DATA \n')
-  CMSman.gen_windfiles(windata,grid,steeringtimes)     
-   
+    print '\n... downloading new wind data ... \n'
+    GETman.getWIND(CMSconfig)
+    windata = CMSman.getwinddata(None,steeringtimes) #add wintype
+  
+  # CONSTRUCT THE FILE
+  CMSman.gen_windfiles(windata,grid,steeringtimes)
+
+
+################################
+# CREATE WAVE INPUT
+################################
+def makeWaveInput():
+    
+    #DEFINE SPATIAL/TEMPORAL DOMAIN
+    box = CMSman.makebox()
+    steeringtimes = CMSman.maketimes(None,None,None)
+
+    #RETRIEVE WAVE DATA FROM DATABASE
+    wavdata = CMSman.getwavedata(box,steeringtimes) #add wavtype
+    if (wavdata==None):
+      print '\n... downloading new wave data ... \n'
+      GETman.getWAVE(CMSconfig)
+      wavdata = CMSman.getwavedata(box,steeringtimes) #add wavtype 
+    
+    # CONSTRUCT THE FILE
+    CMSman.gen_wavefiles(wavdata,steeringtimes)
+
+
+if __name__ == '__main__': 

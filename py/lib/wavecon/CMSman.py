@@ -23,12 +23,12 @@ def makebox():
   lat_ll = CMSconfig['lat_ll']
   lon_ur = CMSconfig['lon_ur']
   lat_ur = CMSconfig['lat_ur']
-  proj = CMSconfig['projection']
+  projection = CMSconfig['projection']
   
   #create box2d object (in projected coordinates)
-  point_ll = 'ST_TRANSFORM(ST_SETSRID(ST_POINT('+lon_ll+','+lat_ll+'),4236),'+proj+')'
-  point_ur = 'ST_TRANSFORM(ST_SETSRID(ST_POINT('+lon_ur+','+lat_ur+'),4326),'+proj+')'
-  box = 'ST_SETSRID(ST_MAKEBOX2D('+point_ll+','+point_ur+'),'+proj+')'
+  point_ll = 'ST_TRANSFORM(ST_SETSRID(ST_POINT('+west+','+south+'),4236),'+projection+')'
+  point_ur = 'ST_TRANSFORM(ST_SETSRID(ST_POINT('+east+','+north+'),4326),'+projection+')'
+  box = 'ST_SETSRID(ST_MAKEBOX2D('+point_ll+','+point_ur+'),'+projection+')'
   return box
 
 ################################
@@ -42,38 +42,41 @@ def makegrid():
   lat_ur = CMSconfig['lat_ur']
   nx = int(CMSconfig['nx'])
   ny = int(CMSconfig['ny'])
-  proj = CMSconfig['projection']
+  projection = CMSconfig['projection']
   
   #build query
-  point_ll = 'ST_TRANSFORM(ST_SETSRID(ST_POINT('+lon_ll+','+lat_ll+'),4236),'+proj+')'
-  point_ur = 'ST_TRANSFORM(ST_SETSRID(ST_POINT('+lon_ur+','+lat_ur+'),4326),'+proj+')'  
+  point_ll = 'ST_TRANSFORM(ST_SETSRID(ST_POINT('+west+','+south+'),4236),'+projection+')'
+  point_ur = 'ST_TRANSFORM(ST_SETSRID(ST_POINT('+east+','+north+'),4326),'+projection+')'  
   query = 'select ST_X('+point_ll+'),ST_Y('+point_ll+'),ST_X('+point_ur+'),ST_Y('+point_ur+')'
   
   #execute query
   session = DBman.startSession()
   result = session.execute(query).fetchall()
-  lon_ll,lat_ll,lon_ur,lat_ur = result[0] 
-  
+  west,south,east,north = result[0] 
+  session.close()
+  session.bind.dispose()  
+
   #create meshgrid object 
-  gridx = linspace(float(lon_ll),float(lon_ur),nx)
-  gridy = linspace(float(lat_ll),float(lat_ur),ny)
+  gridx = linspace(float(west),float(east),nx)
+  gridy = linspace(float(south),float(north),ny)
   grid = meshgrid(gridx,gridy)
   return grid
 
 ################################
 # CALCULATE STEERING TIMES
 ################################
-def maketimes():
-  
-  starttime = CMSconfig['starttime']
-  duration = float(CMSconfig['simduration'])
-  steeringinterval = float(CMSconfig['steeringinterval'])
+def maketimes(starttime,simduration,steeringinterval):
+
+  if (starttime==None or simduration==None or steeringinterval==None):
+      starttime = CMSconfig['starttime']
+      simduration = float(CMSconfig['simduration'])
+      steeringinterval = float(CMSconfig['steeringinterval'])
   
   #create datetime objects  
-  duration = datetime.timedelta(float(duration)/24.0)
+  simduration = datetime.timedelta(float(simduration)/24.0)
   steeringinterval = datetime.timedelta(float(steeringinterval)/24.0)
   starttime = strptime( starttime, '%Y%m%d%H' )
-  stoptime = starttime+duration
+  stoptime = starttime+simduration
 
   #determine steering times
   steeringtimes = []
@@ -90,7 +93,7 @@ def maketimes():
 def getwavedata(box,steeringtimes):
   
   #define constants
-  proj = CMSconfig['projection']
+  projection = CMSconfig['projection']
   starttime = steeringtimes[0]
   stoptime = steeringtimes[len(steeringtimes)-1]
   starttime = starttime.strftime('%Y%m%d %H:00' )
@@ -101,14 +104,14 @@ def getwavedata(box,steeringtimes):
   #construct query
   q1 = ' select wavid from tblwave '
   q2 = ' where ST_WITHIN(ST_TRANSFORM( '
-  q3 = ' wavlocation,'+proj+'),'+box+')'
+  q3 = ' wavlocation,'+projection+'),'+box+')'
   q4 = ' and wavdatetime>='+starttime
   q5 = ' and wavdatetime<='+stoptime
   subquery = q1+q2+q3+q4+q5
   q1 = ' select wavspectra,wavspectrabinid,'
   q2 = ' wavdatetime,wavlocation,'
-  q3 = ' ST_X(ST_TRANSFORM(wavlocation,'+proj+')),'
-  q4 = ' ST_Y(ST_TRANSFORM(wavlocation,'+proj+')) '
+  q3 = ' ST_X(ST_TRANSFORM(wavlocation,'+projection+')),'
+  q4 = ' ST_Y(ST_TRANSFORM(wavlocation,'+projection+')) '
   q5 = ' from tblwave where wavid in ('+subquery+')'
   query = q1+q2+q3+q4+q5
   
@@ -149,6 +152,7 @@ def getwavedata(box,steeringtimes):
   
   #close session and return
   session.close()
+  session.bind.dispose()
   wavdata = {
     'spec':spec,'time':wavtime,'x':wavx,
     'y':wavy,'freq':freq,'dir':dir,'loc':wavloc}
@@ -160,7 +164,7 @@ def getwavedata(box,steeringtimes):
 def getwinddata(box,steeringtimes):
 
   #define constants
-  proj = CMSconfig['projection']
+  projection = CMSconfig['projection']
   starttime = steeringtimes[0]
   stoptime = steeringtimes[len(steeringtimes)-1]
   starttime = starttime.strftime('%Y%m%d %H:00' )
@@ -175,11 +179,11 @@ def getwinddata(box,steeringtimes):
   subquery = q1+q2+q3
   if (box != None):
     q4 = ' and ST_WITHIN(ST_TRANSFORM( '
-    q5 = ' winlocation,'+proj+'),'+box+')'
+    q5 = ' winlocation,'+projection+'),'+box+')'
     subquery = subquery+q4+q5
   q1 = ' select winspeed,windirection,windatetime,'
-  q2 = ' ST_X(ST_TRANSFORM(winlocation,'+proj+')),'
-  q3 = ' ST_Y(ST_TRANSFORM(winlocation,'+proj+')) '
+  q2 = ' ST_X(ST_TRANSFORM(winlocation,'+projection+')),'
+  q3 = ' ST_Y(ST_TRANSFORM(winlocation,'+projection+')) '
   q4 = ' from tblwind where winid in ('+subquery+')'
   query = q1+q2+q3+q4
 
@@ -206,6 +210,7 @@ def getwinddata(box,steeringtimes):
 
   #close session and return
   session.close()
+  session.bind.dispose()
   windata = {
     'speed':winspeed,'dir':windir,
     'time':wintime,'x':winx,'y':winy }
@@ -265,11 +270,20 @@ def calculatepeakfreq(wavdata):
 # GENERATE A CMS SPECTRA FILE 
 ################################
 def gen_wavefiles(wavdata,steeringtimes):
+ 
+  if (wavdata==None):
+    quit('\n CANNOT GENERATE INPUT FILE: MISSING WAVE DATA \n')
+  
+  wavdata = interpolatespectra(wavdata)
+  wavdata = calculatepeakfreq(wavdata)  
 
-  nestfn = CMSconfig['nestfile']
-  metafn = CMSconfig['metafile']
-  tmpdir = CMSconfig['tmpdir']
-  cmsdir = CMSconfig['cmsdir']
+  #nestfn = CMSconfig['nestfile']
+  #metafn = CMSconfig['metafile']
+  #tmpdir = CMSconfig['tmpdir']
+  #cmsdir = CMSconfig['cmsdir']
+  nestfn=nestfile
+  metafn=metafile
+
   loc = wavdata['loc']
   freq = wavdata['freq']
   dir = wavdata['dir']
@@ -345,12 +359,16 @@ def gen_wavefiles(wavdata,steeringtimes):
 ################################
 def gen_windfiles(windata,grid,steeringtimes):
 
+  if (windata==None):
+    quit('\n CANNOT GENERATE INPUT FILE: MISSING WIND DATA \n')
+
   #import constants
-  nx = int(CMSconfig['nx'])
-  ny = int(CMSconfig['ny'])
-  tmpdir = CMSconfig['tmpdir']
-  cmsdir = CMSconfig['cmsdir']
-  windfn = CMSconfig['windfile']
+  #nx = int(CMSconfig['nx'])
+  #ny = int(CMSconfig['ny'])
+  #tmpdir = CMSconfig['tmpdir']
+  #cmsdir = CMSconfig['cmsdir']
+  #windfn = CMSconfig['windfile']
+  windfn = windfile
   winspeed = windata['speed']
   windir = windata['dir']
   wintime = windata['time']
