@@ -40,7 +40,6 @@ def add_sourcetype(srctypename):
     if ( existing.first() == None ):
         #if doesn't exist,  add new sourcetype to db
         record = srctype(srctypename)                              
-        print '\nadding new sourcetype:'+srctypename+'\n'
         session.add(record)
         session.commit()
         srctypeid = record.id
@@ -82,7 +81,6 @@ def add_source(srctypeid,date):
     srcSourceTypeID=srctypeid)
     
     # add record to tblSource
-    print '\nadding new source:'+srcname+'\n'
     session.add(record)    
     session.commit()
     srcid = record.id
@@ -126,16 +124,16 @@ def ww3_download(wavregion,tmpdir):
     
     url = 'ftp://polar.ncep.noaa.gov/pub/waves/latest_run/'
     filename = 'enp.' + wavregion + '*'
-    print 'downloading WW3 latest run'       
+    print '\ndownloading WW3 latest run...'       
     command1 = 'rm -f ' + tmpdir + '/' + filename
     command2 = '{0} {1} {2}/{3}'.format('wget -A.gz -qP',tmpdir,url,filename)
     command3 = 'gunzip -q ' + tmpdir + '/' + filename  
     flag = os.system(command1)                              
-    if (flag!=0): quit('ERROR: COULD NOT REMOVE EXISTING WW3 FILES')
+    if (flag!=0): quit('\nERROR: COULD NOT REMOVE EXISTING WW3 FILES')
     flag = os.system(command2)
-    if (flag!=0): quit('ERROR: COULD NOT DOWNLOAD WW3 DATA')
+    if (flag!=0): quit('\nERROR: COULD NOT DOWNLOAD WW3 DATA')
     flag = os.system(command3)
-    if (flag!=0): quit('ERROR: COULD NOT GUNZIP WW3 DATA')
+    if (flag!=0): quit('\nERROR: COULD NOT GUNZIP WW3 DATA')
     print 'done'
     files = glob(tmpdir + '/' + filename)
     return files
@@ -198,16 +196,10 @@ def ww3_parsefile(file):
 ##########################################
 # ADD RECORDS TO TBLWAVE
 ##########################################
-def push_wavdata(wavdata,srcid,):
+def push_wavdata(wavdata,srcid,specbinid):
 
     session = DBman.startSession()
     for loc in sort(wavdata.keys()):           
-        
-        # add record to tblspectrabin if neccessary
-        date = sort(wavdata[loc].keys())[0]
-        specbinid = add_spectrabin(
-        wavdata[loc][date]['freqs'],
-        wavdata[loc][date]['dirs'])
         
         for date in sort(wavdata[loc].keys()):
             
@@ -226,9 +218,7 @@ def push_wavdata(wavdata,srcid,):
             session.add(record)
 
     # close session
-    print '\ncommiting ww3 session\n'
     session.commit()
-    print 'done'
     session.close()
     session.bind.dispose()
     return
@@ -250,10 +240,15 @@ def getWW3(wavregion,tmpdir):
 # DOWNLOAD NAM12 FILE 
 ################################
 def nam12_download(date,north,south,east,west,tmpdir):
+    print '\ndownloading NAM12 date: '+str(date)+'...'
     myurl = nam12_url(date,north,south,east,west)
     tmpfile = tmpdir + '/tmp.nc'
-    print 'downloading NAM12 date:'+str(date)
-    urllib.urlretrieve(url=myurl,filename=tmpfile)
+    command1 = 'rm -f ' + tmpfile
+    command2 = '{0} {1} \'{2}\''.format('wget -qO',tmpfile,myurl)
+    flag = os.system(command1)
+    if (flag!=0): quit('\nERROR: COULD NOT REMOVE EXISTING NAM12 FILE')
+    flag = os.system(command2)
+    if (flag!=0): quit('\nERROR: COULD NOT DOWNLOAD NAM12 FILE')
     print 'done'
     return tmpfile
 
@@ -313,9 +308,7 @@ def push_windata(windata,srcid):
             session.add(record)    
       
     # commit and close session
-    print 'commiting nam12 session, # points ='+str(lats.shape[0]*lats.shape[1])  
     session.commit()
-    print 'done'
     session.close() 
     session.bind.dispose()
     return 
@@ -360,9 +353,22 @@ def getWIND(config):
   
   # DOWNLOAD AND PUSH TO DATABASE
   if wintype=='NAM12': 
+      
+      # RETRIEVE NAM12 DATA FROM WEB
       windata = getNAM12(steeringtimes,north,south,east,west,tmpdir)
+      
+      # CHECK IF DATA MATCHES STEERINGTIMES
+      wintimes = array(windata.keys())
+      for mytime in steeringtimes:
+          if (not any(wintimes == mytime)):
+              quit('\nERROR: no nam12 data available for time:'+str(mytime))
+
+      # ADD NEW SOURCE TO DATABASE
       srcid = add_source(srctypeid,steeringtimes[0])
+
+      # ADD WIND-DATA TO DATABASE
       push_windata(windata,srcid)
+  
   else: quit('oops, i can only support wintype=NAM12')
   return
 
@@ -388,19 +394,26 @@ def getWAVE(config):
     if (wavtype == 'WW3'):
         # RETREIVE WW3 DATA FROM WEB
         wavdata = getWW3(wavregion,tmpdir)
-        #for date in steeringtimes:
-        #    if not any()
+        
+        # CHECK IF DATA MATCHES STEERINGTIMES
+        wavtimes = array(wavdata.values()[0].keys()) 
+        for mytime in steeringtimes:
+            if (not any(wavtimes == mytime)):
+                quit('\nERROR: no ww3 data available for time:'+str(mytime))
+        
         # ADD NEW SOURCE TO DATABASE
         srcid = add_source(srctypeid,steeringtimes[0])
+        
         # ADD SPECTRAL-BINS TO DATABASE 
         loc = sort(wavdata.keys())[0]
         date = sort(wavdata[loc].keys())[0]
         freqs = wavdata[loc][date]['freqs']
         dirs = wavdata[loc][date]['dirs']
         specbinid = add_spectrabin(freqs,dirs)
+
         # ADD SPECTRAL-DATA TO DATABASE        
-        push_wavdata(wavdata,srcid)
-        print '\ndone pushing wavdata: '+srcid+'\n'
+        push_wavdata(wavdata,srcid,specbinid)
+
     else: quit('oops, i can only support wavtype=WW3')
     return
 
@@ -411,7 +424,7 @@ if __name__ == '__main__':
 
     # PARSE COMMAND LINE ARGUMENTS
     if len(sys.argv) < 10:
-        print '... using cmsconfig parameters...'
+        print '\n... using cmsconfig parameters ...\n'
         config = CMSconfig
     else:
         config = {
@@ -428,6 +441,6 @@ if __name__ == '__main__':
         'wavregion':sys.argv[11] }
                             
     # DOWNLOAD DATA AND PUSH TO DATABASE 
-    #getWIND(config)
     getWAVE(config) 
+    getWIND(config)
 
