@@ -3,16 +3,16 @@
 ################################
 # IMPORT MODULES AND CONFIG SETTINGS
 ################################
-import datetime #posix support
+import os #run system commands
+import datetime #sposix support
 import glob #file wildcard support
 import re #regex support
 from numpy import * #math support
-from os import path,system,remove
-strptime = datetime.datetime.strptime
 import DBman
 from config import CMSconfig
 from math import sin,cos
 from griddata import griddata
+strptime = datetime.datetime.strptime
 
 ################################
 # DEFINE POSTGIS BOX-OBJECT
@@ -344,9 +344,9 @@ def gen_wavefiles(wavdata,steeringtimes):
             file.write('\t'+line+'\n')
       file.close()
     metafile.close()
-    system('./mergeENG.exe < '+metafn)
-    system('rm /'+tmpdir+'/*.eng '+metafn)
-    system('mv '+nestfn+' '+cmsdir)
+    os.system('./mergeENG.exe < '+metafn)
+    os.system('rm /'+tmpdir+'/*.eng '+metafn)
+    os.system('mv '+nestfn+' '+cmsdir)
     return 
 
 ################################
@@ -395,5 +395,5 @@ def gen_windfiles(windata,grid,steeringtimes):
       lines = '\n'.join(lines)
       winfile.write(lines+'\n')
   winfile.close()
-  system('mv '+windfn+' '+cmsdir)
+  os.system('mv '+windfn+' '+cmsdir)
   return

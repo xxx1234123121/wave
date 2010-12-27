@@ -120,7 +120,7 @@ def ww3_download(wavregion,tmpdir):
     
     url = 'ftp://polar.ncep.noaa.gov/pub/waves/latest_run/'
     filename = 'enp.' + wavregion + '*'
-    print '\ndownloading WW3 latest run...'       
+    print '\ndownloading WW3 data...'       
     command1 = 'rm -f ' + tmpdir + '/' + filename
     command2 = '{0} {1} {2}/{3}'.format('wget -A.gz -qP',tmpdir,url,filename)
     command3 = 'gunzip -q ' + tmpdir + '/' + filename  
