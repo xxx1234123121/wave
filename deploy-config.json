@@ -1,6 +1,6 @@
 {
   "user": "wave",
-  "user_password": "$1$tVOjLsRs$NYK5.YP9zIq93OMY/qUFj1",
+  "user_password": "aPassword",
   "user_home": "/home/wave",
   "postgres_password": "aPassword",
   "postgres_config": {
