@@ -53,12 +53,12 @@ def processArgs():
   """Processes command-line arguments and returns a loaded ArgumentParser."""
   import argparse
 
-  parser = argparse.ArgumentParser( description = 'postCMS: CMS model post processor' )
+  parser = argparse.ArgumentParser( description = 'cms-postprocess: CMS model post processor' )
 
   # Flag arguments- these are optional and distinguished by -something
   parser.add_argument( '-v', action = 'store_true', dest = 'be_verbose',
-                       help = '''Should postCMS spare no bytes in order to produce
-                       as much output as possible?''' )
+                       help = '''Should `cms-postprocess` spare no bytes in
+                       order to produce as much output as possible?''' )
 
   parser.add_argument( '--format', action = 'store', dest ='output_format',
                        choices = ['database', 'json','matlab'],
