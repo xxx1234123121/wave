@@ -1,0 +1,12 @@
+{
+  "north" : "50",
+  "south" : "35",
+  "east" : "-120",
+  "west" : "-130",
+  "nx" : "156",
+  "ny" : "191",
+  "projection" : "26941",
+  "wintype" : "NAM12",
+  "wavtype" : "WW3",
+  "wavregion" : "EKA"
+}
