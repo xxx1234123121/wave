@@ -185,7 +185,7 @@ puts "- Forecasting software and database, owned by a new user."
 config = get_config_opts
 config[:run_list] = ['main']
 
-work_dir = (Pathname Dir.pwd) + 'work'
+work_dir = Pathname Dir.tmpdir
 work_dir.mkdir unless File.directory? work_dir
 
 Dir.chdir work_dir do
@@ -197,11 +197,14 @@ Dir.chdir work_dir do
   config_file.write JSON.dump(config)
   config_file.close
 
-  ohai "Running Chef..."
+  ohai "Running Chef... This may require a root password..."
   control_file = work_dir + "deploy.rb"
   config_file = work_dir + "deploy-config.json"
-  sudo "chef-solo", "-c #{control_file}", "-j #{config_file}"
+  sudo "chef-solo -c #{control_file} -j #{config_file}"
 end
+
+ohai "Cleaning up after installation..."
+work_dir.unlink
 
 ohai "Installation successful!"
 warn "In order to use MATLAB matlab components, you will need to install MATLAB." unless Kernel.system "/usr/bin/which matlab"
