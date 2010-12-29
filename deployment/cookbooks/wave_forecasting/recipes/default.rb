@@ -1,6 +1,9 @@
+require "pathname"
+require "json"
+wave_root = (Pathname node[:user_home]) + "wave"
+
 #  User creation
 #-------------------------------------------------------------------------------
-
 log "Isolating modeling environment with a new user."
 
 case node[:platform]
@@ -70,7 +73,7 @@ pg_uuid = File.join(pg_contrib, "uuid-ossp.sql")
 pg_postgis = File.join(pg_contrib, "postgis-1.5", "postgis.sql" )
 pg_spatial = File.join(pg_contrib, "postgis-1.5", "spatial_ref_sys.sql" )
 
-wave_model_schema = File.join(node[:user_home], "wave", "db", "design", "wave.psql")
+wave_model_schema = wave_root + "db" + "design" + "wave.psql"
 
 pg_db = node[:postgres_config][:production_db]
 script "Create production database" do
@@ -127,3 +130,39 @@ script "Create test database" do
     end
   RUBY
 end
+
+#  Database Creation
+#-------------------------------------------------------------------------------
+log "Configuring forecast environment."
+
+ruby_block "generate_dbconfig" do
+  block do
+    dbconfig = wave_root + "config" + "dbconfig.json"
+    dbconfig_template = wave_root + "config" + "dbconfig.json.example"
+    unless File.file? dbconfig
+      dbconfig_hash = JSON.load File.open dbconfig_template
+      dbconfig_hash["username"] = node[:user]
+      dbconfig_hash["password"] = node[:user_password]
+      dbconfig_hash["database"] = node[:postgres_config][:production_db]
+      output = File.open dbconfig, 'w'
+      output.write JSON.pretty_generate dbconfig_hash
+      output.close
+    end
+  end
+end
+
+ruby_block "generate_cmsconfig" do
+  block do
+    cmsconfig = wave_root + "config" + "cmsconfig.json"
+    cmsconfig_template = wave_root + "config" + "cmsconfig.json.example"
+    unless File.file? cmsconfig
+      cmsconfig_hash = JSON.load File.open cmsconfig_template
+      cmsconfig_hash["cmsdir"] = "/usr/bin"
+      cmsconfig_hash["tmpdir"] = "/tmp"
+      output = File.open cmsconfig, 'w'
+      output.write JSON.pretty_generate cmsconfig_hash
+      output.close
+    end
+  end
+end
+
