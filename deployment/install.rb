@@ -125,7 +125,7 @@ end
 ####################################################################### script
 ohai "Checking installer requirements:"
 print "Checking for Chef... "
-if Kernel.system "/usr/bin/which -s chef-solo"
+if Kernel.system "/usr/bin/which chef-solo"
   puts "\t#{Tty.green}Found#{Tty.reset}"
 else
   puts "\t#{Tty.red}Not Found#{Tty.reset}"
@@ -201,5 +201,5 @@ Dir.chdir work_dir do
 end
 
 ohai "Installation successful!"
-warn "In order to use MATLAB matlab components, you will need to install MATLAB." unless Kernel.system "/usr/bin/which -s matlab"
+warn "In order to use MATLAB matlab components, you will need to install MATLAB." unless Kernel.system "/usr/bin/which matlab"
 
