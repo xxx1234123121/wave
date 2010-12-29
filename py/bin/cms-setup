@@ -16,6 +16,15 @@ scriptLocation = path.dirname(path.abspath( __file__ ))
 waveLibs = path.abspath(path.join( scriptLocation, '..', 'lib' ))
 sys.path.insert( 0, waveLibs )
 
+from datetime import datetime
+
+
+#------------------------------------------------------------------------------
+#  Imports from WaveConnect libraries
+#------------------------------------------------------------------------------
+from wavecon.config import CMS_SIM_DIR, CMSConfig
+from wavecon.CMS import setup_model_run
+
 
 #------------------------------------------------------------------
 #  Utility Functions
@@ -30,7 +39,7 @@ def ISO_datestring( aString ):
 
   """
 
-  return datetime.datetime.strptime( aString, '%Y-%m-%dT%H:%M:%S' )
+  return datetime.strptime( aString, '%Y-%m-%dT%H:%M:%S' )
 
 
 #------------------------------------------------------------------
@@ -40,42 +49,44 @@ def processArgs():
   """Processes command-line arguments and returns a loaded ArgumentParser."""
   import argparse
 
-  parser = argparse.ArgumentParser( description = 'postCMS: CMS model post processor' )
+  parser = argparse.ArgumentParser( description = 'cms-setup: CMS model run configuration' )
 
   # Flag arguments- these are optional and distinguished by -something
   parser.add_argument( '-v', action = 'store_true', dest = 'be_verbose',
-                       help = '''Should postCMS spare no bytes in order to produce
+                       help = '''Should `cms-setup` spare no bytes in order to produce
                        as much output as possible?''' )
 
-  parser.add_argument( '--format', action = 'store', dest ='output_format',
-                       choices = ['database', 'json','matlab'],
-                       default = 'json',
-                       help = '''The format of output- may be 'database', 'json'
-                       or 'matlab'.  If database is selected, downloaded data
-                       will be serialized to a relational database.  If json
-                       output is selected, downloaded data will be serialized to
-                       JSON format and either dumped to the screen or written to
-                       a file depending on the values of windFile and
-                       waveFile.  When matlab is selected, the SciPy library
-                       will be used to create a mat file, again using the names
-                       passed by windFile and waveFile.'''
-                     )
-
-  parser.add_argument( '--output-file', action = 'store', dest="outFile", default = '',
-                       help = '''If --format was set to json (the default),
-                       specifies the name of the output file to which downloaded
-                       wind data should be dumped as JSON records.  If left
-                       blank, records will be written to the screen.  If
-                       --format was set to matlab, specifies the name of the
-                       output file (.mat will be automagically appended).  If
-                       left blank, a default filename of CMSoutput.mat will be
-                       used.''' )
 
   # Positional arguments- these are not identified by a flag.  Rather their
   # meaning is inferred from their position in the command line.
-  parser.add_argument( 'cmcards', metavar = 'cmcards file', type = check_cmcards,
-                       help = '''The path to the cmcards file of the CMS run you
-                       wish to post-process.''' )
+  parser.add_argument( 'sim_name', metavar = 'SIMNAME',
+                       choices=CMS_SIM_DIR.list_simulations(),
+                       help = '''The name of a simulation that the run is to be
+                       based on. {0}'''.format(CMS_SIM_DIR) )
+
+  parser.add_argument( 'sim_label', metavar = 'SIMLABEL',
+                       help = '''A label for model run.  `cms-postprocess` will
+                       tag results as "SIMNAME-SIMLABEL" when importing data.''' )
+
+  parser.add_argument( 'sim_starttime', metavar = 'START_TIME', 
+                       type = ISO_datestring,
+                       help = '''A start time for the simulation.  Must be in
+                       the following format "year-month-dayThour:minute:second".
+                       Note the "T" that seperates the date from the time''' )
+
+  parser.add_argument( 'sim_runtime', metavar = 'SIM_RUNTIME', type = float,
+                       help = '''The number of hours for which the model should
+                       run.''' )
+
+  parser.add_argument( 'sim_timestep', metavar = 'SIM_TIMESTEP',
+                       type = float, default = 1.0, nargs = '?',
+                       help = '''The timestep, in hours, at which the model
+                       should record output.''' )
+
+  parser.add_argument( 'sim_ramptime', metavar = 'SIM_RAMPTIME',
+                       type = float, default = 0.25, nargs = '?',
+                       help = '''The amount of time, in days, that the model
+                       should be given as a warm-up period.''' )
 
   args = parser.parse_args()
   return args
@@ -89,4 +100,5 @@ if __name__ == '__main__':
   """
 
   args = processArgs()
+  setup_model_run(**args.__dict__)
 
