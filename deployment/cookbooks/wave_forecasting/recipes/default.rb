@@ -56,7 +56,7 @@ script "Create postgres user" do
   user node[:postgres_config][:admin_user]
   code <<-RUBY
     user_check = `psql -t -c "SELECT usename FROM pg_user WHERE usename = '#{node[:user]}';"`
-    `psql -c "CREATE USER #{node[:user]} WITH PASSWORD '#{node[:postgres_password]}';"` unless user_check.chomp.size > 0
+    `psql -c "CREATE USER #{node[:user]} WITH PASSWORD '#{node[:user_password]}';"` unless user_check.chomp.size > 0
   RUBY
 end
 
@@ -72,7 +72,7 @@ pg_spatial = File.join(pg_contrib, "postgis-1.5", "spatial_ref_sys.sql" )
 
 wave_model_schema = File.join(node[:user_home], "wave", "db", "design", "wave.psql")
 
-pg_db = node[:postgres_config][:productionDB]
+pg_db = node[:postgres_config][:production_db]
 script "Create production database" do
   interpreter "ruby"
   user node[:postgres_config][:admin_user]
@@ -100,7 +100,7 @@ script "Create production database" do
   RUBY
 end
 
-pg_db = node[:postgres_config][:testDB]
+pg_db = node[:postgres_config][:test_db]
 script "Create test database" do
   interpreter "ruby"
   user node[:postgres_config][:admin_user]

@@ -2,11 +2,10 @@
   "user": "wave",
   "user_password": "aPassword",
   "user_home": "/home/wave",
-  "postgres_password": "aPassword",
   "postgres_config": {
     "admin_user": "postgres",
-    "productionDB": "wave",
-    "testDB": "wavetest"
+    "production_db": "wave",
+    "test_db": "wavetest"
   },
   "run_list": ["main"]
 }
