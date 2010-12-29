@@ -7,7 +7,7 @@ $PROJECT_ROOT/config
 
 
 **Development Status:**
-  **Last Modified:** December 22, 2010 by Charlie Sharpsteen
+  **Last Modified:** December 29, 2010 by Charlie Sharpsteen
 
 Layout
 ------
@@ -51,7 +51,7 @@ info or the results of parsing particular files in the top-level
 #------------------------------------------------------------------------------
 #  Imports from Python 2.7 standard library
 #------------------------------------------------------------------------------
-from os import path
+from os import path, listdir
 import json
 
 
@@ -72,6 +72,26 @@ CMS_TEMPLATE_DIR = path.abspath(path.join(_scriptLocation, '..', '..', '..',
 """``CMS_TEMPLATE_DIR`` holds the path to a top-level directory containing
 templates for the input files of the CMS model.
 """
+
+
+class SimDir:
+  def __init__(self, dir_path):
+    self.sim_dir = dir_path
+
+  def __repr__(self):
+    sim_dirs = '\n\n\t' + '\n\t'.join(self.list_simulations())
+    return 'Available Simulations:{0}'.format(sim_dirs)
+
+  def list_simulations(self):
+    return [ a_path for a_path in listdir(self.sim_dir) 
+      if path.isdir(path.join(self.sim_dir, a_path)) ]
+
+CMS_SIM_DIR = SimDir( path.abspath(path.join(_scriptLocation, '..', '..', '..',
+  'cms', 'simulations')))
+"""``CMS_TEMPLATE_DIR`` holds the path to a top-level directory containing
+simulation-specific CMS files.
+"""
+
 
 #------------------------------------------------------------------
 #  Configuration File Parsing Functions
@@ -128,4 +148,46 @@ functions which use this object are:
 """ 
 
 CMS_TEMPLATES = Environment(loader=FileSystemLoader(CMS_TEMPLATE_DIR))
+
+class CMSConfig:
+  """Class for managing access to configuration info and input templates for CMS
+  simulations"""
+
+  def __init__(self, simulation_name):
+    sim_dir = path.join(CMS_SIM_DIR.sim_dir, simulation_name)
+    if not path.isdir(sim_dir):
+      raise IOError('''Could not find a simulation folder at:
+        {0}'''.format(sim_dir)
+      )
+
+    required_files = [
+      'FLOW.tel',
+      'FLOW_grid.h5',
+      'FLOW_mp.h5',
+      'WAVE.dep',
+      'config.json'
+    ]
+
+    for sim_file in required_files:
+      if not path.exists(path.join(sim_dir, sim_file)):
+        raise IOError('''Could not find a required similation file, {0}, which
+        should be located at:
+            {1}'''.format(sim_file, path.join(sim_dir, sim_file))
+        )
+
+
+    self.sim_dir = sim_dir
+    self.templates = CMS_TEMPLATES
+
+  def get_template(self, template_name):
+    return self.templates.get_template(template_name)
+
+  def get_sim_file(self, file_name):
+    return path.join(self.sim_dir, file_name)
+
+  def load_sim_config(self):
+    with open(path.join(self.sim_dir, 'config.json')) as config_file:
+      config_info = json.load(config_file)
+
+    return config_info
 
