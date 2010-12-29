@@ -10,6 +10,7 @@
 require 'rubygems'
 require 'tmpdir'
 require 'pathname'
+require 'yaml'
 
 module Tty extend self
   def blue; bold 34; end
