@@ -2,20 +2,45 @@ Automagic Deployment
 ====================
 
 This directory contains resources that can be used to manage the deployment of
-SERC wave modelling software.  Using the software contained in this directory
+SERC wave modeling software.  Using the software contained in this directory
 the provisioning of new development and production servers running the software
 should be close to a "turnkey" operation.
 
 The [Chef][chef] configuration management software is used to manage deployment
-of software to the folloing environments:
+of software to the following environments:
 
-- Debian-based servers, particularily Ubuntu 10.10
+- Debian-based servers, particularity Ubuntu 10.10
 - Apple OS X (currently not implemented)
 
 Additionally, support is provided for quickly creating and recreating virtual
 servers running the modeling environment using [Vagrant][vagrant].  Machines
 created by Vagrant run Ubuntu Server 10.10 (64 bit) and provide ideal testing
-and development environments as they are both disposible and reproducible.
+and development environments as they are both disposable and reproducible.
+
+
+Deployment to a Production Server
+---------------------------------
+
+The wave forecasting system can be deployed to a production server running
+Ubuntu 10.10 through the following steps:
+
+1. The install script requires some software, this can be obtained using the
+   following commands:
+
+       sudo apt-get install curl ruby-dev rubygems
+
+2. The [Chef][chef] configuration management system is used to automate the
+   deployment of the forecasting software and its dependencies.  Chef can be
+   installed using the following command:
+
+       sudo gem install chef
+
+3. Finally, run the installation script using the following command:
+
+       ruby -e "$(curl -fsSLk https://github.com/serc/wave/raw/deploy/install.rb)"
+
+   The installation script will obtain details about the desired configuration
+   and then call Chef to complete the deployment.
 
 
 Development With Vagrant
@@ -50,46 +75,73 @@ the chef setup scripts on the virtual machine via:
     vagrant provision
 
 
-Deployment With Chef
---------------------
-
-*To be written...*
-
-
 Implementation Details
 ----------------------
 
-The following packages are installed by Chef:
+The following steps are executed by Chef:
 
-- gfortran 4.5
-- git
-- Python 2.7
-- ATLAS SSE3 -> optimized BLAS and LAPACK libraries.  Possibly only compatible
-  with 64 bit Intel chips.
-- SuiteSparse libraries
-- HDF5 libraries
-- The Pip package manager for Python
+  - Install toolchain for compiling and managing code:
 
-The following Python packages are installed by Pip:
+    * build-essential 
+    * gcc and gfortran compilers
+    * cmake
+    * GNU stow
+    * git 
 
-- numpy
-- scipy
-- sphinx
-- h5py
+  - Install tools and libraries required run the forecasting system:
 
-The following needs to be added to the deployment routine:
+    * libatlas - Tuned implementation of BLAS and LAPACK
+    * libfftw3-dev
+    * libsuitesparse-dev
+    * libhdf5-serial-dev
+    * libproj-dev
+    * libgdal1-dev
+    * proj-bin
+    * gdal-bin 
 
-- Install postgresql
-- Install psycopg2
-- Install sqlalchemy and geoalchemy
-- Install pyDAP
-- Install CMS
-- Install NCAR NCL library and Python module
-- Create a new postgres database using the SQL files in the SERC repository and
-  assign ownership to the wave user
+  - Install Postgresql and PostGIS
+
+  - Install CMS model from pre-built binaries supplied by project maintainers.
+
+  - Install Python 2.7 and the Pip package manager.  Pip is used to build and
+    install the following python modules which are required by the forecasting
+    system:
+
+    * sphinx
+    * flask
+    * pyparsing
+    * numpy
+    * scipy - Patched source code supplied by the project maintainers to allow
+      compiling against Python 2.7 until SciPy 0.9 is released.
+    * h5py -  Patched source code supplied by the project maintainers until a
+      a newer version is released.
+    * pydap
+    * psycopg2
+    * sqlalchemy
+    * geoalchemy
+    * pyproj
+    * ipython
+
+  - Install NCAR NCL library and PyNIO interface.  Binaries are provided by
+    the project maintainers and are a mirror of the official NCAR binaries in
+    order to facilitate automatic deployment.  PyNIO binaries are modified
+    slightly to correct some naming errors.
+
+  - Create new system user and postgres user using the information in
+    `deploy-config.json`.  This user will own files, data and processes related
+    to the forecasting system.
+
+  - Use forecast user to checkout the forecasting system.
+
+  - Create a new PostGIS database and use forecasting system database schema to
+    set up tables.  Grant database administration to the forecast user.
+
+
+## TODO:
+
 - Link wave repository if it was downloaded via other means, such as a tarball.
-  Homebew would be a good place to look for an example of this behavior.
-- Add OS X support.  Possibly by grabbing the Chef recipie for Homebrew used by
+  Homebrew would be a good place to look for an example of this behavior.
+- Add OS X support.  Possibly by grabbing the Chef recipe for Homebrew used by
   the [Smeagol][smeagol] project.
 
 

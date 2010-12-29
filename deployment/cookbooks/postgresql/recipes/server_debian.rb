@@ -38,6 +38,16 @@ service "postgresql" do
   action :nothing
 end
 
+# Raise memory limits
+execute "sysctl kernel.shmmax=1278541824"
+execute "sysctl kernel.shmall=1278541824"
+template "/etc/sysctl.conf" do
+  source "debian.sysctl.conf"
+  owner "root"
+  group "root"
+  mode 0644
+end
+
 template "#{node[:postgresql][:dir]}/pg_hba.conf" do
   source "debian.pg_hba.conf.erb"
   owner "postgres"
@@ -53,3 +63,4 @@ template "#{node[:postgresql][:dir]}/postgresql.conf" do
   mode 0600
   notifies :restart, resources(:service => "postgresql")
 end
+
