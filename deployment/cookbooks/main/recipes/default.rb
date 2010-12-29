@@ -68,6 +68,11 @@ pip_package "scipy" do
   file "http://dl.dropbox.com/u/72178/dist/scipy-0.8.0.tar.gz"
 end
 
+pip_package "griddata" do
+  version "0.1.2"
+  file "http://griddata-python.googlecode.com/files/griddata-0.1.2.tar.gz"
+end
+
 pip_package "h5py" do
   # pyH5 has a tiny bug that prevents it from compiling against Python 2.7.  The
   # following archive has been fixed, but should be removed once the official
@@ -75,6 +80,7 @@ pip_package "h5py" do
   version "1.3.0"
   file "http://dl.dropbox.com/u/72178/dist/h5py-1.3.0.tar.gz"
 end
+pip_package "netCDF4"
 
 pip_package "pydap"
 
