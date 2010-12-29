@@ -95,9 +95,10 @@ def add_spectrabin(freqs,dirs):
     for rec in session.query(specbin):
         dirshape = array(rec.spcdir).size==array(dirs).size
         freqshape = array(rec.spcfreq).size==array(freqs).size
-        dirval = all((array(rec.spcdir) - array(dirs)) < .01)
-        freqval = all((array(rec.spcfreq) - array(freqs)) < .01)
-        if (dirshape and freqshape and dirval and freqval):
+        if (dirshape and freqshape):
+          dirval = all((array(rec.spcdir) - array(dirs)) < .01)
+          freqval = all((array(rec.spcfreq) - array(freqs)) < .01)
+          if (dirval and freqval):
             exists = True
             specid = rec.id
             break
