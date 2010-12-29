@@ -2,7 +2,7 @@ Automagic Deployment
 ====================
 
 This directory contains resources that can be used to manage the deployment of
-SERC wave modelling software.  Using the software contained in this directory
+SERC wave modeling software.  Using the software contained in this directory
 the provisioning of new development and production servers running the software
 should be close to a "turnkey" operation.
 
@@ -16,6 +16,31 @@ Additionally, support is provided for quickly creating and recreating virtual
 servers running the modeling environment using [Vagrant][vagrant].  Machines
 created by Vagrant run Ubuntu Server 10.10 (64 bit) and provide ideal testing
 and development environments as they are both disposable and reproducible.
+
+
+Deployment to a Production Server
+---------------------------------
+
+The wave forecasting system can be deployed to a production server running
+Ubuntu 10.10 through the following steps:
+
+1. The install script requires some software, this can be obtained using the
+   following commands:
+
+       sudo apt-get install curl ruby-dev rubygems
+
+2. The [Chef][chef] configuration management system is used to automate the
+   deployment of the forecasting software and its dependencies.  Chef can be
+   installed using the following command:
+
+       sudo gem install chef
+
+3. Finally, run the installation script using the following command:
+
+       ruby -e "$(curl -fsSLk https://github.com/serc/wave/raw/deploy/install.rb)"
+
+   The installation script will obtain details about the desired configuration
+   and then call Chef to complete the deployment.
 
 
 Development With Vagrant
@@ -48,12 +73,6 @@ required software got hung up and failed.  The easiest fix is to try re-running
 the chef setup scripts on the virtual machine via:
 
     vagrant provision
-
-
-Deployment With Chef
---------------------
-
-*To be written...*
 
 
 Implementation Details
