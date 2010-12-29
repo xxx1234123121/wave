@@ -344,7 +344,7 @@ def gen_wavefiles(wavdata,steeringtimes):
             file.write('\t'+line+'\n')
       file.close()
     metafile.close()
-    os.system('./mergeENG.exe < '+metafn)
+    os.system('mergeENG < '+metafn)
     os.system('rm /'+tmpdir+'/*.eng '+metafn)
     os.system('mv '+nestfn+' '+cmsdir)
     return 
