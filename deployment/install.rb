@@ -186,7 +186,7 @@ config = get_config_opts
 config[:run_list] = ['main']
 
 work_dir = (Pathname Dir.pwd) + 'work'
-work_dir.mkdir
+work_dir.mkdir unless File.directory? work_dir
 
 Dir.chdir work_dir do
   ohai "Downloading deployment resources..."
@@ -198,7 +198,9 @@ Dir.chdir work_dir do
   config_file.close
 
   ohai "Running Chef..."
-  sudo "chef-solo", "-c deploy.rb", "-j deploy-config.json"
+  control_file = work_dir + "deploy.rb"
+  config_file = work_dir + "deploy-config.json"
+  sudo "chef-solo", "-c #{control_file}", "-j #{config_file}"
 end
 
 ohai "Installation successful!"
