@@ -123,7 +123,6 @@ The following steps are executed by Chef:
 - Link wave repository if it was downloaded via other means, such as a tarball.
   Homebrew would be a good place to look for an example of this behavior.
 - Set up dbconfig.json and cmsconfig.json
-- Tune the Postgresql configuration.
 - Add OS X support.  Possibly by grabbing the Chef recipe for Homebrew used by
   the [Smeagol][smeagol] project.
 
