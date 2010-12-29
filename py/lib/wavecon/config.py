@@ -175,12 +175,12 @@ class CMSConfig:
             {1}'''.format(sim_file, path.join(sim_dir, sim_file))
         )
 
+    # Remove config.json
+    required_files.pop()
 
+    self.static_files = [ path.join(sim_dir, static_file) 
+      for static_file in required_files ]
     self.sim_dir = sim_dir
-    self.templates = CMS_TEMPLATES
-
-  def get_template(self, template_name):
-    return self.templates.get_template(template_name)
 
   def get_sim_file(self, file_name):
     return path.join(self.sim_dir, file_name)

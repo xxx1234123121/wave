@@ -66,7 +66,10 @@ def processArgs():
 
   parser.add_argument( 'sim_label', metavar = 'SIMLABEL',
                        help = '''A label for model run.  `cms-postprocess` will
-                       tag results as "SIMNAME-SIMLABEL" when importing data.''' )
+                       tag results as "SIMNAME-SIMLABEL" when importing data.
+                       The model input files will also be generated in a
+                       directory named SIMLABEL, keep this in mind when choosing
+                       a label.''' )
 
   parser.add_argument( 'sim_starttime', metavar = 'START_TIME', 
                        type = ISO_datestring,
