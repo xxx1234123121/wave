@@ -190,7 +190,7 @@ work_dir.mkdir
 
 Dir.chdir work_dir do
   ohai "Downloading deployment resources..."
-  system "/bin/bash -o pipefail -c '/usr/bin/curl -sSfL https://github.com/serc/wave/tarball/deploy | /usr/bin/tar xz -m --strip 1'"
+  system "/bin/bash -o pipefail -c '/usr/bin/curl -sSfL https://github.com/serc/wave/tarball/deploy | tar xz -m --strip 1'"
 
   ohai "Writing configuration info..."
   config_file = File.open('deploy-config.json', 'w')
