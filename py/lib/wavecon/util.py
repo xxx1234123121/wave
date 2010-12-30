@@ -37,6 +37,7 @@ def compass_to_angle(comp_angle):
 #------------------------------------------------------------------------------
 #  Specialized Coercion Functions
 #------------------------------------------------------------------------------
+from datetime import datetime
 def maybe_float(x):
   # Tries to coerce x to a float, if it fails, it returns NaN instead of raising
   # an exception.
@@ -46,4 +47,17 @@ def maybe_float(x):
     value = float('nan')
 
   return value
+
+
+def ISODateString(a_string):
+  """Takes a string in 'unambiguous format' and returns a datetime object.
+
+  Here, 'unambiguous format' is arbitrarily declared to be a subset of the
+  ISO 8601 format:
+
+     %Y-%m-%dT%H:%M:%S
+
+  """
+
+  return datetime.strptime(a_string, '%Y-%m-%dT%H:%M:%S')
 

@@ -20,22 +20,7 @@ sys.path.insert( 0, waveLibs )
 import datetime
 
 from wavecon.NDBC import fetchBuoyRecords
-
-
-#------------------------------------------------------------------
-#  Utility Functions
-#------------------------------------------------------------------
-def ISO_datestring( aString ):
-  """Takes a string in 'unambiguous format' and returns a datetime object.
-
-  Here, 'unambiguous format' is arbitrarily declared to be a subset of the
-  ISO 8601 format:
-
-     %Y-%m-%dT%H:%M:%S
-
-  """
-
-  return datetime.datetime.strptime( aString, '%Y-%m-%dT%H:%M:%S' )
+from wavecon.util import ISODateString
 
 
 #------------------------------------------------------------------
@@ -92,10 +77,12 @@ def processArgs():
   parser.add_argument( 'buoyNum', metavar = 'Buoy#', type = int,
                        help = 'The number of the NDBC buoy for which you wish to fetch data.' )
 
-  parser.add_argument( 'startTime', metavar = 'StartTime', type = ISO_datestring,
+  parser.add_argument( 'startTime', metavar = 'StartTime', type = ISODateString,
                         help = '''The starting time for data you wish to download. Must be in the 
-                        following format "year-month-dayThour:minute:second"''' )
-  parser.add_argument( 'stopTime', metavar = 'StopTime', type = ISO_datestring,
+                        following format "year-month-dayThour:minute:second".
+                        Note the "T" that seperates the date and the time.''' )
+
+  parser.add_argument( 'stopTime', metavar = 'StopTime', type = ISODateString,
                         help = '''The end of the time range for which data is to be downloaded. 
                         Uses the same format as described above.''' ) 
 

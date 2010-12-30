@@ -20,19 +20,6 @@ sys.path.insert( 0, waveLibs )
 #------------------------------------------------------------------
 #  Utility Functions
 #------------------------------------------------------------------
-def ISO_datestring( aString ):
-  """Takes a string in 'unambiguous format' and returns a datetime object.
-
-  Here, 'unambiguous format' is arbitrarily declared to be a subset of the
-  ISO 8601 format:
-
-     %Y-%m-%dT%H:%M:%S
-
-  """
-
-  return datetime.datetime.strptime( aString, '%Y-%m-%dT%H:%M:%S' )
-
-
 def check_cmcards( aString ):
 
   cmcardsPath = path.abspath( aString )

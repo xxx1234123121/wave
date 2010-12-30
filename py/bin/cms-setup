@@ -24,22 +24,7 @@ from datetime import datetime
 #------------------------------------------------------------------------------
 from wavecon.config import CMS_SIM_DIR, CMSConfig
 from wavecon.CMS import setup_model_run
-
-
-#------------------------------------------------------------------
-#  Utility Functions
-#------------------------------------------------------------------
-def ISO_datestring( aString ):
-  """Takes a string in 'unambiguous format' and returns a datetime object.
-
-  Here, 'unambiguous format' is arbitrarily declared to be a subset of the
-  ISO 8601 format:
-
-     %Y-%m-%dT%H:%M:%S
-
-  """
-
-  return datetime.strptime( aString, '%Y-%m-%dT%H:%M:%S' )
+from wavecon.util import ISODateString
 
 
 #------------------------------------------------------------------
@@ -72,7 +57,7 @@ def processArgs():
                        a label.''' )
 
   parser.add_argument( 'sim_starttime', metavar = 'START_TIME', 
-                       type = ISO_datestring,
+                       type = ISODateString,
                        help = '''A start time for the simulation.  Must be in
                        the following format "year-month-dayThour:minute:second".
                        Note the "T" that seperates the date from the time''' )
