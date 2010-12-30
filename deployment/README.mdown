@@ -113,8 +113,10 @@ The following steps are executed by Chef:
     * numpy
     * scipy - Patched source code supplied by the project maintainers to allow
       compiling against Python 2.7 until SciPy 0.9 is released.
+    * griddata
     * h5py -  Patched source code supplied by the project maintainers until a
       a newer version is released.
+    * netCDF4
     * pydap
     * psycopg2
     * sqlalchemy
