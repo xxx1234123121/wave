@@ -36,6 +36,11 @@ ruby_block 'make_wave_user' do
   end
 end
 
+template "#{node[:user_home]}/.profile" do
+  source "wave_user.profile"
+  owner node[:user]
+end
+
 
 #  Code Checkout
 #-------------------------------------------------------------------------------
