@@ -1,0 +1,86 @@
+CMS_VERSION                         3.75 
+
+!Model Files 
+GRID_FILE                           "{{ sim_name }}_grid.h5"
+PARAMS_FILE                         "{{ sim_name }}_mp.h5"
+
+!Grid Geometry 
+BATHYMETRY_DATASET                  "{{ sim_name }}_grid.h5" "Tel-Flow/Datasets/Depth" 
+GRID_ANGLE                          {{ grid_rotation }}
+GRID_ORIGIN_X                       {{ grid_origin_x }}
+GRID_ORIGIN_Y                       {{ grid_origin_y }}
+CELL_LATITUDES                      "{{ sim_name }}_mp.h5" "PROPERTIES/Model Params/Lats" 
+GRID_CELL_TYPES                     "Tel-Flow/Grid 7/PROPERTIES/CellTypes" 
+GRID_EPSG_CODE                      {{ projection }}
+
+!General Parameters 
+USE_ADVECTION_TERMS                 ON 
+USE_MIXING_TERMS                    ON 
+USE_WALL_FRICTION_TERMS             ON 
+DRYING_DEPTH                        0.05 
+SIMULATION_LABEL                    "{{ sim_label }}" 
+2D_MODE                             ON 
+NUM_THREADS                         1 
+
+!Timing 
+HYDRO_TIMESTEP                      600.0 
+STARTING_JDATE                      {{ sim_start_date }}
+STARTING_JDATE_HOUR                 {{ sim_start_hour }}
+DURATION_RUN                        {{ sim_runtime }}
+DURATION_RAMP                       {{ sim_ramptime }}
+
+!Hot Start 
+
+!Transport 
+CALC_SALINITY                       OFF 
+CALC_SEDIMENT_TRANSPORT             OFF 
+WATER_DENSITY                       1025.0 
+WATER_TEMPERATURE                   15.0 
+
+!Observation Cells 
+TIME_SERIES_INCREMENT               1800 
+FLOW_RATE_INCREMENT                 1800 
+Q_TRANS_RATE_INCREMENT              1800 
+
+!Output Times List 
+TIME_LIST_1                         {{ sim_output_times }} 
+TIME_LIST_2                         0 
+TIME_LIST_3                         0 
+TIME_LIST_4                         0 
+WSE_OUT_TIMES_LIST                  1 
+VEL_OUT_TIMES_LIST                  1 
+MORPH_OUT_TIMES_LIST                0 
+TRANS_OUT_TIMES_LIST                0 
+WAVES_OUT_TIMES_LIST                1 
+EDDY_VISCOSITY_OUT_TIMES_LIST       0 
+
+!Implicit/Explicit 
+SOLUTION_SCHEME                     IMPLICIT 
+
+!Cellstrings 
+HDRIVER_CELLSTRING                  "{{ sim_name }}_mp.h5" "PROPERTIES/Model Params/Boundary" 
+
+!Wind/Wave 
+WIND_INPUT_CURVE                    "{{ sim_name }}_mp.h5" "PROPERTIES/Model Params/WindCurve" 
+ANEMOMETER_HEIGHT                   10.0 
+
+!Hardbottom/Mannings/D50 
+HARDBOTTOM_DATASET                  "{{ sim_name }}_grid.h5" "Tel-Flow/Datasets/Hard Bottom" 
+MANNINGS_N_DATASET                  "{{ sim_name }}_grid.h5" "Tel-Flow/Datasets/ManningsN" 
+D50_DATASET                         "Tel-Flow/Datasets/D50" 
+
+!Input 
+
+!Output 
+GLOBAL_VELOCITY_OUTPUT              "{{ sim_name }}_sol.h5" "Datasets/{{ sim_label }}/Velocity
+GLOBAL_WATER_LEVEL_OUTPUT           "{{ sim_name }}_sol.h5" "Datasets/{{ sim_label }}/Elevation" 
+GLOBAL_MORPHOLOGY_OUTPUT            "{{ sim_name }}_sol.h5" "Datasets/{{ sim_label }}/Morphology" 
+GLOBAL_TRANS_RATE_OUTPUT            "{{ sim_name }}_sol.h5" "Datasets/{{ sim_label }}/Transport" 
+GLBL_CONCENTRATION_OUTPUT           "Datasets/{{ sim_label }}/Concentration" 
+GLBL_CONC_CAPAC_OUTPUT              "Datasets/{{ sim_label }}/ConcentrationCapacity" 
+
+!Advanced 
+WAVE_OUT_TIMES_LIST                1     
+TELESCOPING    "{{ sim_name }}.tel"          
+
+END_PARAMETERS                      

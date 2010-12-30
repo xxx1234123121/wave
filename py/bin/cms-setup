@@ -1,0 +1,107 @@
+#!/usr/bin/env python2.7
+
+#------------------------------------------------------------------
+# This script sets up input files for a CMS simulation.
+# 
+# Version:       0.1.0
+# Author:        Charlie Sharpsteen <source@sharpsteen.net>
+# Last Modified: December 29, 2010 by Charlie Sharpsteen
+#------------------------------------------------------------------
+
+# Make sure the WaveConnect py/lib folder is on the search path so
+# modules can be retrieved.
+import sys
+from os import path
+scriptLocation = path.dirname(path.abspath( __file__ ))
+waveLibs = path.abspath(path.join( scriptLocation, '..', 'lib' ))
+sys.path.insert( 0, waveLibs )
+
+from datetime import datetime
+
+
+#------------------------------------------------------------------------------
+#  Imports from WaveConnect libraries
+#------------------------------------------------------------------------------
+from wavecon.config import CMS_SIM_DIR, CMSConfig
+from wavecon.CMS import setup_model_run
+from wavecon.util import ISODateString
+
+
+#------------------------------------------------------------------
+#  Main Script and Supporting Functions
+#------------------------------------------------------------------
+def processArgs():
+  """Processes command-line arguments and returns a loaded ArgumentParser."""
+  import argparse
+
+  parser = argparse.ArgumentParser( description = 'cms-setup: CMS model run configuration' )
+
+  # Flag arguments- these are optional and distinguished by -something
+  parser.add_argument( '-v', action = 'store_true', dest = 'be_verbose',
+                       help = '''Should `cms-setup` spare no bytes in order to produce
+                       as much output as possible?''' )
+
+
+  # Positional arguments- these are not identified by a flag.  Rather their
+  # meaning is inferred from their position in the command line.
+  parser.add_argument( 'sim_label', metavar = 'RUNLABEL',
+                       help = '''A label for model run.  `cms-postprocess` will
+                       tag results as "SIMNAME-SIMLABEL" when importing data.
+                       The model input files will also be generated in a
+                       directory named SIMLABEL, keep this in mind when choosing
+                       a label.''' )
+
+  parser.add_argument( 'sim_name', metavar = 'SIMNAME',
+                       choices=CMS_SIM_DIR.list_simulations(),
+                       help = '''The name of a simulation that the run is to be
+                       based on. {0}'''.format(CMS_SIM_DIR) )
+
+
+  parser.add_argument( 'sim_starttime', metavar = 'START_TIME', 
+                       type = ISODateString,
+                       help = '''A start time for the simulation.  Must be in
+                       the following format "year-month-dayThour:minute:second".
+                       Note the "T" that seperates the date from the time''' )
+
+  parser.add_argument( 'sim_runtime', metavar = 'SIM_RUNTIME', type = float,
+                       help = '''The number of hours for which the model should
+                       run.''' )
+
+  parser.add_argument( 'sim_timestep', metavar = 'SIM_TIMESTEP',
+                       type = float, default = 1.0, nargs = '?',
+                       help = '''The timestep, in hours, at which the model
+                       should record output.''' )
+
+  parser.add_argument( 'sim_ramptime', metavar = 'SIM_RAMPTIME',
+                       type = float, default = 0.25, nargs = '?',
+                       help = '''The amount of time, in days, that the model
+                       should be given as a warm-up period.''' )
+
+  args = parser.parse_args()
+  return args
+
+
+if __name__ == '__main__':
+  """ 
+  This is the actual script part.  Building a script file this way allows it to
+  be used as both a command line tool and a python library.  Then other Python
+  scripts can import functions from this one without running the script.
+  """
+
+  args = processArgs()
+  setup_model_run(**args.__dict__)
+
+  print '''
+_____________________________________________________________________________
+A CMS model simulation has been set up in the directory `{0}`. The simulation
+may be started by entering the directory and executing the following:
+
+    cms {1}.sim {1}.cmcards {2}
+    
+After the simulation has finished, execute:
+
+    cms-postprocess {1}.cmcards
+
+To load the results into the database.
+  '''.format(args.sim_label, args.sim_name, args.sim_timestep)
+

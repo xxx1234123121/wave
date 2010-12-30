@@ -9,21 +9,23 @@ import glob #file wildcard support
 import re #regex support
 from numpy import * #math support
 import DBman
-from config import CMSconfig
 from math import sin,cos
 from griddata import griddata
 strptime = datetime.datetime.strptime
 
+import tempfile
+import shutil
+
 ################################
 # DEFINE POSTGIS BOX-OBJECT
 ################################
-def makebox():
+def makebox(model_config):
 
-    west = CMSconfig['west']
-    south = CMSconfig['south']
-    east = CMSconfig['east']
-    north = CMSconfig['north']
-    projection = CMSconfig['projection']
+    west = model_config['west']
+    south = model_config['south']
+    east = model_config['east']
+    north = model_config['north']
+    projection = model_config['projection']
     
     #create box2d object (in projected coordinates)
     point_ll = 'ST_TRANSFORM(ST_SETSRID(ST_POINT('+west+','+south+'),4236),'+projection+')'
@@ -34,15 +36,15 @@ def makebox():
 ################################
 # DEFINE THE WAVE GRID FOR INTERPOLATION
 ################################
-def makegrid():
+def makegrid(model_config):
 
-    west = CMSconfig['west']
-    south = CMSconfig['south']
-    east = CMSconfig['east']
-    north = CMSconfig['north']
-    nx = int(CMSconfig['nx'])
-    ny = int(CMSconfig['ny'])
-    projection = CMSconfig['projection']
+    west = model_config['west']
+    south = model_config['south']
+    east = model_config['east']
+    north = model_config['north']
+    nx = int(model_config['nx'])
+    ny = int(model_config['ny'])
+    projection = model_config['projection']
     
     #build query
     point_ll = 'ST_TRANSFORM(ST_SETSRID(ST_POINT('+west+','+south+'),4236),'+projection+')'
@@ -66,16 +68,9 @@ def makegrid():
 # CALCULATE STEERING TIMES
 ################################
 def maketimes(starttime,simduration,steeringinterval):
-
-      if (starttime==None or simduration==None or steeringinterval==None):
-          starttime = CMSconfig['starttime']
-          simduration = float(CMSconfig['simduration'])
-          steeringinterval = float(CMSconfig['steeringinterval'])
-  
       #create datetime objects  
       simduration = datetime.timedelta(float(simduration)/24.0)
       steeringinterval = datetime.timedelta(float(steeringinterval)/24.0)
-      starttime = strptime( starttime, '%Y%m%d%H' )
       stoptime = starttime+simduration
 
       #determine steering times
@@ -89,10 +84,9 @@ def maketimes(starttime,simduration,steeringinterval):
 ################################
 # RETREIVE DATA FROM TBLWAVE
 ################################
-def getwavedata(box,steeringtimes):
-  
+def getwavedata(box, steeringtimes, model_config):
     #define constants
-    projection = CMSconfig['projection']
+    projection = model_config['projection']
     starttime = steeringtimes[0]
     stoptime = steeringtimes[len(steeringtimes)-1]
     starttime = starttime.strftime('%Y%m%d %H:00' )
@@ -159,10 +153,10 @@ def getwavedata(box,steeringtimes):
 ################################
 # RETREIVE DATA FROM TBLWIND
 ################################
-def getwinddata(box,steeringtimes):
+def getwinddata(box, steeringtimes, model_config):
 
     #define constants
-    projection = CMSconfig['projection']
+    projection = model_config['projection']
     starttime = steeringtimes[0]
     stoptime = steeringtimes[len(steeringtimes)-1]
     starttime = starttime.strftime('%Y%m%d %H:00' )
@@ -266,7 +260,7 @@ def calculatepeakfreq(wavdata):
 ################################
 # GENERATE A CMS SPECTRA FILE 
 ################################
-def gen_wavefiles(wavdata,steeringtimes):
+def gen_wavefiles(wavdata, steeringtimes, model_config, output_path):
  
     if (wavdata==None):
       quit('\n CANNOT GENERATE INPUT FILE: MISSING WAVE DATA \n')
@@ -274,10 +268,9 @@ def gen_wavefiles(wavdata,steeringtimes):
     wavdata = interpolatespectra(wavdata)
     wavdata = calculatepeakfreq(wavdata)  
 
-    nestfn = CMSconfig['nestfile']
-    metafn = CMSconfig['metafile']
-    tmpdir = CMSconfig['tmpdir']
-    cmsdir = CMSconfig['cmsdir']
+    tmpdir = tempfile.gettempdir()
+    nestfn = 'nest.dat'
+    metafn = 'nest.meta'
 
     loc = wavdata['loc']
     freq = wavdata['freq']
@@ -346,7 +339,7 @@ def gen_wavefiles(wavdata,steeringtimes):
     metafile.close()
     os.system('mergeENG < '+metafn)
     os.system('rm /'+tmpdir+'/*.eng '+metafn)
-    os.system('mv '+nestfn+' '+cmsdir)
+    shutil.copy(nestfn, output_path)
     return 
 
 ################################

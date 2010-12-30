@@ -17,6 +17,8 @@ from config import CMSconfig
 import DBman,CMSman
 strptime = datetime.datetime.strptime
 
+import tempfile
+
 ################################
 # CREATE DATABASE OBJECTS
 ################################
@@ -374,12 +376,9 @@ def getWIND(config):
 ################################
 # STRING TOGETHER WAVE-RELATED SUBROUTINES 
 ################################
-def getWAVE(config):
-    
-    starttime=config['starttime']
-    simduration=config['simduration']
-    steeringinterval=config['steeringinterval']
-    tmpdir=config['tmpdir']
+def getWAVE(config, starttime, simduration, steeringinterval):
+    tmpdir=tempfile.gettempdir()
+
     wavtype=config['wavtype']
     wavregion=config['wavregion']
 

@@ -9,7 +9,9 @@ This module provides tools for interacting with the CMS model.
 
 """
 from .postprocessing import postprocess_CMS_run
-from .cmcards import cmcards_parser
+from .setup import setup_model_run
+from .cmcards import cmcards_parser, gen_cmcards_file
 from .gridfiles import telfile_parser, georeference_grid
 from .stdfiles import gen_std_file
-from .engfiles import parse_eng_spectra
+from .simfiles import gen_sim_file
+from .engfiles import parse_eng_spectra, gen_eng_file

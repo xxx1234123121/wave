@@ -6,7 +6,7 @@ This module provides a parser for CMS-Wave *.eng files.  These files contain
 spectral input and output.
 
 **Development Status:**
-  **Last Modified:** December 22, 2010 by Charlie Sharpsteen
+  **Last Modified:** December 29, 2010 by Charlie Sharpsteen
 
 """
 
@@ -27,6 +27,9 @@ from numpy import array, linspace
 #------------------------------------------------------------------------------
 from wavecon.IO import FileScanner
 from wavecon.util import maybe_float
+
+from wavecon.config import CMSConfig
+from wavecon import CMSman, GETman
 
 
 #------------------------------------------------------------------------------
@@ -61,4 +64,29 @@ def parse_eng_spectra(file_path):
     'dir_bins': dir_bins,
     'spectra': spectra()
   }
+
+
+#------------------------------------------------------------------------------
+#  eng file generator
+#------------------------------------------------------------------------------
+def gen_eng_file(output_path, params):
+  # This routine started out as makeWaveInput in prepareCMS.py
+
+  model_config = CMSConfig(params['sim_name']).load_sim_config()
+
+  #DEFINE SPATIAL/TEMPORAL DOMAIN
+  box = CMSman.makebox(model_config)
+  steeringtimes = CMSman.maketimes(params['sim_starttime'],
+    params['sim_runtime'], params['sim_timestep'])
+
+  #RETRIEVE WAVE DATA FROM DATABASE
+  wavdata = CMSman.getwavedata(box, steeringtimes, model_config) #add wavtype
+  if (wavdata==None):
+    print '\n... downloading new wave data ... \n'
+    GETman.getWAVE(model_config, params['sim_starttime'], params['sim_runtime'],
+        params['sim_timestep'])
+    wavdata = CMSman.getwavedata(box, steeringtimes, model_config) #add wavtype 
+
+  # CONSTRUCT THE FILE
+  CMSman.gen_wavefiles(wavdata, steeringtimes, model_config, output_path)
 

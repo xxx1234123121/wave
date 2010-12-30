@@ -15,6 +15,7 @@ dict.
 #------------------------------------------------------------------------------
 #  Imports from Python 2.7 standard library
 #------------------------------------------------------------------------------
+from datetime import timedelta 
 
 
 #------------------------------------------------------------------------------
@@ -28,7 +29,8 @@ from pyparsing import( ParserElement, Literal, Keyword, Word, Group, Dict,
 #------------------------------------------------------------------------------
 #  Imports from other CMS submodules
 #------------------------------------------------------------------------------
-
+from wavecon.util import ISODateString
+from wavecon.config import CMS_TEMPLATES, CMSConfig
 
 #------------------------------------------------------------------------------
 #  cmcards parser
@@ -87,3 +89,47 @@ comment = comment_char + Optional(restOfLine)
 cmcards_parser = Dict(
   ZeroOrMore( config_line | Suppress(comment) | Suppress(lineEnd) )
 ) + Suppress(end_of_file)
+
+#------------------------------------------------------------------------------
+#  cmcards generator
+#------------------------------------------------------------------------------
+DEFAULT_SIM_PARAMS = {
+  'sim_name': 'humboldt-example',
+  'sim_label': 'test_run',
+  'sim_starttime': ISODateString('2010-12-01T00:00:00'),
+  'sim_runtime': 24.0,
+  'sim_timestep': 1.0,
+  'sim_ramptime': 0.25
+}
+
+def gen_cmcards_file(output_path, params = DEFAULT_SIM_PARAMS):
+  cmcards_template = CMS_TEMPLATES.get_template('FLOW.cmcards')
+  cmcards_config = CMSConfig(params['sim_name']).load_sim_config()
+
+  cmcards_config['sim_start_date'] = params['sim_starttime'].strftime('%y%j')
+  cmcards_config['sim_start_hour'] = params['sim_starttime'].strftime('%H')
+
+  # Godawful, ugly code coming up---avert your eyes!
+  sim_output_times = [0.0, 0.0, 0.0]
+  n_tstep = 1
+  sim_endtime = params['sim_starttime'] + timedelta(hours = params['sim_runtime'])
+  time_step = params['sim_timestep']
+  while (params['sim_starttime'] + timedelta(hours = time_step)) <= sim_endtime:
+    sim_output_times.append(time_step)
+    sim_output_times.append(time_step)
+    sim_output_times.append(0.0)
+
+    time_step += params['sim_timestep']
+    n_tstep += 1
+
+  sim_output_times.insert(0, n_tstep)
+  sim_output_times = ' '.join(str(x) for x in sim_output_times)
+
+  cmcards_config['sim_output_times'] = sim_output_times
+  cmcards_config.update(params)
+
+  with open(output_path, 'w') as cmcards_output:
+    cmcards_output.writelines(cmcards_template.render(**cmcards_config))
+
+  return None
+

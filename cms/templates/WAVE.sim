@@ -1,0 +1,4 @@
+CMS-WAVE {{ grid_origin_x }} {{ grid_origin_y }} {{ 360 - grid_rotation }}
+DEP    {{ sim_name }}.dep
+OPTS   {{ sim_name }}.std
+SPEC   {{ sim_name }}.eng
