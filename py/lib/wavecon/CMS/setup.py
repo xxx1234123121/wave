@@ -29,6 +29,7 @@ import re
 #------------------------------------------------------------------------------
 from wavecon.config import CMSConfig
 from .simfiles import gen_sim_file
+from .cmcards import gen_cmcards_file
 
 
 #------------------------------------------------------------------------------
@@ -52,6 +53,7 @@ def setup_model_run(**kwargs):
     copy(static_file, sim_file)
 
   gen_sim_file(path.join(sim_dir, kwargs['sim_name'] + '.sim'), kwargs)
+  gen_cmcards_file(path.join(sim_dir, kwargs['sim_name'] + '.cmcards'), kwargs)
 
   return None
 
