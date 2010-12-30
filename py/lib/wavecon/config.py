@@ -53,6 +53,7 @@ info or the results of parsing particular files in the top-level
 #------------------------------------------------------------------------------
 from os import path, listdir
 import json
+from warnings import warn
 
 
 #------------------------------------------------------------------------------
@@ -132,6 +133,9 @@ Some functions which use this object are:
 #  CMS Config section
 #------------------------------------------------------------------
 def loadCMSConfig( aPath ):
+  warn(DeprecationWarning('''CMSconfig files are currently depreciated, please
+  use the load_sim_data() method of a CMSConfig object which provides a way to
+  easily switch between different simulations'''))
   configFile = open( aPath, 'r')
   cmsconfig = json.load( configFile )
   configFile.close()
