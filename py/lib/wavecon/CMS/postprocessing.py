@@ -107,7 +107,7 @@ def load_run_metadata(cmcardsPath):
   }
 
   if cmcards.GRID_EPSG_CODE:
-    grid_info['grid_epsg_code'] = 'EPSG:{0}'.format(cmcards.GRID_EPSG_CODE[0])
+    grid_info['grid_epsg_code'] = 'epsg:{0}'.format(cmcards.GRID_EPSG_CODE[0])
   else:
     raise LookupError('''
     In order to properly georeference CMS output, this program needs to know the

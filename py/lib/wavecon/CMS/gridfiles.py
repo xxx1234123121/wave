@@ -128,7 +128,7 @@ def georeference_grid(grid_coords, grid_info):
 
   # Set up projection from grid coordinate system to WGS84 lat/lons.
   grid_proj = Proj(init = grid_info['grid_epsg_code'])
-  wgs84 = Proj(init = 'EPSG:4326')
+  wgs84 = Proj(init = 'epsg:4326')
 
   grid_origin = grid_info['grid_origin']
   lons, lats = transform(grid_proj, wgs84,
