@@ -24,22 +24,22 @@ This module contains routines for generating CMS-Wave *.sim files.
 #------------------------------------------------------------------------------
 #  Imports from other CMS submodules
 #------------------------------------------------------------------------------
-from wavecon.config import CMS_TEMPLATES
+from wavecon.config import CMS_TEMPLATES, CMSConfig
 
 
 #------------------------------------------------------------------------------
 #  *.sim file generator
 #------------------------------------------------------------------------------
-SIM_DEFAULT_PARAMS = {
+DEFAULT_SIM_PARAMS = {'sim_name': 'humboldt-example'}
 
-}
-
-
-def gen_sim_file(output_path, params = SIM_DEFAULT_PARAMS):
+def gen_sim_file(output_path, params = DEFAULT_SIM_PARAMS):
   sim_template = CMS_TEMPLATES.get_template('WAVE.sim')
+  sim_config = CMSConfig(params['sim_name']).load_sim_config()
 
-  with open(oputput_path, 'w') as sim_output:
-    sim_output.writelines(sim_template.render(**params))
+  sim_config.update(params)
+
+  with open(output_path, 'w') as sim_output:
+    sim_output.writelines(sim_template.render(**sim_config))
 
   return None
 

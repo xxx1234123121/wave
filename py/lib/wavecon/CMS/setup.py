@@ -28,28 +28,30 @@ import re
 #  Imports from other CMS submodules
 #------------------------------------------------------------------------------
 from wavecon.config import CMSConfig
+from .simfiles import gen_sim_file
 
 
 #------------------------------------------------------------------------------
 #  Model Setup
 #------------------------------------------------------------------------------
-def setup_model_run(sim_name, sim_label, sim_starttime, sim_runtime,
-  sim_timestep, sim_ramptime, **keywords):
+def setup_model_run(**kwargs):
 
-  sim_dir = path.join(getcwd(), sim_label)
+  sim_dir = path.join(getcwd(), kwargs['sim_label'])
 
   if not path.isdir(sim_dir):
     mkdir(sim_dir)
 
-  sim_info = CMSConfig(sim_name)
+  sim_info = CMSConfig(kwargs['sim_name'])
 
   # Copy static files containing bathymetry info into the simulation directory.
   for static_file in sim_info.static_files:
     file_ext = path.splitext(static_file)[1]
     if file_ext == '.h5':
       file_ext = '_' + re.split('_', path.basename(static_file)).pop()
-    sim_file = path.join(sim_dir, sim_name + file_ext)
+    sim_file = path.join(sim_dir, kwargs['sim_name'] + file_ext)
     copy(static_file, sim_file)
+
+  gen_sim_file(path.join(sim_dir, kwargs['sim_name'] + '.sim'), kwargs)
 
   return None
 
