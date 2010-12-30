@@ -25,7 +25,7 @@ from numpy import meshgrid
 #------------------------------------------------------------------------------
 #  Imports from other CMS submodules
 #------------------------------------------------------------------------------
-from wavecon.config import CMS_TEMPLATES, CMSconfig
+from wavecon.config import CMS_TEMPLATES, CMSConfig
 
 
 #------------------------------------------------------------------------------
@@ -49,20 +49,21 @@ STD_DEFAULT_PARAMS = {
   'iwvbk': 0
 }
 
-def gen_std_file(outputPath, params = STD_DEFAULT_PARAMS):
+def gen_std_file(output_path, sim_name, params = STD_DEFAULT_PARAMS):
   std_template = CMS_TEMPLATES.get_template('WAVE.std')
+
+  model_config = CMSConfig(sim_name).load_sim_config()
 
   # Set up a grid for observation cells.  This could probably live in the
   # gridfiles module.
-  nx = int(CMSconfig['nx']); ny = int(CMSconfig['ny'])
+  nx = int(model_config['nx']); ny = int(model_config['ny'])
   grid = meshgrid(xrange(1, nx + 1), xrange(1, ny + 1))
 
   params['kout'] = nx * ny
   params['observation_cells'] = zip(grid[0].flatten('F'), grid[1].flatten('F'))
 
-  std_output = open(outputPath, 'wb')
-  std_output.writelines(std_template.render(**params))
-  std_output.close()
+  with open(output_path, 'w') as std_output:
+    std_output.writelines(std_template.render(**params))
 
   return None
 
