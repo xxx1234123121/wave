@@ -72,7 +72,7 @@ D50_DATASET                         "Tel-Flow/Datasets/D50"
 !Input 
 
 !Output 
-GLOBAL_VELOCITY_OUTPUT              "{{ sim_name }}_sol.h5" "Datasets/{{ sim_label }}/Velocity
+GLOBAL_VELOCITY_OUTPUT              "{{ sim_name }}_sol.h5" "Datasets/{{ sim_label }}/Velocity"
 GLOBAL_WATER_LEVEL_OUTPUT           "{{ sim_name }}_sol.h5" "Datasets/{{ sim_label }}/Elevation" 
 GLOBAL_MORPHOLOGY_OUTPUT            "{{ sim_name }}_sol.h5" "Datasets/{{ sim_label }}/Morphology" 
 GLOBAL_TRANS_RATE_OUTPUT            "{{ sim_name }}_sol.h5" "Datasets/{{ sim_label }}/Transport" 
