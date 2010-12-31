@@ -49,16 +49,23 @@ def processArgs():
 
   parser.add_argument( '--format', action = 'store', dest ='output_format',
                        choices = ['database', 'json','matlab'],
-                       default = 'json',
+                       default = 'database',
                        help = '''The format of output- may be 'database', 'json'
-                       or 'matlab'.  If database is selected, downloaded data
-                       will be serialized to a relational database.  If json
-                       output is selected, downloaded data will be serialized to
-                       JSON format and either dumped to the screen or written to
-                       a file depending on the values of windFile and
-                       waveFile.  When matlab is selected, the SciPy library
+                       or 'matlab'.  Database is the default---this serializes
+                       model output to a relational database.  
+                       
+                       If json output is selected, downloaded data will be
+                       serialized to JSON format and either dumped to the screen
+                       or written to a file depending on the values of windFile
+                       and waveFile.  When matlab is selected, the SciPy library
                        will be used to create a mat file, again using the names
-                       passed by windFile and waveFile.'''
+                       passed by windFile and waveFile.
+                       
+                       NOTE: Model output can be several gigabytes in size---the
+                       database option has been carefully optimized to limit the
+                       amount of RAM consumed while processing massive datasets.
+                       The JSON and MATLAB options have not been optimized in
+                       this way and may starve the system of resources.'''
                      )
 
   parser.add_argument( '--output-file', action = 'store', dest="outFile", default = '',
