@@ -51,7 +51,7 @@ classdef wind
             sp = win.speed;
         end
         function dr = get.dir(win)
-            dr = win.dri;
+            dr = win.dir;
         end
     end
 end

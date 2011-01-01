@@ -57,3 +57,10 @@ tBegin  = datenum('2010-12-21 00:00:00','yyyy-mm-dd HH:MM:SS');
 tEnd    = datenum('2010-12-21 23:59:59','yyyy-mm-dd HH:MM:SS');
 w3 = db.selectSpectra(www3Src,tBegin,tEnd); % spec is a dataField object
 % w3.plotSurf('hs',w3.boundingBox);
+
+%% Pull spectra data from humboldt-example CMS run
+cmsSrc = 'humboldt-example-humboldt-example';
+tBegin  = datenum('2010-12-28 00:00:00','yyyy-mm-dd HH:MM:SS');
+tEnd    = datenum('2010-12-28 00:59:59','yyyy-mm-dd HH:MM:SS');
+cms = db.selectSpectra(cmsSrc,tBegin,tEnd); % spec is a dataField object
+% w3.plotSurf('hs',w3.bounding

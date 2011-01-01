@@ -106,19 +106,31 @@
 \textbf{Activity to Date}\\
 Since the last submitted progress report (December 7, 2010), the team from the Schatz Energy Research Center (SERC) has engaged in the following activities in pursuit of the project goals:\\
 \\
-\textbf{Completed development of model control scripts capable of controling CMS model}
+\textbf{Completed preliminary development of model control scripts capable of controlling CMS model}
 \begin{itemize}
-\item Developed python script to determine whether the necessary input data are currently available in the database, if not, the script downloads the appropriate data from WaveWatch III for spectral input and NAM 12 for wind input.  The script inserts the data into the database. 
-\item The script then extracts the data from the database and formats for use by CMS.
-\item The script then downloads tidal forcing constituents from 
+\item Developed scripts to determine whether the necessary input data are currently available in the database, if not, the script downloads the appropriate data from WaveWatch III (for spectral input) and NAM 12 (for wind input).  The script inserts the data into the database. 
+\item The script extracts the relevant data from the database and formats for use by CMS.
 \end{itemize}
-\item Complete code for extracting results from CMS output to be inserted into the database.
-\item Complete development of Matlab classes for retreival and visualization of model results.
+\textbf{Completed preliminary code for extracting results from CMS output to be inserted into the database.}
+\begin{itemize}
+\item Completed development of python scripts capable of parsing flow and wave spectra output from CMS and inserting into database.
+\item Optimized the insert of large amounts of data using csv files and postgres bulk import capabilities.
+\end{itemize}
+\textbf{Completed preliminary code for visualizing results in Matlab}
+\begin{itemize}
+\item Creation of a class called ``dataField" which generically stores wind, current, or spectral wave data.  The data are represented in an unstructured format in space and time.
+\item With a single method call, the data inside the dataField object can be plotted as a 1D or 2D spectra (in the case of wave data) or as a surface or contour plot of a scalar value (e.g. significant wave height or current speed) or as a vector plot (arrows indicating speed and direction).  If the method call invokes just a single time step, a single plot is produced, if the call invokes multiple time steps, an animation is produced.
+\end{itemize}
+\textbf{Ubuntu Deployment Script}
+\begin{itemize}
+\item Completed preliminary development of a deployment script to facilitate installation of the suite of scripts on a fresh Ubuntu installation.
 \end{itemize}
 
 \textbf{Upcoming Activity}\\
-We intend to accomplish the following in the month of December (pending funding from PG\&E):
+Pending continued funding from PG\&E, the following are next steps in the continued development of the coastal modeling system:
 \begin{itemize}
+\item CMS produces \textit{massive} quantities of data.  Some attention has been paid to efficiently managing those data, but more work is necessary to bring latency times down to acceptable levels.  For example, results should be down-sampled before storing in the database; results should be stored in raster format when possible; proper indexes should be created on the database to facilitate rapid extraction of results.
+\item CMS-FLOW requires tidal forcings to be specified as water surface elevations at each time step.  We currently don't have a means to dynamically produce these elevations based on the start and end times of a given simulation.  We still need to develop a script to extract the tidal harmonic constituents from the Eastern North Pacific (ENPAC) database and then calculate the elevations for any given time.
 \end{itemize}
 
 \end{document}

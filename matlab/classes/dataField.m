@@ -142,12 +142,11 @@ classdef dataField
                     );
                 delete(h);
                 hold on;
-                polarcont(df.Z(iNearby).freqBin,metToMathAngle(df.Z(iNearby).dirBin),df.Z(iNearby).spec');
+                polarcont(df.Z(iNearby).freqBin,df.Z(iNearby).dirBin.*pi./180,df.Z(iNearby).spec');
                 cb = colorbar;
                 xlabel('Radius = Frequency (Hz)');
                 set(get(cb,'ylabel'),'String','Density (m^2/Hz)');
                 hold off;
-                
             end
         end
         
@@ -232,8 +231,8 @@ classdef dataField
             Zspeed = df.interpFuns{speedInd}(X,Y,T);
             Zdir = df.interpFuns{dirInd}(X,Y,T);
             
-            U = Zspeed.*cos(metToMathAngle(Zdir));
-            V = Zspeed.*sin(metToMathAngle(Zdir));
+            U = Zspeed.*cos(Zdir.*pi./180);
+            V = Zspeed.*sin(Zdir.*pi./180);
             U(isnan(V)) = 0;
             V(isnan(V)) = 0;
             
