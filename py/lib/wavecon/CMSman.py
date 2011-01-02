@@ -345,17 +345,15 @@ def gen_wavefiles(wavdata, steeringtimes, model_config, output_path):
 ################################
 # GENERATE A CMS WIND FILE 
 ################################
-def gen_windfiles(windata,grid,steeringtimes):
+def gen_windfiles(windata,grid,steeringtimes,model_config,output_path):
 
   if (windata==None):
     quit('\n CANNOT GENERATE INPUT FILE: MISSING WIND DATA \n')
 
   #import constants
-  nx = int(CMSconfig['nx'])
-  ny = int(CMSconfig['ny'])
-  tmpdir = CMSconfig['tmpdir']
-  cmsdir = CMSconfig['cmsdir']
-  windfn = CMSconfig['windfile']
+  tmpdir = tempfile.gettempdir()
+  nx = int(model_config['nx'])
+  ny = int(model_config['ny'])
   winspeed = windata['speed']
   windir = windata['dir']
   wintime = windata['time']
@@ -365,7 +363,7 @@ def gen_windfiles(windata,grid,steeringtimes):
   gridy=array(grid[1])
 
   ugrid,vgrid=[[],[]]
-  windfn = '/'.join([tmpdir,windfn]) 
+  windfn = '/'.join([tmpdir,'wind.dat']) 
   winfile = open(windfn,'w')
   line = str(nx)+' '+str(ny)+'\n'
   winfile.write(line)
@@ -388,5 +386,5 @@ def gen_windfiles(windata,grid,steeringtimes):
       lines = '\n'.join(lines)
       winfile.write(lines+'\n')
   winfile.close()
-  os.system('mv '+windfn+' '+cmsdir)
+  os.system('mv ' + windfn + ' ' + output_path)
   return

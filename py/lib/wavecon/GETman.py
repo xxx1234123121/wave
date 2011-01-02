@@ -334,16 +334,13 @@ def nam12_url(date,north,south,east,west):
 ################################
 # STRING TOGETHER WIND-RELATED SUBROUTINES 
 ################################
-def getWIND(config):                     
+def getWIND(config, starttime, simduration, steeringinterval):
+  tmpdir=tempfile.gettempdir()
 
   north=config['north']
   south=config['south']
   east=config['east']
   west=config['west']
-  starttime=config['starttime']
-  simduration=config['simduration']
-  steeringinterval=config['steeringinterval']
-  tmpdir=config['tmpdir']
   wintype=config['wintype']
   
   # PARSE DATE PARAMATERS

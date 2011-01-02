@@ -6,7 +6,7 @@ This module facilitates the setup of a CMS model run by copying static files and
 rendering templates into a simulation directory.
 
 **Development Status:**
-  **Last Modified:** December 29, 2010 by Charlie Sharpsteen
+  **Last Modified:** January 1, 2010 by Charlie Sharpsteen
 
 """
 
@@ -58,6 +58,7 @@ def setup_model_run(**kwargs):
   gen_cmcards_file(path.join(sim_dir, kwargs['sim_name'] + '.cmcards'), kwargs)
   gen_std_file(path.join(sim_dir, kwargs['sim_name'] + '.std'), kwargs['sim_name'])
 
+  gen_wind_file(path.join(sim_dir, kwargs['sim_name'] + '.wnd'), kwargs)
   gen_eng_file(path.join(sim_dir, kwargs['sim_name'] + '.eng'), kwargs)
 
   return None
@@ -66,5 +67,31 @@ def setup_model_run(**kwargs):
 #------------------------------------------------------------------------------
 #  Utility Functions
 #------------------------------------------------------------------------------
+
+# This is living here for now because there is no other good place for it at the
+# moment.
+
+################################
+# CREATE WIND INPUT
+################################
+def gen_wind_file(output_path, params):
+  from wavecon import CMSman, GETman
+  model_config = CMSConfig(params['sim_name']).load_sim_config()
+  
+  #DEFINE SPATIAL/TEMPORAL DOMAIN
+  grid = CMSman.makegrid(model_config)
+  steeringtimes = CMSman.maketimes(params['sim_starttime'],
+    params['sim_runtime'], params['sim_timestep'])
+  
+  #RETRIEVE WIND DATA FROM DATABASE
+  windata = CMSman.getwinddata(None,steeringtimes, model_config) #add wintype
+  if (windata==None):
+    print '\n... downloading new wind data ... \n'
+    GETman.getWIND(model_config, params['sim_starttime'], params['sim_runtime'],
+      params['sim_timestep'])
+    windata = CMSman.getwinddata(None,steeringtimes, model_config) #add wintype
+  
+  # CONSTRUCT THE FILE
+  CMSman.gen_windfiles(windata,grid,steeringtimes,model_config, output_path)
 
 
