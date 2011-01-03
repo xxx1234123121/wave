@@ -59,7 +59,7 @@ def setup_model_run(**kwargs):
   gen_std_file(path.join(sim_dir, kwargs['sim_name'] + '.std'), kwargs['sim_name'])
 
   gen_wind_file(path.join(sim_dir, kwargs['sim_name'] + '.wnd'), kwargs)
-  gen_eng_file(path.join(sim_dir, kwargs['sim_name'] + '.eng'), kwargs)
+  gen_eng_file(path.join(sim_dir, 'nest.dat'), kwargs)
 
   return None
 
