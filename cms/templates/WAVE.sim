@@ -1,4 +1,5 @@
 CMS-WAVE {{ grid_origin_x }} {{ grid_origin_y }} {{ 360 - grid_rotation }}
 DEP    {{ sim_name }}.dep
 OPTS   {{ sim_name }}.std
+WIND   {{ sim_name }}.wind
 SPEC   nest.dat
