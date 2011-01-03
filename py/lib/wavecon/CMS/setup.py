@@ -61,6 +61,9 @@ def setup_model_run(**kwargs):
   gen_wind_file(path.join(sim_dir, kwargs['sim_name'] + '.wind'), kwargs)
   gen_eng_file(path.join(sim_dir, 'nest.dat'), kwargs)
 
+  # Hack... hack... hack...
+  patch_wind_into_flow(sim_dir, kwargs)
+
   return None
 
 
@@ -94,4 +97,36 @@ def gen_wind_file(output_path, params):
   # CONSTRUCT THE FILE
   CMSman.gen_windfiles(windata,grid,steeringtimes,model_config, output_path)
 
+
+def patch_wind_into_flow(sim_dir, params):
+    import h5py
+    from wavecon import CMSman
+    from numpy import array, transpose
+    from os import path
+    # Hack-o-saurus rex strikes again!
+    times = CMSman.maketimes(params['sim_starttime'],
+        params['sim_runtime'], params['sim_timestep'], return_timestamps=False)
+
+    windfile = path.join(sim_dir, params['sim_name'] + '.wind.ave')
+    windfile = open(windfile, 'r')
+    windat = windfile.read().splitlines()
+    windfile.close()
+    speed, direc = zip(*[(float(speed), float(direc)) for speed, direc in [line.split() for
+        line in windat]])
+
+    speed = transpose(array(speed,ndmin=2))
+    direc = transpose(array(direc,ndmin=2))
+    times = transpose(array(times,ndmin=2))
+
+    
+    flow_params = h5py.File(path.join(sim_dir,params['sim_name'] + '_mp.h5'), 'a')
+    del flow_params['PROPERTIES/Model Params/WindCurve/Magnitude']
+    flow_params.create_dataset('PROPERTIES/Model Params/WindCurve/Magnitude', data = speed)
+    del flow_params['PROPERTIES/Model Params/WindCurve/Direction']
+    flow_params.create_dataset('PROPERTIES/Model Params/WindCurve/Direction', data = direc)
+    del flow_params['PROPERTIES/Model Params/WindCurve/Times']
+    flow_params.create_dataset('PROPERTIES/Model Params/WindCurve/Times', data = times)
+    flow_params.close()
+
+    return None
 
