@@ -9,7 +9,7 @@ import glob #file wildcard support
 import re #regex support
 from numpy import * #math support
 import DBman
-from math import sin,cos
+from math import sin,cos,atan2,degrees
 from griddata import griddata
 strptime = datetime.datetime.strptime
 
@@ -67,7 +67,7 @@ def makegrid(model_config):
 ################################
 # CALCULATE STEERING TIMES
 ################################
-def maketimes(starttime,simduration,steeringinterval):
+def maketimes(starttime,simduration,steeringinterval, return_timestamps = True):
       #create datetime objects  
       simduration = datetime.timedelta(float(simduration)/24.0)
       steeringinterval = datetime.timedelta(float(steeringinterval)/24.0)
@@ -75,11 +75,19 @@ def maketimes(starttime,simduration,steeringinterval):
 
       #determine steering times
       steeringtimes = []
+      steeringsteps = []
       mytime = starttime
       while( mytime <= stoptime ):
           steeringtimes.append(mytime)
+          steeringdiff = mytime - starttime
+          steeringsteps.append(steeringdiff.days*24 +
+                  steeringdiff.seconds/3600)
           mytime = mytime+steeringinterval
-      return steeringtimes
+
+      if return_timestamps:
+          return steeringtimes
+      else:
+          return steeringsteps
 
 ################################
 # RETREIVE DATA FROM TBLWAVE
@@ -281,6 +289,15 @@ def gen_wavefiles(wavdata, steeringtimes, model_config, output_path):
     wavtime = wavdata['time']
     peakfreq = wavdata['peakfreq']
     spec = wavdata['spec']
+
+    # GAAAAAAAAAAAAAAAAAAAAAAAAAAAH.  Ugly Ugly hack. It hurts me to do this.
+    windat = os.path.dirname(output_path)
+    winfile = glob.glob(windat + '/*.ave')[0]
+    winfile = open(winfile, 'r')
+    windat = winfile.read().splitlines()
+    winfile.close()
+    win_dat = [(speed, direc) for speed, direc in (line.split() for
+        line in windat)]
     
     #FIND DISTINCT LOCATIONS
     locset = [x for x in set(loc)]
@@ -295,6 +312,7 @@ def gen_wavefiles(wavdata, steeringtimes, model_config, output_path):
     metafile.write(str(len(locset))+'\n0\n')
     counter=0
     for myloc in locset:
+      wind = iter(win_dat)
       #CHECK THAT ALL FREQUENCY BINS MATCH
       filter = (loc==myloc)
       myfreq = freq[filter].tolist()
@@ -328,8 +346,9 @@ def gen_wavefiles(wavdata, steeringtimes, model_config, output_path):
         else:
           #WRITE SINGLE TIMESTEP DATA TO SPEC FILE
           filter = filter.tolist().index(True)
+          win_speed, win_dir = wind.next()
           line = ' '.join([
-            str(mytime.strftime('%m%d%H')),'0','0',
+            str(mytime.strftime('%m%d%H')),win_speed,win_dir,
             str(peakfreq[filter]),'0'])
           file.write(line+'\n')
           for f in range(len(freq[filter])):
@@ -337,6 +356,7 @@ def gen_wavefiles(wavdata, steeringtimes, model_config, output_path):
             file.write('\t'+line+'\n')
       file.close()
     metafile.close()
+    winfile.close()
     os.system('mergeENG < '+metafn)
     os.system('rm /'+tmpdir+'/*.eng '+metafn)
     shutil.copy(nestfn, output_path)
@@ -345,17 +365,15 @@ def gen_wavefiles(wavdata, steeringtimes, model_config, output_path):
 ################################
 # GENERATE A CMS WIND FILE 
 ################################
-def gen_windfiles(windata,grid,steeringtimes):
+def gen_windfiles(windata,grid,steeringtimes,model_config,output_path):
 
   if (windata==None):
     quit('\n CANNOT GENERATE INPUT FILE: MISSING WIND DATA \n')
 
   #import constants
-  nx = int(CMSconfig['nx'])
-  ny = int(CMSconfig['ny'])
-  tmpdir = CMSconfig['tmpdir']
-  cmsdir = CMSconfig['cmsdir']
-  windfn = CMSconfig['windfile']
+  tmpdir = tempfile.gettempdir()
+  nx = int(model_config['nx'])
+  ny = int(model_config['ny'])
   winspeed = windata['speed']
   windir = windata['dir']
   wintime = windata['time']
@@ -365,8 +383,10 @@ def gen_windfiles(windata,grid,steeringtimes):
   gridy=array(grid[1])
 
   ugrid,vgrid=[[],[]]
-  windfn = '/'.join([tmpdir,windfn]) 
+  windfn = '/'.join([tmpdir,'wind.dat']) 
+  avewindfn = '/'.join([tmpdir,'avewind.dat'])
   winfile = open(windfn,'w')
+  avewinfile = open(avewindfn, 'w')
   line = str(nx)+' '+str(ny)+'\n'
   winfile.write(line)
   for mytime in steeringtimes:
@@ -380,6 +400,10 @@ def gen_windfiles(windata,grid,steeringtimes):
       vel_y = winspeed[filter]*map(sin,windir[filter])
       newvel_x = griddata(myx,myy,vel_x,gridx,gridy)
       newvel_y = griddata(myx,myy,vel_y,gridx,gridy)
+      avevel_x = mean(newvel_x)
+      avevel_y = mean(newvel_y)
+      win_speed = sqrt(avevel_x**2 + avevel_y**2)
+      win_dir = degrees(atan2(avevel_y, avevel_x))
       #WRITE SINGLE TIMESTEP TO INPUT FILE
       winfile.write(mytime.strftime('%m%d%H')+'\n')
       lines = ['\n'.join([' '.join([str(newvel_x[i][j])+' '+
@@ -387,6 +411,9 @@ def gen_windfiles(windata,grid,steeringtimes):
               for i in range(ny)[::-1]]
       lines = '\n'.join(lines)
       winfile.write(lines+'\n')
+      avewinfile.write('{0} {1}\n'.format(win_speed, win_dir))
   winfile.close()
-  os.system('mv '+windfn+' '+cmsdir)
+  avewinfile.close()
+  os.system('mv ' + windfn + ' ' + output_path)
+  os.system('mv ' + avewindfn + ' ' + output_path + '.ave')
   return

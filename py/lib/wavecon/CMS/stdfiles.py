@@ -37,7 +37,7 @@ STD_DEFAULT_PARAMS = {
   'icur':  0,
   'ibrk':  0,
   'irs':   0,
-  'ibnd':  0,
+  'ibnd':  1,
   'iwet':  0,
   'ibf':   0,
   'iark':  0,
