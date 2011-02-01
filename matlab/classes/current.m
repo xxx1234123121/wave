@@ -24,11 +24,10 @@ classdef current
         function cur = current(sourceName,datetime,location,s,d,sUnits,dUnits)
             if(nargin>0)
                 cur.srcName = sourceName;
-                if(length(char(datetime))==19)
-                    cur.datetime   = datenum(datetime,'yyyy-mm-dd HH:MM:SS');
-                elseif(length(char(datetime))==21)
-                    cur.datetime   = datenum(datetime,'yyyy-mm-dd HH:MM:SS.0');
+                if(length(char(datetime))>19)
+                    datetime = substr(char(datetime),1,19);
                 end
+                cur.datetime   = datenum(datetime,'yyyy-mm-dd HH:MM:SS');
                 cur.location   = location;
                 cur.speed      = s;
                 cur.dir        = d;

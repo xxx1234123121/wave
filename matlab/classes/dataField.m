@@ -101,11 +101,12 @@ classdef dataField
                 for i=1:length(tbetween)
                     makePointSpecPlot(df,tbetween(i),x,y,collapse);
                     %axis equal;
-                    M(i) = getframe;
+                    caxis([0,10]);
+                    M(i) = getframe(gcf);
                 end
             else
                 makePointSpecPlot(df,tb,x,y,collapse);
-                M = getframe;
+                M = getframe(gcf);
             end
         end
         
@@ -142,7 +143,7 @@ classdef dataField
                     );
                 delete(h);
                 hold on;
-                polarcont(df.Z(iNearby).freqBin,df.Z(iNearby).dirBin.*pi./180,df.Z(iNearby).spec');
+                polarcont(df.Z(iNearby).freqBin,metToMathAngle(df.Z(iNearby).dirBin),df.Z(iNearby).spec);
                 cb = colorbar;
                 xlabel('Radius = Frequency (Hz)');
                 set(get(cb,'ylabel'),'String','Density (m^2/Hz)');
@@ -168,7 +169,7 @@ classdef dataField
                         df.makeFieldPlot(plotType,fieldName,cropExtent,tbetween(i));
                     end
                     %axis equal;
-                    M(i) = getframe;
+                    M(i) = getframe(gcf);
                 end
             else
                 if(strcmp(plotType,'quiver'))
@@ -176,7 +177,7 @@ classdef dataField
                 else
                     df.makeFieldPlot(plotType,fieldName,cropExtent,cropExtent.tb);
                 end
-                M = getframe;
+                M = getframe(gcf);
             end
         end
         
@@ -225,18 +226,39 @@ classdef dataField
             inds = df.isInCropExtent(cropExtent);
             speedInd = find(strcmp(df.scalarFields,'speed'));
             dirInd = find(strcmp(df.scalarFields,'dir'));
-            
-            sortedXY = sortrows([df.X(inds),df.Y(inds)],[1,2]);
+           
+            % The following down samples the data to a regular grid with
+            % nGrid segments (nGrid+1 points)
+            nGrid = 30;
+            xRange = max(df.X(inds))-min(df.X(inds));
+            xSparse = min(df.X(inds)) + [0:nGrid]*xRange/nGrid;
+            yRange = max(df.Y(inds))-min(df.Y(inds));
+            ySparse = min(df.Y(inds)) + [0:nGrid]*yRange/nGrid;
+            sortedXY = sortrows([xSparse',ySparse'],[1,2]);
+
+                        
+          %  sortedXY = sortrows([df.X(inds),df.Y(inds)],[1,2]);
             [X,Y,T] = meshgrid(sortedXY(:,1),sortedXY(:,2),t);
             Zspeed = df.interpFuns{speedInd}(X,Y,T);
             Zdir = df.interpFuns{dirInd}(X,Y,T);
+            %X = X(:,size(X,2):-1:1);
+            
             
             U = Zspeed.*cos(Zdir.*pi./180);
             V = Zspeed.*sin(Zdir.*pi./180);
             U(isnan(V)) = 0;
             V(isnan(V)) = 0;
+          
+            centerLon = (cropExtent.ll(1)+ cropExtent.ur(1))/2;
             
-            quiver(X,Y,U,V);
+            m_proj('oblique mercator','longitudes',[centerLon centerLon], ...
+'latitudes',[cropExtent.ur(2) cropExtent.ll(2)],'aspect',1);
+            m_coast('patch',[.7 .7 .7],'edgecolor','none');
+            m_grid;
+            hold on;
+            m_quiver(X,Y,U,V);
+            m_contour(X,Y,Zspeed);
+            hold off;
             view(2);
             set(gcf(),'Color','White');
             set(gca(),'Position',get(gca(),'Position')+[0,0,0,-.1]);
